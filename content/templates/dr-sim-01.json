@@ -1,0 +1,98 @@
+{
+  "id": "dr-sim-01",
+  "mechanic": "delay_reward",
+  "training_level": "simulated",
+  "difficulty": 1,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "self_control": 0.7,
+    "motive_awareness": 0.3
+  },
+  "title": {
+    "child": "الصندوق الذي ينتظر",
+    "teen": "الآن أم بعد قليل؟",
+    "adult": "تأجيل صغير بعائد أكبر"
+  },
+  "situation": {
+    "child": "أمامك زر (افتح الصندوق الآن) وفيه نجمة واحدة. إذا انتظرت {{time_budget}} دقائق كاملة دون أن تفتحه، يصبح فيه ثلاث نجوم. ماذا ستفعل وأنت تنتظر؟",
+    "teen": "يمكنك إنهاء هذا التمرين الآن بنتيجة صغيرة، أو الانتظار {{time_budget}} دقائق دون فتح أي شيء آخر لتحصل على نتيجة أكبر. ما الذي ستشغل نفسك به أثناء الانتظار؟",
+    "adult": "تمرين قصير في تأجيل الإشباع: انتظر {{time_budget}} دقائق قبل الضغط على (أنهيت) دون أن تفتح تطبيقًا آخر. لاحظ ما الذي يدفعك للتعجّل."
+  },
+  "variable_defaults": {
+    "time_budget": 3
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أشغل نفسي بشيء مفيد أثناء الانتظار",
+      "fit": 0.8,
+      "outcome_hint": "الانشغال بشيء آخر يُضعف الرغبة الفورية."
+    },
+    {
+      "id": "s2",
+      "text": "أراقب المؤقت طوال الوقت",
+      "fit": -0.2,
+      "outcome_hint": "مراقبة الوقت تجعل الانتظار أطول وأصعب."
+    },
+    {
+      "id": "s3",
+      "text": "أذكّر نفسي لماذا الانتظار يستحق",
+      "fit": 0.7,
+      "outcome_hint": "تذكّر السبب يقوّي الصبر."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما الذي شعرت به في أول دقيقة؟",
+    "ما الذي ساعدك على الانتظار، أو ما الذي جعله صعبًا؟",
+    "أين في حياتك تواجه اختيارًا مشابهًا بين (الآن) و(لاحقًا)؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "ضع هاتفك بعيدًا قبل أن تبدأ المؤقت.",
+      "أغمض عينيك وعدّ أنفاسك ببطء."
+    ],
+    "L1_hint": [
+      "جرّب أن تشغل يديك بشيء."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "self_control",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "motive_awareness",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "timer",
+  "min_duration": 3,
+  "max_duration": 3,
+  "distraction_config": {
+    "count": 1,
+    "kind": "open_now_button"
+  },
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

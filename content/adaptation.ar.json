@@ -1,0 +1,45 @@
+{
+  "_note": "نصوص التكيّف الذكي (المرحلة 7): اقتراحات التكيّف (5.8)، ذاكرة الاستراتيجيات (4.13.2)، فعالية القوالب (7.6).",
+  "suggestions": {
+    "title": "اقتراحات التكيّف",
+    "intro": "اقتراح أو اثنان في الأسبوع من ملاحظة أدلتك وتوقيت مهامك. لا يتغير شيء إلا بقرارك.",
+    "empty": "لا اقتراحات الآن.",
+    "apply": "طبّق",
+    "not_now": "لا الآن",
+    "applied": "طُبّق الاقتراح وسُجّل التغيير.",
+    "rejected": "حسنًا، لن يتكرر هذا الاقتراح قريبًا.",
+    "decided_by_guardian": "في وضع الطفل يقرر المربي.",
+    "expected_effect_label": "الأثر المتوقع",
+    "reason_label": "السبب",
+    "types": {
+      "move_mission_time": "نقل وقت المهام",
+      "change_focus_capabilities": "تغيير القدرات المركّز عليها",
+      "change_daily_count": "تغيير عدد المهام اليومية",
+      "try_mechanic": "تجربة ميكانيكية لأسبوع",
+      "request_more_support": "دعم أكثر لقدرة",
+      "real_mission_idea": "فكرة مهمة واقعية"
+    },
+    "value_labels": { "daily_mission_count": "{value} مهام يوميًا", "focus_capabilities": "التركيز على: {value}", "available_windows": "نوافذ: {value}", "mechanic": "الميكانيكية: {value}", "capability": "القدرة: {value}", "idea": "{value}" }
+  },
+  "strategy_memory": {
+    "worked_before": "نجحت معك سابقًا",
+    "recall": {
+      "child": "المرة الماضية عندما جرّبت «{strategy}»، {outcome}. ما الذي اختلف هذه المرة؟",
+      "teen": "المرة الماضية عندما «{strategy}»، {outcome}. ما الذي اختلف هذه المرة؟",
+      "adult": "في المرة الماضية مع «{strategy}»، {outcome}. ما الذي اختلف هذه المرة؟"
+    },
+    "outcomes": { "shown": "ظهرت المهارة", "partial": "ظهرت جزئيًا", "not_yet": "لم تظهر بعد" }
+  },
+  "admin": {
+    "templates_title": "فعالية القوالب",
+    "drafts_title": "مسودات القوالب من الذكاء الاصطناعي",
+    "no_metrics": "لا مقاييس بعد. تُحسب يوميًا بعد أول مهام.",
+    "no_drafts": "لا مسودات تنتظر المراجعة.",
+    "flagged": "للمراجعة",
+    "approve": "اعتمد النسخة",
+    "reject": "ارفض",
+    "columns": { "template": "القالب", "missions": "المهام", "shown": "ظهرت", "partial": "جزئي", "not_yet": "ليس بعد", "abandon": "تخلٍ", "transfer": "نقل", "prediction": "خطأ التوقع" },
+    "flag_reasons": { "low_shown": "نسبة «ظهرت» منخفضة", "high_abandon": "نسبة التخلي مرتفعة" },
+    "model_switch_note": "تبديل النموذج يشترط نجاح pnpm ai:verify على النموذج الجديد (ADAPT-8)."
+  }
+}

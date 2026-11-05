@@ -1,0 +1,101 @@
+{
+  "id": "sm-real-01",
+  "mechanic": "self_monitor",
+  "training_level": "guided_real",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "self_awareness": 0.6,
+    "planning": 0.2,
+    "motive_awareness": 0.2
+  },
+  "title": {
+    "child": "توقّعي والواقع",
+    "teen": "مهمة حقيقية بالمؤقت",
+    "adult": "تقدير واقعي لمهمة واقعية"
+  },
+  "situation": {
+    "child": "اختر شيئًا حقيقيًا عليك فعله اليوم ({{context}}). توقّع الوقت، نفّذ بالمؤقت، ثم قارن.",
+    "teen": "اختر مهمة حقيقية اليوم ({{context}}). قدّر زمنها، نفّذها بالمؤقت، وراقب لحظة انتباهك أنك تتأخر أو تسبق توقعك.",
+    "adult": "مهمة واقعية اليوم ({{context}}). قدّر، نفّذ بالمؤقت، وسجّل اللحظة التي لاحظت فيها انحرافك عن التقدير وماذا فعلت."
+  },
+  "variable_defaults": {
+    "context": {
+      "child": "واجب أو ترتيب غرفتك",
+      "teen": "واجب أو مهمة منزلية",
+      "adult": "مهمة عمل أو منزلية"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أقدّر ثم أضيف هامشًا لما قد أنساه",
+      "fit": 0.7,
+      "outcome_hint": "الهامش يعوّض التفاؤل المعتاد."
+    },
+    {
+      "id": "s2",
+      "text": "أقدّر بناءً على مرات سابقة مشابهة",
+      "fit": 0.8,
+      "outcome_hint": "التاريخ الشخصي أفضل مرجع."
+    },
+    {
+      "id": "s3",
+      "text": "أقدّر رقمًا متفائلًا لأحفّز نفسي",
+      "fit": -0.4,
+      "outcome_hint": "التفاؤل المقصود يسبب الإحباط عند التأخر."
+    }
+  ],
+  "prediction_prompt": "كم دقيقة ستستغرق المهمة؟",
+  "reflection_prompts": [
+    "متى لاحظت أنك تنحرف عن توقعك؟",
+    "ما الذي أخذ وقتًا أكثر مما ظننت؟",
+    "كيف ستقدّر المرة القادمة؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب الخطوات أولًا ثم قدّر كل خطوة.",
+      "أضف دقيقتين للتجهيز."
+    ],
+    "L1_hint": [
+      "راجع المؤقت في المنتصف وقارن."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "planning",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      },
+      "rule_weight": 0.5
+    }
+  ],
+  "completion_check": "timer",
+  "min_duration": 10,
+  "max_duration": 45,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

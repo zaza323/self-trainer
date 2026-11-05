@@ -1,0 +1,101 @@
+{
+  "id": "pr-real-01",
+  "mechanic": "prioritize",
+  "training_level": "guided_real",
+  "difficulty": 3,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "thinking": 0.5,
+    "planning": 0.3,
+    "autonomy": 0.2
+  },
+  "title": {
+    "child": "أولويات بعد المدرسة",
+    "teen": "أولويات مسائك",
+    "adult": "أولويات الساعتين القادمتين"
+  },
+  "situation": {
+    "child": "بعد المدرسة اليوم لديك أشياء كثيرة ({{context}}). قبل أن تبدأ أي شيء، اكتب الترتيب الذي ستفعلها به، ثم نفّذ أول اثنين.",
+    "teen": "الليلة لديك مهام متنافسة ({{context}}). رتّبها قبل أن تفتح الهاتف، ونفّذ الأولى والثانية. سجّل إن غيّرت الترتيب أثناء التنفيذ ولماذا.",
+    "adult": "في الساعتين القادمتين لديك مهام متنافسة ({{context}}). رتّبها بقاعدة واضحة، نفّذ أول اثنتين، وسجّل أي انحراف عن الترتيب وسببه."
+  },
+  "variable_defaults": {
+    "time_budget": 60,
+    "context": {
+      "child": "واجب، لعب، مساعدة في البيت",
+      "teen": "دراسة، أصدقاء، التزام منزلي",
+      "adult": "عمل، التزامات منزلية، تواصل"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أرتّب بالموعد ثم بالأهمية قبل أن أبدأ",
+      "fit": 0.9,
+      "outcome_hint": "الترتيب قبل البدء يحمي من الانجراف."
+    },
+    {
+      "id": "s2",
+      "text": "أبدأ وأقرر في أثناء الطريق",
+      "fit": -0.3,
+      "outcome_hint": "القرار في أثناء الطريق ينحاز لما هو أمامك."
+    },
+    {
+      "id": "s3",
+      "text": "أسأل شخصًا ماذا أفعل أولًا",
+      "fit": -0.2,
+      "outcome_hint": "السؤال يحل اللحظة لكنه لا يبني القدرة."
+    }
+  ],
+  "prediction_prompt": "كم مهمة تتوقع أن تنهيها بالترتيب الذي كتبته؟",
+  "reflection_prompts": [
+    "هل التزمت بالترتيب؟ أين انحرفت ولماذا؟",
+    "ما القاعدة التي ستستخدمها غدًا للترتيب؟",
+    "ما الذي تركته اليوم وكان تركه صحيحًا؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب المهام كلها أولًا ثم رقّمها.",
+      "المهمة التي لها موعد اليوم تأتي أولًا."
+    ],
+    "L1_hint": [
+      "إذا ترددت بين اثنتين، اختر ذات الأثر الأكبر."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "thinking",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "planning",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 30,
+  "max_duration": 120,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

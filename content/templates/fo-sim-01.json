@@ -1,0 +1,95 @@
+{
+  "id": "fo-sim-01",
+  "mechanic": "face_obstacle",
+  "training_level": "simulated",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "perseverance": 0.7,
+    "thinking": 0.3
+  },
+  "title": {
+    "child": "الخطة لم تنجح، والآن؟",
+    "teen": "عندما تتعطل الخطة",
+    "adult": "العقبة في منتصف الطريق"
+  },
+  "situation": {
+    "child": "كنت تبني برجًا من المكعبات وسقط عند منتصفه، وبقي {{time_budget}} دقائق قبل أن يُطلب منك التوقف. ماذا ستفعل الآن؟ اختر، ثم طبّق خيارك على شيء صغير أمامك فعلًا.",
+    "teen": "حللت نصف التمرين ثم اكتشفت أن الطريقة خاطئة، وبقي {{time_budget}} دقائق. ماذا تفعل؟ اختر استراتيجية ثم طبّقها الآن على مهمة صغيرة تعثّرت فيها مؤخرًا.",
+    "adult": "في منتصف مهمة اكتشفت أن المدخل الذي اخترته لا يعمل، والوقت المتبقي {{time_budget}} دقائق. اختر طريقة تعامل، ثم طبّقها فورًا على عقبة حقيقية صغيرة لديك."
+  },
+  "variable_defaults": {
+    "time_budget": 5
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أتوقف دقيقة، أحدد أين تعطّل الأمر بالضبط، ثم أغيّر خطوة واحدة",
+      "fit": 0.9,
+      "outcome_hint": "تحديد موضع العطل يوفر إعادة البناء من الصفر."
+    },
+    {
+      "id": "s2",
+      "text": "أعيد كل شيء من البداية بالطريقة نفسها",
+      "fit": -0.3,
+      "outcome_hint": "التكرار بلا تغيير يعيد العقبة نفسها."
+    },
+    {
+      "id": "s3",
+      "text": "أطلب مساعدة فورًا",
+      "fit": 0.0,
+      "outcome_hint": "المساعدة مفيدة بعد محاولة، لا قبلها."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما أول شعور عند ظهور العقبة؟",
+    "ما الخطوة الواحدة التي غيّرتها؟",
+    "متى واجهت عقبة مشابهة وماذا فعلت حينها؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اسأل: أين توقف الأمر بالضبط؟",
+      "غيّر شيئًا واحدًا فقط وجرّب."
+    ],
+    "L1_hint": [
+      "قبل أن تطلب مساعدة، جرّب تغييرًا واحدًا."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "perseverance",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "thinking",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 5,
+  "max_duration": 10,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

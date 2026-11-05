@@ -1,0 +1,101 @@
+{
+  "id": "fo-real-01",
+  "mechanic": "face_obstacle",
+  "training_level": "guided_real",
+  "difficulty": 3,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "perseverance": 0.6,
+    "thinking": 0.2,
+    "self_awareness": 0.2
+  },
+  "title": {
+    "child": "الشيء الصعب الذي أتجنبه",
+    "teen": "المهمة التي أتجنبها لأنها صعبة",
+    "adult": "المهمة الصعبة المؤجلة"
+  },
+  "situation": {
+    "child": "اختر شيئًا تتجنبه لأنه صعب ({{context}}). اعمل عليه {{time_budget}} دقيقة. عندما تتعثر، لا تتوقف فورًا: جرّب شيئًا واحدًا مختلفًا أولًا.",
+    "teen": "اختر مهمة تتجنبها لأنها صعبة ({{context}}). خصص {{time_budget}} دقيقة. عند التعثر، طبّق استراتيجيتك قبل أن تقرر التوقف.",
+    "adult": "مهمة تؤجلها لصعوبتها ({{context}}). {{time_budget}} دقيقة عمل. عند أول عقبة، سجّل ما هي وطبّق استراتيجيتك، ثم قرر بوعي: أكمل أم أتوقف."
+  },
+  "variable_defaults": {
+    "time_budget": 20,
+    "context": {
+      "child": "مسألة صعبة أو مهارة جديدة",
+      "teen": "مادة صعبة أو مهارة",
+      "adult": "مهمة تقنية أو إدارية معقدة"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أحدد أصغر جزء يمكنني فهمه أو فعله وأبدأ منه",
+      "fit": 0.9,
+      "outcome_hint": "الجزء الصغير يكسر جدار الصعوبة."
+    },
+    {
+      "id": "s2",
+      "text": "أضغط على نفسي حتى أنتهي مهما كان",
+      "fit": 0.0,
+      "outcome_hint": "الضغط يستنزف ولا يعلّم الطريقة."
+    },
+    {
+      "id": "s3",
+      "text": "أغيّر الطريقة بعد كل تعثر بدل تكرارها",
+      "fit": 0.7,
+      "outcome_hint": "تبديل الطريقة يعني أنك تتعلم من العقبة."
+    }
+  ],
+  "prediction_prompt": "كم مرة تتوقع أن تتعثر خلال الجلسة؟",
+  "reflection_prompts": [
+    "ما العقبة التي ظهرت فعلًا؟",
+    "ماذا فعلت عندها، وهل كان ذلك ما خططت له؟",
+    "ما الذي تعرفه الآن عن نفسك أمام الصعوبة؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب العقبة في جملة واحدة عندما تظهر.",
+      "جرّب جزءًا أصغر."
+    ],
+    "L1_hint": [
+      "إذا تكررت العقبة، غيّر الطريقة لا الجهد."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "perseverance",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 15,
+  "max_duration": 40,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

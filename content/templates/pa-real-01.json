@@ -1,0 +1,102 @@
+{
+  "id": "pa-real-01",
+  "mechanic": "plan_ahead",
+  "training_level": "guided_real",
+  "difficulty": 3,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "planning": 0.6,
+    "self_awareness": 0.2,
+    "perseverance": 0.2
+  },
+  "title": {
+    "child": "الغرفة والموعد",
+    "teen": "الغرفة وموعد الخروج",
+    "adult": "الغرفة والموعد"
+  },
+  "situation": {
+    "child": "غرفتك غير مرتبة، وموعد خروجك بعد {{time_budget}} دقيقة. كيف ستتصرف؟ قرر ما المهم، قدّر الوقت، ضع خطة، ونفّذ.",
+    "teen": "غرفتك غير مرتبة وموعد خروجك بعد {{time_budget}} دقيقة. لاحظ الوضع، حدد المهم، قدّر الوقت، خطط، قرر، نفّذ، ثم قيّم.",
+    "adult": "مساحتك غير مرتبة وموعدك بعد {{time_budget}} دقيقة. لاحظ، حدد ما يهم فعلًا، قدّر، خطط، قرر، نفّذ، قيّم. لا توجد إجابة صحيحة واحدة."
+  },
+  "variable_defaults": {
+    "time_budget": 20
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أرتّب ما يظهر للعين فقط وأترك الباقي لوقت آخر",
+      "fit": 0.7,
+      "outcome_hint": "تحديد (الكافي) يناسب ضيق الوقت."
+    },
+    {
+      "id": "s2",
+      "text": "أرتّب كل شيء بسرعة",
+      "fit": 0.0,
+      "outcome_hint": "الكل بسرعة غالبًا يعني التأخر أو العمل الناقص."
+    },
+    {
+      "id": "s3",
+      "text": "أقسم الوقت: 10 دقائق ترتيب أساسي، 10 تجهيز للخروج",
+      "fit": 0.9,
+      "outcome_hint": "تقسيم الوقت يحمي الموعد."
+    },
+    {
+      "id": "s4",
+      "text": "أؤجل الترتيب كله لما بعد العودة",
+      "fit": 0.3,
+      "outcome_hint": "قرار صالح إن كان واعيًا ومحدد الوقت."
+    }
+  ],
+  "prediction_prompt": "كم دقيقة سيستغرق ما ستفعله؟",
+  "reflection_prompts": [
+    "ما الذي اعتبرته (المهم)؟ لماذا؟",
+    "هل التزمت بخطتك أم غيّرتها؟ ماذا حدث؟",
+    "ما الذي ستفعله بالطريقة نفسها في موقف آخر؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "ابدأ بما يراه الداخل إلى الغرفة أولًا.",
+      "ضع مؤقتًا لنصف الوقت."
+    ],
+    "L1_hint": [
+      "اسأل: ما الذي يكفي الآن؟"
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "planning",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 15,
+  "max_duration": 25,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

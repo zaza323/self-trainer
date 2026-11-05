@@ -1,0 +1,10 @@
+{
+  "_note": "وسوم السياق (context_tag) لمهام الواقع حتى تُبنى personal_context.contexts في المرحلة 5. simulated دائمًا in_app.",
+  "in_app": "داخل التطبيق",
+  "home": "البيت",
+  "study": "الدراسة",
+  "work": "العمل",
+  "sport": "الرياضة",
+  "social": "مع الناس",
+  "other": "آخر"
+}

@@ -1,0 +1,100 @@
+{
+  "id": "sm-sim-01",
+  "mechanic": "self_monitor",
+  "training_level": "simulated",
+  "difficulty": 1,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "self_awareness": 0.7,
+    "planning": 0.3
+  },
+  "title": {
+    "child": "كم دقيقة سأحتاج؟",
+    "teen": "توقّع ثم قِس",
+    "adult": "معايرة التقدير الذاتي"
+  },
+  "situation": {
+    "child": "رتّب سطح مكتبك أو مكان لعبك. قبل أن تبدأ، توقّع كم دقيقة ستحتاج. ثم شغّل المؤقت وقارن.",
+    "teen": "اختر مهمة صغيرة أمامك ({{context}}). توقّع كم دقيقة ستستغرق، ثم نفّذها بالمؤقت وقارن التوقع بالواقع.",
+    "adult": "مهمة قصيرة ({{context}}). قدّر زمنها قبل البدء، نفّذها بالمؤقت، ثم انظر إلى الفرق. الهدف معرفة اتجاه خطئك: تتفاءل أم تتشاءم؟"
+  },
+  "variable_defaults": {
+    "context": {
+      "child": "ترتيب المكتب",
+      "teen": "ترتيب حقيبتك أو مكتبك",
+      "adult": "ترتيب سطح المكتب أو الرد على رسالة"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أتذكر آخر مرة فعلت شيئًا مشابهًا وأقدّر من ذلك",
+      "fit": 0.8,
+      "outcome_hint": "الذاكرة الفعلية أدق من الحدس."
+    },
+    {
+      "id": "s2",
+      "text": "أخمّن رقمًا سريعًا",
+      "fit": -0.2,
+      "outcome_hint": "التخمين السريع يميل للتفاؤل."
+    },
+    {
+      "id": "s3",
+      "text": "أقسّم المهمة في ذهني وأجمع أزمنة الأجزاء",
+      "fit": 0.7,
+      "outcome_hint": "الجمع من الأجزاء يكشف ما نسيته."
+    }
+  ],
+  "prediction_prompt": "كم دقيقة ستستغرق؟",
+  "reflection_prompts": [
+    "هل كان توقعك أقل أم أكثر من الواقع؟ بكم؟",
+    "ما الذي لم تحسب حسابه؟",
+    "في أي شيء بحياتك تخطئ التقدير بالاتجاه نفسه؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "فكّر في كل خطوة ستفعلها قبل أن تقدّر.",
+      "قارن بشيء فعلته أمس."
+    ],
+    "L1_hint": [
+      "هل توقعك يتضمن التجهيز والتنظيف؟"
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "planning",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "timer",
+  "min_duration": 2,
+  "max_duration": 10,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

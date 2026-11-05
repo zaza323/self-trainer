@@ -1,0 +1,99 @@
+{
+  "id": "pr-sim-01",
+  "mechanic": "prioritize",
+  "training_level": "simulated",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "thinking": 0.6,
+    "planning": 0.4
+  },
+  "title": {
+    "child": "ماذا أفعل أولًا؟",
+    "teen": "أربع مهام ونصف ساعة",
+    "adult": "ترتيب أولويات تحت ضغط الوقت"
+  },
+  "situation": {
+    "child": "أمامك {{time_budget}} دقيقة قبل العشاء، وعليك: واجب قصير، ترتيب ألعابك، الاتصال بجدتك، ومشاهدة حلقة. لا يتسع الوقت للكل. رتّبها وقرر ما الذي سيُترك.",
+    "teen": "لديك {{time_budget}} دقيقة: تسليم واجب موعده الليلة، رد على صديق، تجهيز حقيبة الغد، ومتابعة مقطع. رتّب الأولويات وحدد ما الذي لن تفعله الآن.",
+    "adult": "{{time_budget}} دقيقة قبل موعد: رسالة عمل عاجلة، تحضير ملف للغد، مكالمة عائلية، وترتيب المكتب. رتّب، وقرر ما يُترك بوعي."
+  },
+  "variable_defaults": {
+    "time_budget": 30
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أسأل: ما الذي له موعد لا يتأخر؟ ثم ما الذي يهم فعلًا؟",
+      "fit": 0.9,
+      "outcome_hint": "الموعد ثم الأهمية هو الترتيب الذي يصمد."
+    },
+    {
+      "id": "s2",
+      "text": "أبدأ بالأسهل والأسرع",
+      "fit": 0.1,
+      "outcome_hint": "الأسهل أولًا يريح لكنه قد يترك المهم."
+    },
+    {
+      "id": "s3",
+      "text": "أبدأ بما أحبه أكثر",
+      "fit": -0.5,
+      "outcome_hint": "الميل الشخصي نادرًا ما يطابق الأولوية."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما الذي قررت تركه؟ كيف شعرت بذلك؟",
+    "ما القاعدة التي استخدمتها للترتيب؟",
+    "متى واجهت موقفًا مشابهًا فعلًا هذا الأسبوع؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "ابحث أولًا عن الشيء الذي له موعد.",
+      "اكتب بجانب كل مهمة: ضروري / يمكن تأجيله."
+    ],
+    "L1_hint": [
+      "اسأل: ماذا يحدث لو لم أفعل هذا اليوم؟"
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "thinking",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "planning",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "checklist",
+  "checklist": [
+    "رتّبت المهام الأربع",
+    "حددت ما سيُترك",
+    "كتبت السبب في سطر"
+  ],
+  "min_duration": 3,
+  "max_duration": 8,
+  "distraction_config": null,
+  "version": 1,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

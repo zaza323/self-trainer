@@ -1,0 +1,42 @@
+{
+  "config_version": "2026-11-05.1",
+  "_note": "المرحلة 8 (التجربة المغلقة، القسم 14) ومقاييس النجاح (القسم 15) والقياس المجهّل (القسم 9). الأهداف الأولية من الجدول 15؛ التفسيرات الكمية موثقة في README.",
+  "cohort": {
+    "min_users": 15,
+    "max_users": 30,
+    "weeks": 4,
+    "enabled_age_modes": ["teen", "adult", "child"],
+    "min_users_per_enabled_mode": 3,
+    "snapshot_every_days": 7
+  },
+  "metrics": {
+    "skill_growth": { "min_missions": 10, "min_capabilities_improved": 2, "compare_weeks": [1, 4], "min_share_of_qualifying_users": 0.5 },
+    "transfer_rate": { "target": 0.30 },
+    "autonomy": { "min_support_levels_up": 1, "min_share_of_users": 0.5 },
+    "mastery_over_achievement": { "compare_weeks": [1, 4] },
+    "novel_context": { "max_relative_gap": 0.20 },
+    "healthy_return": { "after_days": [7, 30], "targets": { "7": 0.40, "30": 0.25 } },
+    "adaptation_acceptance": { "target": 0.40 }
+  },
+  "counter_warnings": {
+    "xp_without_learning": { "min_xp_growth_ratio": 0.5, "max_avg_capability_delta": 2 },
+    "reward_displaces_motivation": { "window_days": 14, "min_shown_rate_drop": 0.15, "min_missions_each_window": 3 }
+  },
+  "analytics": {
+    "events": [
+      "signup", "profile_created", "goal_created", "mission_chosen", "mission_reflected", "transfer_reported", "transfer_confirmed",
+      "reward_delivered", "suggestion_decided", "challenge_joined", "challenge_finished", "surprise_granted", "comeback", "break_mode_on",
+      "notification_opened", "export_requested", "account_deleted"
+    ],
+    "allowed_props": ["age_mode", "gate1", "gate2", "training_level", "support_level", "mechanic", "source", "decision", "type", "kind", "count", "stage", "intensity", "worked", "confirmed", "rank"],
+    "max_string_prop_length": 40,
+    "profile_hash_length": 16,
+    "retention_days": 180
+  },
+  "readiness": {
+    "required_env": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "ANTHROPIC_API_KEY", "CRON_SECRET", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "NEXT_PUBLIC_VAPID_PUBLIC_KEY"],
+    "optional_env": ["POSTHOG_KEY", "POSTHOG_HOST", "ANALYTICS_SALT"],
+    "require_safety_resources_verified": true,
+    "min_active_templates": 20
+  }
+}

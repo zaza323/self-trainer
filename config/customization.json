@@ -1,0 +1,408 @@
+{
+  "config_version": "2026-11-05.3",
+  "resolution_order": [
+    "mission_override",
+    "player",
+    "guardian",
+    "age_mode_default",
+    "system_default"
+  ],
+  "edit_rules": {
+    "child": {
+      "player": "player_editable_keys_only",
+      "guardian": "requires_permission:manage_settings",
+      "guardian_can_lock": true,
+      "creator_can_lock_against_guardians": true
+    },
+    "teen": {
+      "player": "all",
+      "guardian": "requires_permission:manage_settings",
+      "guardian_can_lock": false,
+      "lockable_keys_override": [
+        "companion_free_chat_daily_minutes"
+      ]
+    },
+    "adult": {
+      "player": "all",
+      "guardian": "requires_permission:manage_settings",
+      "guardian_can_lock": false
+    }
+  },
+  "player_editable_in_child": [
+    "space_theme",
+    "companion_dialect",
+    "notification_time",
+    "break_mode"
+  ],
+  "catalog": {
+    "daily_mission_count": {
+      "type": "int",
+      "min": 1,
+      "max": 3,
+      "default": {
+        "child": 2,
+        "teen": 3,
+        "adult": 3
+      },
+      "mission_override": false
+    },
+    "focus_capabilities": {
+      "type": "capability_array",
+      "max_items": 3,
+      "default": {
+        "child": [],
+        "teen": [],
+        "adult": []
+      },
+      "mission_override": false
+    },
+    "available_windows": {
+      "type": "time_windows",
+      "max_items": 6,
+      "default": {
+        "child": [],
+        "teen": [],
+        "adult": []
+      },
+      "mission_override": false
+    },
+    "notification_time": {
+      "type": "time_local",
+      "default": {
+        "child": "16:30",
+        "teen": "17:00",
+        "adult": "19:00"
+      },
+      "mission_override": false
+    },
+    "notification_max_per_day": {
+      "type": "int",
+      "min": 0,
+      "max": 3,
+      "default": {
+        "child": 1,
+        "teen": 1,
+        "adult": 1
+      },
+      "mission_override": false
+    },
+    "quiet_hours": {
+      "type": "time_range",
+      "default": {
+        "child": [
+          "20:00",
+          "07:00"
+        ],
+        "teen": [
+          "22:00",
+          "07:00"
+        ],
+        "adult": [
+          "23:00",
+          "07:00"
+        ]
+      },
+      "mission_override": false
+    },
+    "game_intensity_override": {
+      "type": "int_or_null",
+      "min": 0,
+      "max": 90,
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "companion_free_chat_daily_minutes": {
+      "type": "int_or_null",
+      "min": 5,
+      "max": 60,
+      "default": {
+        "child": 15,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "companion_dialect": {
+      "type": "enum",
+      "values": [
+        "fusha_simple",
+        "mirror_user"
+      ],
+      "default": {
+        "child": "fusha_simple",
+        "teen": "fusha_simple",
+        "adult": "fusha_simple"
+      },
+      "mission_override": false
+    },
+    "reflection_max_questions": {
+      "type": "int",
+      "min": 2,
+      "max": 4,
+      "default": {
+        "child": 3,
+        "teen": 4,
+        "adult": 4
+      },
+      "mission_override": true
+    },
+    "self_missions_require_approval": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "photo_completion_allowed": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "chat_auto_delete_days": {
+      "type": "enum_or_null",
+      "values": [
+        30,
+        90,
+        180
+      ],
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "real_rewards_enabled": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "adaptation_suggestions_to": {
+      "type": "enum",
+      "values": [
+        "owner",
+        "owner_and_permitted_guardians"
+      ],
+      "default": {
+        "child": "owner",
+        "teen": "owner",
+        "adult": "owner"
+      },
+      "mission_override": false
+    },
+    "break_mode": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "space_theme": {
+      "type": "enum",
+      "values": [
+        "room",
+        "garden",
+        "workshop",
+        "observatory"
+      ],
+      "default": {
+        "child": "room",
+        "teen": "room",
+        "adult": "workshop"
+      },
+      "mission_override": false
+    },
+    "challenges_enabled": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "challenge_auto_match": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "surprises_enabled": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    }
+  },
+  "guardrails_not_configurable": [
+    "public_leaderboards",
+    "streak_threats",
+    "loss_counters",
+    "paid_rewards",
+    "notification_hard_cap_3",
+    "child_requires_alert_guardian",
+    "ai_disclosure",
+    "chat_visibility_disclosure",
+    "evidence_formulas",
+    "forbidden_reward_triggers",
+    "data_export_and_deletion",
+    "manual_support_level_raise",
+    "challenge_fairness_matching",
+    "surprise_caps"
+  ],
+  "guardian_temporary_support": {
+    "allowed_direction": "down_only",
+    "levels": 1,
+    "duration_days": 7,
+    "requires_permission": "manage_settings"
+  },
+  "real_rewards": {
+    "max_active_per_player": 10,
+    "allowed_triggers": {
+      "gate2_shown_count": {
+        "params": {
+          "capability_id": "capability",
+          "count": {
+            "min": 2,
+            "max": 20
+          }
+        }
+      },
+      "training_level_reached": {
+        "params": {
+          "capability_id": "capability",
+          "level": [
+            "guided_real",
+            "independent_real",
+            "transfer",
+            "mastered"
+          ]
+        }
+      },
+      "transfer_reports": {
+        "params": {
+          "count": {
+            "min": 1,
+            "max": 10
+          },
+          "min_distinct_contexts": {
+            "min": 1,
+            "max": 4
+          }
+        }
+      },
+      "achievement_earned": {
+        "params": {
+          "achievement_code": "achievement"
+        }
+      },
+      "goal_completed": {
+        "params": {
+          "goal_id": "goal"
+        }
+      },
+      "surprise": {
+        "params": {}
+      }
+    },
+    "forbidden_triggers": [
+      "missions_completed_count",
+      "xp_balance",
+      "xp_spend",
+      "streak_days",
+      "time_in_app"
+    ],
+    "no_retroactive_evaluation": true,
+    "stage_guidance_from_stage": 3,
+    "creation_hint_key": "reward_tie_to_skill_not_task",
+    "creator_permission": "add_rewards",
+    "adult_self_rewards": true
+  },
+  "custom_achievements": {
+    "creator_permission": "add_rewards",
+    "max_active_per_player": 10,
+    "allowed_triggers_from": "real_rewards.allowed_triggers",
+    "exclude_triggers": [
+      "surprise"
+    ]
+  },
+  "adaptation": {
+    "run_every_days": 7,
+    "lookback_days": 14,
+    "max_suggestions_per_run": 2,
+    "reject_cooldown_days": 30,
+    "expire_after_days": 14,
+    "approver_permission": "approve_suggestions",
+    "allowed_types": {
+      "move_mission_time": {
+        "setting_key": "available_windows"
+      },
+      "change_focus_capabilities": {
+        "setting_key": "focus_capabilities"
+      },
+      "change_daily_count": {
+        "setting_key": "daily_mission_count"
+      },
+      "try_mechanic": {
+        "setting_key": null,
+        "engine_hint_days": 7
+      },
+      "request_more_support": {
+        "setting_key": null,
+        "action": "guardian_temporary_support"
+      },
+      "real_mission_idea": {
+        "setting_key": null,
+        "audience": "guardian_only"
+      }
+    }
+  },
+  "personal_context": {
+    "fields": [
+      "interests",
+      "routine",
+      "free_windows",
+      "contexts"
+    ],
+    "max_items_per_field": 10,
+    "forbidden_content": [
+      "health",
+      "non_family_person_names",
+      "precise_locations"
+    ],
+    "suggestions_require_user_confirmation": true
+  },
+  "strategy_memory": {
+    "show_in_planning_up_to_support_level": "L1_hint",
+    "min_uses_to_show": 2,
+    "min_shown_rate_to_show": 0.5
+  },
+  "template_metrics": {
+    "min_missions_to_evaluate": 30,
+    "flag_if_shown_rate_below": 0.15,
+    "flag_if_abandon_rate_above": 0.5,
+    "recompute_every_days": 1
+  }
+}

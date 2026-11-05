@@ -1,0 +1,17 @@
+{
+  "_note": "صيغ ملاحظة المربي المحددة (GUARD-3): كل نوع يرتبط بقدرة وتقييم (positive/mixed/needs_support) تُحوَّل إلى قيمة من config/scoring.json. مسودة تحتاج مراجعة تربوية.",
+  "types": {
+    "started_without_reminder":   { "label": "بدأ دون تذكير",                    "capability": "autonomy",        "valence": "positive" },
+    "needed_repeated_reminders":  { "label": "احتاج تذكيرًا متكررًا",             "capability": "autonomy",        "valence": "needs_support" },
+    "planned_before_start":       { "label": "خطط قبل أن يبدأ",                   "capability": "planning",        "valence": "positive" },
+    "returned_after_break":       { "label": "عاد بعد انقطاع وأكمل",              "capability": "perseverance",    "valence": "positive" },
+    "gave_up_at_first_obstacle":  { "label": "توقف عند أول عقبة",                 "capability": "perseverance",    "valence": "needs_support" },
+    "ignored_distraction":        { "label": "تجاهل مشتتًا وواصل",                "capability": "attention",       "valence": "positive" },
+    "lost_to_distraction":        { "label": "انجرف مع مشتت",                     "capability": "attention",       "valence": "needs_support" },
+    "waited_for_better_outcome":  { "label": "انتظر نتيجة أفضل بدل الفورية",      "capability": "self_control",    "valence": "positive" },
+    "named_his_feelings":         { "label": "وصف ما يشعر به أو ما يشتته",         "capability": "self_awareness",  "valence": "positive" },
+    "explained_why":              { "label": "عرف لماذا يريد فعل الشيء",           "capability": "motive_awareness","valence": "positive" },
+    "weighed_options":            { "label": "وازن بين خيارات قبل القرار",         "capability": "thinking",        "valence": "positive" },
+    "mixed_day":                  { "label": "يوم متذبذب: نجح أحيانًا وتعثر أحيانًا", "capability": "perseverance",  "valence": "mixed" }
+  }
+}

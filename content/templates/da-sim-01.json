@@ -1,0 +1,93 @@
+{
+  "id": "da-sim-01",
+  "mechanic": "decide_alone",
+  "training_level": "simulated",
+  "difficulty": 1,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "autonomy": 0.7,
+    "thinking": 0.3
+  },
+  "title": {
+    "child": "قرار بدون سؤال أحد",
+    "teen": "قرار دون انتظار توجيه",
+    "adult": "قرار مستقل في ظل نقص المعلومات"
+  },
+  "situation": {
+    "child": "أنت وحدك في البيت لمدة ساعة، وأنهيت واجبك. أمامك ثلاثة خيارات لما تفعله، ولا أحد تسأله. اختر، واكتب في جملة لماذا اخترته.",
+    "teen": "معلمك غائب وترك ورقة عمل غامضة قليلًا. لا أحد تسأله الآن. قرر كيف ستبدأ، واكتب سبب قرارك في جملة.",
+    "adult": "وصلتك مهمة بتعليمات ناقصة ولا يمكنك سؤال أحد لساعات. قرر مدخلًا معقولًا وابدأ، مع كتابة افتراضك في جملة."
+  },
+  "variable_defaults": {},
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أحدد ما أعرفه وما لا أعرفه، ثم أختار أفضل خيار معقول",
+      "fit": 0.9,
+      "outcome_hint": "الوضوح حول المجهول يجعل القرار محسوبًا."
+    },
+    {
+      "id": "s2",
+      "text": "أنتظر حتى يعود أحد لأسأله",
+      "fit": -0.6,
+      "outcome_hint": "الانتظار يعني أن القرار ليس لك."
+    },
+    {
+      "id": "s3",
+      "text": "أختار أول شيء يخطر ببالي",
+      "fit": 0.0,
+      "outcome_hint": "سريع لكنه بلا سبب يمكن التعلم منه."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما الذي جعل القرار صعبًا؟",
+    "لو كان أحد موجودًا، هل كنت ستسأله؟ لماذا؟",
+    "متى تنتظر توجيه الآخرين بينما يمكنك أن تقرر؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب الخيارات الثلاثة ثم اشطب الأسوأ.",
+      "سؤال مساعد: ماذا سيكون أثر كل خيار بعد ساعة؟"
+    ],
+    "L1_hint": [
+      "اختر، ثم اكتب لماذا."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "autonomy",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "thinking",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 3,
+  "max_duration": 8,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

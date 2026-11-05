@@ -1,0 +1,102 @@
+{
+  "id": "pa-sim-01",
+  "mechanic": "plan_ahead",
+  "training_level": "simulated",
+  "difficulty": 1,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "planning": 0.7,
+    "self_awareness": 0.3
+  },
+  "title": {
+    "child": "خطة صباح الغد",
+    "teen": "خطة صباح الغد",
+    "adult": "خطة لموقف قادم"
+  },
+  "situation": {
+    "child": "غدًا صباحًا عليك أن تستيقظ، تلبس، تفطر، وتجهّز حقيبتك خلال {{time_budget}} دقيقة. اكتب خطة بالترتيب مع الوقت لكل خطوة.",
+    "teen": "غدًا صباحًا لديك {{time_budget}} دقيقة من الاستيقاظ إلى الخروج. اكتب خطة بالترتيب والوقت، وحدد أين يضيع الوقت عادة.",
+    "adult": "موقف قادم غدًا ({{context}}) بوقت محدود ({{time_budget}} دقيقة). اكتب خطة بالخطوات والأزمنة، وحدد نقطة الخطر التي تنهار عندها الخطط عادة."
+  },
+  "variable_defaults": {
+    "time_budget": 40,
+    "context": {
+      "adult": "صباح يوم عمل أو اجتماع"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أبدأ من وقت الخروج وأرجع للخلف",
+      "fit": 0.9,
+      "outcome_hint": "الحساب العكسي يكشف ضيق الوقت مبكرًا."
+    },
+    {
+      "id": "s2",
+      "text": "أكتب الخطوات بلا أوقات",
+      "fit": 0.2,
+      "outcome_hint": "بلا أوقات لا تعرف أين ستضيق."
+    },
+    {
+      "id": "s3",
+      "text": "سأتصرف غدًا حسب الظروف",
+      "fit": -0.5,
+      "outcome_hint": "الظروف غدًا هي الصباح نفسه الذي تكرر."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "أين يضيع وقتك عادة في هذا الموقف؟",
+    "ما الخطوة التي أعطيتها وقتًا أكثر من المعتاد؟ لماذا؟",
+    "متى ستكتب خطتك المرة القادمة: الليلة أم الصباح؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب وقت الخروج أولًا.",
+      "أعطِ كل خطوة رقم دقائق."
+    ],
+    "L1_hint": [
+      "أين تتأخر عادة؟ أعطها هامشًا."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "planning",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "checklist",
+  "checklist": [
+    "كتبت الخطوات بالترتيب",
+    "وضعت وقتًا لكل خطوة",
+    "حددت نقطة الخطر"
+  ],
+  "min_duration": 3,
+  "max_duration": 8,
+  "distraction_config": null,
+  "version": 1,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

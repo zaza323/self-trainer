@@ -1,0 +1,100 @@
+{
+  "id": "da-real-01",
+  "mechanic": "decide_alone",
+  "training_level": "guided_real",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "autonomy": 0.6,
+    "thinking": 0.2,
+    "motive_awareness": 0.2
+  },
+  "title": {
+    "child": "قرار اليوم بنفسي",
+    "teen": "قرار يومي بلا استئذان",
+    "adult": "قرار يومي دون تأكيد خارجي"
+  },
+  "situation": {
+    "child": "اليوم، قرر شيئًا واحدًا بنفسك دون أن تسأل أحدًا ({{context}}). نفّذه، ثم أخبرنا ماذا قررت ولماذا.",
+    "teen": "اتخذ اليوم قرارًا واحدًا كنت ستسأل عنه عادة ({{context}}) ونفّذه. سجّل القرار وسببه قبل التنفيذ.",
+    "adult": "قرار واحد اليوم كنت ستطلب تأكيده عادة ({{context}}). قرر، نفّذ، ثم راجع: هل كان طلب التأكيد ضروريًا فعلًا؟"
+  },
+  "variable_defaults": {
+    "context": {
+      "child": "ماذا تفعل أولًا بعد المدرسة",
+      "teen": "ترتيب وقتك أو مشروعك",
+      "adult": "أسلوب تنفيذ مهمة أو ترتيب يومك"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أقرر بسرعة معقولة ثم أراجع النتيجة لاحقًا",
+      "fit": 0.8,
+      "outcome_hint": "المراجعة بعد القرار تبني الثقة دون شلل."
+    },
+    {
+      "id": "s2",
+      "text": "أفكر طويلًا في كل الاحتمالات قبل أن أقرر",
+      "fit": 0.1,
+      "outcome_hint": "التفكير الطويل في قرار صغير يستنزف."
+    },
+    {
+      "id": "s3",
+      "text": "أقرر ما أظن أن الآخرين يريدونه",
+      "fit": -0.3,
+      "outcome_hint": "هذا قرار الآخرين بصوتك."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما القرار الذي اتخذته وحدك؟",
+    "كيف شعرت لحظة القرار؟ وبعد التنفيذ؟",
+    "ما الذي يمكنك أن تقرره وحدك غدًا؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اختر قرارًا صغيرًا لا يضر لو أخطأت.",
+      "اكتب: قررت كذا لأن كذا."
+    ],
+    "L1_hint": [
+      "راجع القرار في المساء بسطر واحد."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "autonomy",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "motive_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      },
+      "rule_weight": 0.5
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 5,
+  "max_duration": 30,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

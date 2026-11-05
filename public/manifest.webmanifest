@@ -1,0 +1,11 @@
+{
+  "name": "منظومة التدرب على إدارة الذات",
+  "short_name": "إدارة الذات",
+  "start_url": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#fbfaf7",
+  "theme_color": "#2f7a62",
+  "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

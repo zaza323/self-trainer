@@ -1,0 +1,114 @@
+{
+  "config_version": "2026-11-05.1",
+  "source_weights": {
+    "auto": 1.0,
+    "guardian": 0.9,
+    "ai": 0.6,
+    "self": 0.4,
+    "companion": 0.3
+  },
+  "support_multipliers": {
+    "L0_instruct": 0.6,
+    "L1_hint": 0.8,
+    "L2_ask": 1.0,
+    "L3_free": 1.0
+  },
+  "value_defaults": {
+    "distraction_choice_map": {
+      "ignore": 1.0,
+      "break_return": 0.6,
+      "give_in": -0.4
+    },
+    "prediction_tolerance": 1.0,
+    "hint_count_map": {
+      "0": 1.0,
+      "1": 0.3,
+      "2+": -0.3
+    },
+    "recovery": {
+      "resumed_completed": 1.0,
+      "resumed_abandoned_reflected": 0.3
+    },
+    "transfer_report": {
+      "worked": 1.0,
+      "not_worked": -0.3
+    },
+    "guardian_observation": {
+      "positive": 0.8,
+      "mixed": 0.2,
+      "needs_support": -0.5
+    }
+  },
+  "global_rules": {
+    "G1_recovery": {
+      "capability": "perseverance",
+      "rule_weight": 1.0
+    },
+    "G2_help_needed": {
+      "capability": "autonomy",
+      "rule_weight": 0.5,
+      "min_support_level": "L1_hint"
+    },
+    "G3_novel_context": {
+      "capability": "primary",
+      "rule_weight": 1.0,
+      "exclude_training_levels": [
+        "simulated"
+      ]
+    },
+    "G4_reflection_quality": {
+      "rule_weight": 1.0,
+      "max_candidates": 3,
+      "extra_allowed_capabilities": [
+        "self_awareness",
+        "thinking"
+      ]
+    }
+  },
+  "capability_score": {
+    "half_life_days": 21,
+    "shrinkage_k": 2.0,
+    "confidence_mass_scale": 4.0,
+    "context_min_weight": 0.3,
+    "contexts_for_full_confidence": 3
+  },
+  "display": {
+    "confidence_bands": {
+      "unknown_below": 0.35,
+      "tentative_below": 0.65
+    },
+    "score_bands": {
+      "needs_support_below": 35,
+      "growing_below": 65
+    },
+    "decline": {
+      "min_drop_points": 10,
+      "lookback_days": 14,
+      "min_confidence": 0.35
+    }
+  },
+  "gate2": {
+    "shown_min_score": 0.5,
+    "partial_min_score": 0.0,
+    "shown_min_events": 2,
+    "shown_requires_sources": [
+      "auto",
+      "guardian"
+    ]
+  },
+  "engine": {
+    "easy_success": {
+      "gate1": true,
+      "gate2": "shown",
+      "max_hints": 0
+    },
+    "struggle": {
+      "any_of": [
+        "abandoned",
+        "gate2_not_yet"
+      ]
+    },
+    "difficulty_up_after": 2,
+    "difficulty_down_after": 2
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "id": "rs-real-01",
+  "mechanic": "resume",
+  "training_level": "guided_real",
+  "difficulty": 3,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "perseverance": 0.6,
+    "planning": 0.2,
+    "self_awareness": 0.2
+  },
+  "title": {
+    "child": "مهمة على جلستين",
+    "teen": "مهمة على جلستين",
+    "adult": "مهمة مقسومة على جلستين"
+  },
+  "situation": {
+    "child": "اختر مهمة تحتاج أكثر من جلسة ({{context}}). اعمل {{time_budget}} دقيقة، توقف عمدًا، ثم ارجع لاحقًا اليوم وأكمل.",
+    "teen": "مهمة تحتاج جلستين ({{context}}). الجلسة الأولى {{time_budget}} دقيقة، ثم توقف عمدًا، وعُد لاحقًا اليوم. سجّل ما جعل العودة ممكنة.",
+    "adult": "مهمة على جلستين ({{context}}): {{time_budget}} دقيقة، توقف مخطط، عودة لاحقًا اليوم. لاحظ ما الذي يسهّل الاستئناف وما الذي يعرقله."
+  },
+  "variable_defaults": {
+    "time_budget": 20,
+    "context": {
+      "child": "مشروع مدرسي أو ترتيب",
+      "teen": "مراجعة أو مشروع",
+      "adult": "تقرير أو عمل يدوي"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أنهي الجلسة الأولى بتحديد الخطوة التالية بوضوح",
+      "fit": 0.9,
+      "outcome_hint": "الخطوة التالية المحددة هي جسر العودة."
+    },
+    {
+      "id": "s2",
+      "text": "أترك كل شيء مفتوحًا كما هو",
+      "fit": 0.2,
+      "outcome_hint": "قد يساعد بصريًا، لكنه لا يذكّر بالخطوة التالية."
+    },
+    {
+      "id": "s3",
+      "text": "أعتمد على الحماس لأعود",
+      "fit": -0.4,
+      "outcome_hint": "الحماس لا يُعتمد عليه بعد انقطاع."
+    }
+  ],
+  "prediction_prompt": "كم دقيقة ستحتاج في الجلسة الثانية؟",
+  "reflection_prompts": [
+    "هل عدت فعلًا؟ ما الذي جعل العودة ممكنة أو صعبة؟",
+    "كم استغرقت الدقيقة الأولى بعد العودة لتدخل في المهمة؟",
+    "كيف ستغلق جلستك القادمة؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "حدد موعد العودة بالساعة قبل أن تتوقف.",
+      "اكتب الخطوة التالية على ورقة واضحة."
+    ],
+    "L1_hint": [
+      "اجعل أول فعل بعد العودة سهلًا جدًا."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "perseverance",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 30,
+  "max_duration": 90,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

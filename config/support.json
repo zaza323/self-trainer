@@ -1,0 +1,51 @@
+{
+  "config_version": "2026-11-05.1",
+  "levels": ["L0_instruct", "L1_hint", "L2_ask", "L3_free"],
+  "initial_by_age_mode": {
+    "child": "L0_instruct",
+    "teen": "L1_hint",
+    "adult": "L1_hint"
+  },
+  "evaluate_when_capability_weight_at_least": 0.5,
+  "promote": {
+    "window_missions": 5,
+    "min_gate2_shown": 3,
+    "max_total_hints": 1,
+    "max_abandoned": 0,
+    "min_confidence": 0.35,
+    "min_missions_since_last_change": 3
+  },
+  "demote": {
+    "window_missions": 3,
+    "min_struggles": 2,
+    "struggle_states": ["gate2_not_yet", "abandoned"],
+    "min_missions_since_last_change": 2
+  },
+  "training_levels": {
+    "order": ["simulated", "guided_real", "independent_real", "transfer"],
+    "advance": {
+      "simulated_to_guided_real":        { "min_shown": 3, "min_confidence": 0.35 },
+      "guided_real_to_independent_real": { "min_shown": 3, "min_support_level": "L2_ask" },
+      "independent_real_to_transfer":    { "min_shown": 2, "min_worked_transfer_reports": 1 },
+      "transfer_to_mastered": {
+        "min_worked_transfer_reports": 2,
+        "min_distinct_contexts": 2,
+        "min_score": 65,
+        "min_confidence": 0.65,
+        "required_support_level": "L3_free"
+      }
+    },
+    "auto_downgrade": false,
+    "warmup_lower_level_per_week": 1
+  },
+  "mastery_check": {
+    "interval_days": 21,
+    "jitter_days": 7,
+    "requires_novel_context": true,
+    "on_fail": {
+      "set_training_level": "independent_real",
+      "support_level_delta": -1,
+      "support_level_floor": "L2_ask"
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "id": "dr-real-01",
+  "mechanic": "delay_reward",
+  "training_level": "guided_real",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "self_control": 0.6,
+    "motive_awareness": 0.2,
+    "autonomy": 0.2
+  },
+  "title": {
+    "child": "المتعة بعد المهمة",
+    "teen": "المتعة بعد المهمة",
+    "adult": "الشيء الممتع بعد الشيء المهم"
+  },
+  "situation": {
+    "child": "هناك شيء تحبه الآن ({{context}}). المهمة: أنهِ أولًا شيئًا صغيرًا عليك فعله ({{time_budget}} دقيقة تقريبًا)، ثم استمتع بما تحب.",
+    "teen": "حدّد شيئًا ممتعًا تريده الآن ({{context}})، وشيئًا صغيرًا مطلوبًا منك. المهمة: المطلوب أولًا خلال {{time_budget}} دقيقة، ثم الممتع. كيف ستضمن ألا تبدأ بالممتع؟",
+    "adult": "اختر شيئًا ممتعًا تميل إليه الآن ({{context}}) ومهمة صغيرة مؤجلة. نفّذ المهمة أولًا ({{time_budget}} دقيقة) ثم الممتع. انتبه للحظة التي تحاول فيها قلب الترتيب."
+  },
+  "variable_defaults": {
+    "time_budget": 15,
+    "context": {
+      "child": "لعبة أو فيديو",
+      "teen": "هاتفك أو لعبة",
+      "adult": "تصفّح الهاتف أو مسلسل"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أبعد الشيء الممتع عن نظري حتى أنتهي",
+      "fit": 0.8,
+      "outcome_hint": "إبعاد المغري يقلل الحاجة إلى مقاومته."
+    },
+    {
+      "id": "s2",
+      "text": "أبدأ بالممتع (قليلًا فقط) ثم المهمة",
+      "fit": -0.6,
+      "outcome_hint": "(قليلًا فقط) غالبًا يمتد ويأكل وقت المهمة."
+    },
+    {
+      "id": "s3",
+      "text": "أحدد وقت انتهاء المهمة وأكتبه",
+      "fit": 0.6,
+      "outcome_hint": "الحد الواضح يجعل التأجيل محتملًا."
+    }
+  ],
+  "prediction_prompt": "كم دقيقة ستستغرق المهمة المطلوبة؟",
+  "reflection_prompts": [
+    "هل بدأت بالمطلوب فعلًا؟ ما الذي حدث في البداية؟",
+    "ما الذي ساعدك على التأجيل، أو ما الذي جعله يفشل؟",
+    "كيف شعرت بالممتع بعد أن أنهيت المهمة؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب المهمة الصغيرة في سطر واحد قبل البدء.",
+      "ضع الهاتف في غرفة أخرى."
+    ],
+    "L1_hint": [
+      "ذكّر نفسك: الممتع ينتظر ولا يختفي."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "self_control",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "motive_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    }
+  ],
+  "completion_check": "self_report",
+  "min_duration": 10,
+  "max_duration": 30,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

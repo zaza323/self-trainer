@@ -1,0 +1,103 @@
+{
+  "id": "rs-sim-01",
+  "mechanic": "resume",
+  "training_level": "simulated",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "perseverance": 0.6,
+    "attention": 0.4
+  },
+  "title": {
+    "child": "توقف ثم ارجع",
+    "teen": "العودة بعد التوقف",
+    "adult": "استئناف بعد مقاطعة مجدولة"
+  },
+  "situation": {
+    "child": "ستعمل على شيء بسيط ({{context}}) لمدة {{time_budget}} دقائق. في المنتصف سنوقفك قليلًا عن قصد. التحدي: أن ترجع وتكمل.",
+    "teen": "{{time_budget}} دقائق على {{context}}. سيُقاطعك التطبيق في المنتصف لاستراحة قصيرة. التحدي الحقيقي هو الدقيقة الأولى بعد العودة.",
+    "adult": "{{time_budget}} دقائق على {{context}} مع مقاطعة مجدولة في المنتصف. راقب ما الذي يجعل الاستئناف سهلًا أو ثقيلًا."
+  },
+  "variable_defaults": {
+    "time_budget": 6,
+    "context": {
+      "child": "رسم أو كتابة",
+      "teen": "قراءة أو تمرين",
+      "adult": "كتابة أو قراءة"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "قبل التوقف أكتب سطرًا: أين وصلت وما التالي",
+      "fit": 0.9,
+      "outcome_hint": "السطر الواحد يلغي كلفة التذكر عند العودة."
+    },
+    {
+      "id": "s2",
+      "text": "أتوقف فجأة وأعتمد على ذاكرتي",
+      "fit": -0.2,
+      "outcome_hint": "الذاكرة تضيع أول دقائق العودة."
+    },
+    {
+      "id": "s3",
+      "text": "أترك المهمة في وضع يغريني بالعودة (جملة ناقصة مثلًا)",
+      "fit": 0.7,
+      "outcome_hint": "النهاية المفتوحة تجذبك للرجوع."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "كيف كانت الدقيقة الأولى بعد العودة؟",
+    "ما الذي فعلته قبل التوقف وساعدك (أو لم يساعدك)؟",
+    "متى تنقطع عن مهمة في يومك وكيف تعود؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب كلمة واحدة عن التالي قبل أن تتوقف.",
+      "عند العودة، اقرأ سطرك أولًا."
+    ],
+    "L1_hint": [
+      "ابدأ العودة بأصغر فعل ممكن."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "perseverance",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "attention",
+      "source": "auto",
+      "rule_weight": 0.5,
+      "value": {
+        "kind": "strategy_fit"
+      }
+    }
+  ],
+  "completion_check": "timer",
+  "min_duration": 6,
+  "max_duration": 6,
+  "distraction_config": {
+    "count": 1,
+    "kind": "forced_pause"
+  },
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

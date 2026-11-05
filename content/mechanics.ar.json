@@ -1,0 +1,13 @@
+{
+  "_note": "الميكانيكيات العشر الثابتة (4.3).",
+  "delay_reward":       { "name": "تأجيل المكافأة",       "primary_capability": "self_control" },
+  "resist_distraction": { "name": "مقاومة المشتت",        "primary_capability": "attention" },
+  "decompose":          { "name": "تقسيم المهمة",         "primary_capability": "planning" },
+  "prioritize":         { "name": "اختيار الأولوية",      "primary_capability": "thinking" },
+  "face_obstacle":      { "name": "مواجهة العقبة",        "primary_capability": "perseverance" },
+  "self_monitor":       { "name": "مراقبة الذات",         "primary_capability": "self_awareness" },
+  "resume":             { "name": "العودة للمهمة",        "primary_capability": "perseverance" },
+  "decide_alone":       { "name": "اتخاذ قرار مستقل",     "primary_capability": "autonomy" },
+  "review_outcome":     { "name": "مراجعة النتيجة",       "primary_capability": "thinking" },
+  "plan_ahead":         { "name": "التخطيط المسبق",       "primary_capability": "planning" }
+}

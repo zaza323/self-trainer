@@ -1,0 +1,104 @@
+{
+  "id": "ro-real-01",
+  "mechanic": "review_outcome",
+  "training_level": "guided_real",
+  "difficulty": 2,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "thinking": 0.5,
+    "self_awareness": 0.3,
+    "motive_awareness": 0.2
+  },
+  "title": {
+    "child": "مراجعة شيء فعلته أمس",
+    "teen": "مراجعة نتيجة من أمس",
+    "adult": "مراجعة نتيجة حقيقية"
+  },
+  "situation": {
+    "child": "فكّر في شيء فعلته أمس ونجح أو تعثر ({{context}}). اكتب: ماذا حدث؟ ما السبب المحدد؟ ماذا ستفعل مختلفًا؟",
+    "teen": "اختر نتيجة من أمس ({{context}}). اكتب ما حدث بالضبط، السبب المحدد (لا الحكم على نفسك)، والتغيير الواحد للمرة القادمة.",
+    "adult": "اختر نتيجة من أمس ({{context}}). سجّل الوقائع، السبب الجذري، والقرار الواحد القابل للتطبيق غدًا. تجنّب الأحكام الذاتية."
+  },
+  "variable_defaults": {
+    "context": {
+      "child": "واجب أو لعبة أو مهمة في البيت",
+      "teen": "دراسة أو رياضة أو موقف مع صديق",
+      "adult": "عمل أو عادة أو موقف شخصي"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أفصل الوقائع عن مشاعري قبل أن أحلل",
+      "fit": 0.8,
+      "outcome_hint": "الوقائع أولًا تمنع الحكم المتسرع."
+    },
+    {
+      "id": "s2",
+      "text": "أبدأ بالشعور وأحلل منه",
+      "fit": 0.1,
+      "outcome_hint": "الشعور مهم لكنه يلوّن السبب."
+    },
+    {
+      "id": "s3",
+      "text": "أقول (المرة القادمة سأجتهد أكثر)",
+      "fit": -0.5,
+      "outcome_hint": "الجهد العام ليس سببًا ولا خطة."
+    }
+  ],
+  "prediction_prompt": null,
+  "reflection_prompts": [
+    "ما الوقائع، بلا أحكام؟",
+    "ما السبب الذي يمكن تغييره؟",
+    "ما القرار الواحد لغد؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "اكتب ما حدث كأنك كاميرا.",
+      "ابحث عن أول لحظة تغيّر فيها الأمر."
+    ],
+    "L1_hint": [
+      "اجعل القرار قابلًا للملاحظة غدًا."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "thinking",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "strategy_fit",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      },
+      "rule_weight": 0.5
+    }
+  ],
+  "completion_check": "checklist",
+  "checklist": [
+    "كتبت الوقائع",
+    "كتبت السبب",
+    "كتبت القرار الواحد"
+  ],
+  "min_duration": 5,
+  "max_duration": 15,
+  "distraction_config": null,
+  "version": 1,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}

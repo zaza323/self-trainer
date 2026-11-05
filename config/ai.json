@@ -1,0 +1,34 @@
+{
+  "config_version": "2026-11-05.2",
+  "models": {
+    "main_env": "AI_MODEL_ID",
+    "light_env": "AI_MODEL_ID_LIGHT"
+  },
+  "functions": {
+    "goal_builder":        { "model": "main",  "max_output_tokens": 600,  "daily_calls_per_profile": 60, "streaming": false },
+    "mission_selector":    { "model": "light", "max_output_tokens": 400,  "daily_calls_per_profile": 10, "streaming": false },
+    "task_classifier":     { "model": "light", "max_output_tokens": 400,  "daily_calls_per_profile": 20, "streaming": false },
+    "reflection_coach":    { "model": "main",  "max_output_tokens": 500,  "daily_calls_per_profile": 40, "streaming": false },
+    "progress_narrator":   { "model": "light", "max_output_tokens": 300,  "daily_calls_per_profile": 10, "streaming": false },
+    "companion_chat":      { "model": "main",  "max_output_tokens": 500,  "daily_calls_per_profile": 80, "streaming": true },
+    "weekly_summary":      { "model": "light", "max_output_tokens": 600,  "daily_calls_per_profile": 2,  "streaming": false },
+    "strategy_normalizer": { "model": "light", "max_output_tokens": 50,   "daily_calls_per_profile": 20, "streaming": false },
+    "adaptation_advisor":  { "model": "main",  "max_output_tokens": 600,  "daily_calls_per_profile": 1,  "streaming": false },
+    "template_drafter":    { "model": "main",  "max_output_tokens": 3000, "daily_calls_global": 20,      "streaming": false }
+  },
+  "validation": {
+    "retries_on_invalid": 1,
+    "max_questions_per_reply": 1,
+    "reflection_max_turns": 4
+  },
+  "safety": {
+    "classify_inbound": true,
+    "classify_outbound": true,
+    "guardian_alert_max_seconds": 60
+  },
+  "prompt_caching": true,
+  "cost_monitoring": {
+    "daily_soft_alert_usd_per_profile": 0.25
+  },
+  "model_switch_requires": "all_golden_tests_pass"
+}

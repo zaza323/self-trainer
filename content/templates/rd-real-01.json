@@ -1,0 +1,117 @@
+{
+  "id": "rd-real-01",
+  "mechanic": "resist_distraction",
+  "training_level": "guided_real",
+  "difficulty": 3,
+  "age_modes": [
+    "child",
+    "teen",
+    "adult"
+  ],
+  "capability_weights": {
+    "attention": 0.6,
+    "self_control": 0.3,
+    "self_awareness": 0.1
+  },
+  "title": {
+    "child": "ربع ساعة بلا مقاطعة",
+    "teen": "جلسة تركيز حقيقية",
+    "adult": "جلسة عمل بلا مقاطعات"
+  },
+  "situation": {
+    "child": "اختر شيئًا تحتاج إنهاءه ({{context}}). اعمل عليه {{time_budget}} دقيقة. ضع الأشياء التي تشتتك بعيدًا، وإذا شتّتك شيء سجّله عندما تنتهي.",
+    "teen": "اختر مهمة واحدة ({{context}}) واعمل عليها {{time_budget}} دقيقة متواصلة. الهاتف ليس أمامك. عندما تشتّت، لاحظ ما الذي سحبك.",
+    "adult": "{{time_budget}} دقيقة عمل متواصل على {{context}} بلا إشعارات ولا تبويبات مفتوحة. سجّل كل مرة انجذبت فيها إلى شيء آخر وماذا فعلت."
+  },
+  "variable_defaults": {
+    "time_budget": 15,
+    "context": {
+      "child": "واجب أو ترتيب",
+      "teen": "دراسة أو مشروع",
+      "adult": "مهمة عمل أو دراسة"
+    }
+  },
+  "strategies": [
+    {
+      "id": "s1",
+      "text": "أغلق الإشعارات وأبعد الهاتف قبل البدء",
+      "fit": 0.9,
+      "outcome_hint": "معظم المشتتات تُحسم قبل أن تبدأ."
+    },
+    {
+      "id": "s2",
+      "text": "أترك الهاتف قريبًا لأرد بسرعة ثم أعود",
+      "fit": -0.5,
+      "outcome_hint": "كل رد يكلّف دقائق للعودة إلى التركيز."
+    },
+    {
+      "id": "s3",
+      "text": "أكتب ما يخطر لي على ورقة وأكمل",
+      "fit": 0.7,
+      "outcome_hint": "تفريغ الفكرة يمنعها من سحبك."
+    }
+  ],
+  "prediction_prompt": "كم مرة تتوقع أن تتشتت خلال الجلسة؟",
+  "reflection_prompts": [
+    "ما الذي شتّتك فعلًا؟ من الداخل أم من الخارج؟",
+    "عندما عدت للتركيز، كيف عدت؟",
+    "ما الذي ستغيّره في المرة القادمة قبل أن تبدأ؟"
+  ],
+  "hints_by_level": {
+    "L0_instruct": [
+      "ضع الهاتف في درج مغلق.",
+      "أغلق كل النوافذ غير المطلوبة."
+    ],
+    "L1_hint": [
+      "إذا جاءت فكرة، اكتبها ولا تتبعها."
+    ],
+    "L2_ask": [],
+    "L3_free": []
+  },
+  "evidence_rules": [
+    {
+      "id": "r1",
+      "type": "strategy_fit",
+      "capability_id": "attention",
+      "source": "auto",
+      "value": {
+        "kind": "strategy_fit"
+      }
+    },
+    {
+      "id": "r2",
+      "type": "prediction_accuracy",
+      "capability_id": "self_awareness",
+      "source": "auto",
+      "value": {
+        "kind": "prediction_error",
+        "tolerance": 1.0
+      }
+    },
+    {
+      "id": "r3",
+      "type": "distraction_response",
+      "capability_id": "self_control",
+      "source": "self",
+      "value": {
+        "kind": "choice_map",
+        "field": "distraction_log",
+        "aggregate": "mean",
+        "map": {
+          "ignore": 1.0,
+          "break_return": 0.6,
+          "give_in": -0.4
+        }
+      }
+    }
+  ],
+  "completion_check": "timer",
+  "min_duration": 15,
+  "max_duration": 25,
+  "distraction_config": null,
+  "version": 1,
+  "checklist": null,
+  "status": "active",
+  "origin": "human",
+  "_review": "مسودة تشغيلية كتبها الكود للمرحلة 1؛ تحتاج مراجعة تربوية (القسم 18) — انظر docs/VERIFY-LATER.md V1-1"
+}
