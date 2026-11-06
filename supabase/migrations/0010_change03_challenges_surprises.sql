@@ -117,7 +117,7 @@ $$;
 grant execute on function app.challenge_fairness_check(uuid, uuid) to authenticated;
 
 create or replace function app.random_invite_code() returns text language sql volatile as $$
-  select upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 6));
+  select upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6));
 $$;
 
 -- إنشاء تحدٍّ: المالك (teen/adult)، الإعداد مفعّل، الكثافة كافية؛ الصعوبة مثبتة من القالب؛ المنشئ أول مشارك.

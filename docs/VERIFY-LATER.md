@@ -110,3 +110,9 @@
 | V8-4 | حذف مستخدم auth يتم من الخادم بعد حذف الملف؛ في بيئة بلا service role يبقى مستخدم auth يتيمًا | محاكاة محلية | على Supabase فعلي: التأكد من حذف المستخدم من Authentication |
 | V8-5 | قرار مفتوح 6 (وضع البدء): `enabled_age_modes` في config يشمل الثلاثة؛ التوصية البدء بـ teen ثم adult | قرار الفريق | ضبط القائمة قبل الدفعة |
 | V8-6 | موارد الأمان ما زالت `verified: false` فالجاهزية تفشل بالتصميم حتى تتحقق جهة مختصة (V4-2) | القرار المفتوح 7 | تحديث `content/safety_resources.json` |
+
+## S1 — Findings from running against real Supabase (staging)
+
+- **pgcrypto lives in schema `extensions`** on Supabase, so `gen_random_bytes()` fails under `set search_path = public`. Migration 0010 now uses `gen_random_uuid()` for invite codes. `0001` still has `default encode(gen_random_bytes(6),'hex')` on `guardian_invites.code`; it worked on Supabase (resolved at DDL time) but is a pgcrypto dependency — consider switching to `gen_random_uuid()` as well.
+- **Default privileges**: Supabase grants `anon`/`authenticated` broad table privileges by default, so denial in several cases comes from RLS (0 rows) rather than `permission denied`. Consider explicit `revoke ... from anon` for defense in depth.
+- `tests/rls/*` need a direct Postgres connection; they run against local Postgres only. The phase0 assertions were ported to SQL for Supabase (74 checks, transactions rolled back).
