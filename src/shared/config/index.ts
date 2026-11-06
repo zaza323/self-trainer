@@ -287,7 +287,7 @@ const limitsSchema = z.object({
   }),
   notifications: z.object({
     hard_cap_per_day: z.number().int().positive(), tick_minutes: z.number().int().positive(), planner_lookahead_hours: z.number().int().positive(),
-    bypass_types: z.array(z.string()), types_in_cap: z.array(z.string()),
+    bypass_types: z.array(z.string()), types_in_cap: z.array(z.string()), user_set_types: z.array(z.string()),
     comeback_after_gap_days: z.number().int().positive(), comeback_repeat_days: z.number().int().positive(), mastery_check_lead_days: z.number().int().nonnegative(),
     retention_days: z.number().int().positive(), push_ttl_seconds: z.number().int().positive(), timer_notification_lead_seconds: z.number().int().nonnegative(),
   }),
@@ -319,8 +319,53 @@ const trialSchema = z.object({
   readiness: z.object({ required_env: z.array(z.string()), optional_env: z.array(z.string()), require_safety_resources_verified: z.boolean(), min_active_templates: z.number().int() }),
 });
 export const trial = trialSchema.parse(trialJson);
-/** المخطط (0.4 ب): الشكل الكامل يُتحقق منه في المرحلة 9؛ هنا يُتحقق من الإصدار فقط ليدخل في CONFIG_VERSION. */
-export const planner = z.object({ config_version: z.string() }).passthrough().parse(plannerJson) as { config_version: string } & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+/** المخطط «أدواتي» (0.4 الجزء ب). الأقسام التشغيلية للمرحلة 9 صارمة؛ أقسام المراحل 10–11 (ج–ط) تُقرأ بأشكالها كما هي وتُشدَّد عند بنائها. */
+export const PLANNER_TOOLS = ["quick_add", "subtasks", "checklist", "priority", "due_datetime", "recurrence", "views_basic", "reminders", "nlp_input",
+  "projects", "sections", "tags", "saved_filters", "calendar", "pomodoro", "focus_mode", "habits", "kanban", "time_blocking", "eisenhower", "stats"] as const;
+export type PlannerTool = (typeof PLANNER_TOOLS)[number];
+export const PLANNER_PRIORITIES = ["high", "medium", "low", "none"] as const;
+export type PlannerPriority = (typeof PLANNER_PRIORITIES)[number];
+export const RECURRENCE_KINDS = ["daily", "weekly", "weekdays", "every_n_days", "monthly_day"] as const;
+export type RecurrenceKind = (typeof RECURRENCE_KINDS)[number];
+const loose = z.object({}).passthrough();
+const plannerSchema = z.object({
+  config_version: z.string(),
+  tiers: z.object({
+    tools: z.object({ "0": z.array(z.enum(PLANNER_TOOLS)), "1": z.array(z.enum(PLANNER_TOOLS)), "2": z.array(z.enum(PLANNER_TOOLS)) }),
+    unlock: z.object({ "1": z.object({ min_avg_support: z.number(), or_min_incentive_stage: z.number().int() }), "2": z.object({ min_avg_support: z.number(), or_min_incentive_stage: z.number().int() }) }),
+    start_by_age_mode: byMode(z.number().int().min(0).max(2)),
+    never_lock_after_unlock: z.boolean(),
+  }),
+  tasks: z.object({
+    priorities: z.array(z.enum(PLANNER_PRIORITIES)),
+    subtask_max_depth: z.number().int().positive(),
+    checklist_max_items: z.number().int().positive(),
+    recurrence: z.object({ kinds: z.array(z.enum(RECURRENCE_KINDS)), recur_from: z.array(z.enum(["schedule", "completion"])), every_n_days_max: z.number().int().positive(), default_recur_from: z.object({ every_n_days: z.enum(["schedule", "completion"]), default: z.enum(["schedule", "completion"]) }).passthrough() }),
+    views: z.array(z.string()),
+    upcoming_days: z.number().int().positive(),
+    postpone_prompt_after: z.number().int().positive(),
+  }),
+  nlp: z.object({
+    deterministic_first: z.boolean(), ai_fallback_below_confidence: z.number().min(0).max(1), languages: z.array(z.string()),
+    tag_prefix: z.string().length(1), project_prefix: z.string().length(1), priority_prefix: z.string().length(1),
+    priority_tokens: z.object({ high: z.array(z.string()), medium: z.array(z.string()), low: z.array(z.string()) }),
+    default_ambiguous_hour_pm_until: z.number().int(), preview_required: z.boolean(),
+    voice: z.object({ engine: z.string(), lang: z.string(), server_stt: z.boolean() }),
+    period_hours: z.object({ morning: z.number().int(), noon: z.number().int(), afternoon: z.number().int(), evening: z.number().int(), night: z.number().int() }).passthrough(),
+  }),
+  reminders: z.object({
+    max_per_task: z.number().int().positive(), relative_presets_min: z.array(z.number().int().nonnegative()),
+    snooze_options: z.array(z.union([z.object({ minutes: z.number().int().positive() }), z.object({ tomorrow_at: z.string() })])),
+    user_reminders_exempt_from_daily_cap: z.boolean(), respect_quiet_hours_unless_important: z.boolean(), tick_lookahead_min: z.number().int().nonnegative(),
+    location: z.object({ priority: z.string(), mode: z.string(), store_location_history: z.literal(false), default_radius_m: z.number().int().positive() }),
+  }),
+  summaries: loose, focus: loose, habits: loose, ai: loose, evidence_bridge: loose,
+  permissions: z.object({ guardian_view: z.string(), guardian_add_task: z.string() }),
+  daily_moments: loose, followup: loose, rest: loose,
+  engagement: z.object({ budget: z.object({ low: byMode(z.number().int().nonnegative()) }).passthrough() }).passthrough(),
+  pace: loose, reality_mirror: loose,
+});
+export const planner = plannerSchema.parse(plannerJson);
 
 export type SettingKey = keyof typeof customizationJson.catalog;
 export const SETTING_KEYS = Object.keys(customization.catalog) as SettingKey[];

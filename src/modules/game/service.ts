@@ -88,7 +88,7 @@ export async function maybeSurprise(admin: Admin, mission: { id: string; profile
 }
 
 /** القدرات مع آخر ثقة (للمراحل والكثافة والمساحة). */
-async function capabilityView(admin: Admin, profileId: string) {
+export async function capabilityView(admin: Admin, profileId: string) {
   const [{ data: st }, { data: snaps }] = await Promise.all([
     admin.from("capability_states").select("capability_id, support_level, training_level, mastered").eq("profile_id", profileId),
     admin.from("capability_snapshots").select("capability_id, confidence, date").eq("profile_id", profileId).order("date", { ascending: false }),

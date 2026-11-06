@@ -38,6 +38,7 @@ export function urlForNotification(type: string, payload: Record<string, unknown
     case "settings_changed_by_guardian": return "/app/settings";
     case "safety_resources": return "/app/chat";
     case "adaptation_suggestion": return "/app/suggestions";
+    case "planner_reminder": return typeof payload.task_id === "string" ? `/app/planner/${payload.task_id}${typeof payload.reminder_id === "string" ? `?reminder=${payload.reminder_id}` : ""}` : "/app/planner";
     default: return "/app/notifications";
   }
 }

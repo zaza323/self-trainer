@@ -5,6 +5,7 @@ import { effective } from "@/modules/settings";
 import { decideDelivery, localParts, nextDailySlot, resolveMaxPerDay, type TimeRange } from "./plan";
 import { renderNotification, urlForNotification, containsForbidden, type Audience } from "./texts";
 import type { PushSender } from "./sender";
+import { firePlannerReminders } from "@/modules/planner/service";
 import capabilities from "@content/capabilities.ar.json";
 
 type Profile = { id: string; user_id: string; age_mode: AgeMode | null; timezone: string; display_name: string; kind: string };
@@ -91,9 +92,15 @@ export async function deliverDue(admin: SupabaseClient, sender: PushSender, now 
     if (!p) continue;
     const bypass = limits.notifications.bypass_types.includes(n.type) || n.payload.bypass_limits === true;
     const inCap = limits.notifications.types_in_cap.includes(n.type);
+    // 0.4 ب.5: تذكير ضبطه المستخدم بنفسه — خارج الحد اليومي؛ يحترم ساعات الهدوء إلا إذا وُسم «مهم»
+    const userSet = limits.notifications.user_set_types.includes(n.type);
     let decision: ReturnType<typeof decideDelivery> = { action: "send" };
     const key = `${n.profile_id}:${typeof n.payload.guardian_id === "string" ? n.payload.guardian_id : ""}`;
-    if (!bypass && inCap && p.age_mode) {
+    if (userSet && !bypass && p.age_mode && n.payload.important !== true) {
+      let s = settingsCache.get(p.id);
+      if (!s) { s = await playerSettings(admin, p.id, p.age_mode); settingsCache.set(p.id, s); }
+      decision = decideDelivery({ now, tz: p.timezone, bypass: false, sentTodayCount: 0, maxPerDay: Number.MAX_SAFE_INTEGER, hardCap: Number.MAX_SAFE_INTEGER, quiet: s.quiet, notificationTime: s.notificationTime });
+    } else if (!bypass && inCap && p.age_mode) {
       let s = settingsCache.get(p.id);
       if (!s) { s = await playerSettings(admin, p.id, p.age_mode); settingsCache.set(p.id, s); }
       if (!sentToday.has(key)) {
@@ -150,7 +157,8 @@ export async function tick(admin: SupabaseClient, sender: PushSender, now = new 
   const { data: profs } = await admin.from("profiles").select("id, user_id, age_mode, timezone, display_name, kind").eq("kind", "player");
   let planned = 0;
   for (const p of (profs ?? []) as Profile[]) planned += await planForProfile(admin, p, now);
+  const reminders = await firePlannerReminders(admin, now); // 0.4 ب.5
   const delivery = await deliverDue(admin, sender, now);
   const retention = await runRetention(admin, now);
-  return { planned, ...delivery, retention };
+  return { planned, reminders: reminders.fired, ...delivery, retention };
 }

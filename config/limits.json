@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.2",
+  "config_version": "2026-11-05.4",
   "_note": "حدود تقنية مذكورة في المواصفات خارج ملفات الإعدادات الخمسة (4.2، 5.1، ENGINE-1). تُزامن إلى config_meta.limits.",
   "goal_max_depth": 12,
   "onboarding_simulated_missions": 3,
@@ -67,6 +67,10 @@
     "mastery_check_lead_days": 1,
     "retention_days": 90,
     "push_ttl_seconds": 86400,
-    "timer_notification_lead_seconds": 0
+    "timer_notification_lead_seconds": 0,
+    "user_set_types": [
+      "planner_reminder"
+    ],
+    "_note_04": "user_set_types (0.4 ب.5): تذكيرات ضبطها المستخدم؛ خارج الحد اليومي، تحترم ساعات الهدوء إلا إذا وُسمت مهمة."
   }
 }

@@ -35,7 +35,8 @@
     "new_mission": "مهمة من حياتي",
     "notifications": "الإشعارات",
     "suggestions": "اقتراحات التكيّف",
-    "challenges": "التحديات"
+    "challenges": "التحديات",
+    "planner": "أدواتي"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -121,7 +122,8 @@
     "manage_guardians": "إدارة المربين",
     "add_rewards": "إضافة مكافآت",
     "manage_settings": "ضبط الإعدادات",
-    "approve_suggestions": "الموافقة على اقتراحات التكيّف"
+    "approve_suggestions": "الموافقة على اقتراحات التكيّف",
+    "view_planner": "رؤية المخطط «أدواتي»"
   },
   "relations": {
     "mother": "أم",

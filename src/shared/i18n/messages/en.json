@@ -1,5 +1,19 @@
 {
   "_note": "English dictionary stub: keys mirror ar.json; missing keys fall back to Arabic (9. i18n ready, Arabic first).",
-  "common": { "save": "Save", "cancel": "Cancel", "back": "Back", "continue": "Continue", "signout": "Sign out" },
-  "auth": { "login": "Log in", "signup": "Sign up", "email": "Email", "password": "Password" }
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "signout": "Sign out"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "email": "Email",
+    "password": "Password"
+  },
+  "nav": {
+    "planner": "My tools"
+  }
 }

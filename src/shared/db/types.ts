@@ -15,6 +15,7 @@ export type ProfileRow = {
   timezone: string;
   space_theme: string | null;
   incentive_stage: number;
+  planner_tier_max: number;
   game_intensity: number | null;
   game_intensity_override: number | null;
   avatar_stage_max: number;

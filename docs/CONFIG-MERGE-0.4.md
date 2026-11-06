@@ -19,3 +19,7 @@
 
 ## ملفات جديدة
 `config/planner.json` (يُتحقق منه بالكامل في الخطوة 2؛ الآن يُتحقق من `config_version` فقط ويدخل في `CONFIG_VERSION`).
+
+## إضافات محلية في الخطوة 2 (المرحلة 9)
+- `config/planner.json`: `nlp.period_hours` (ساعة كل كلمة فترة في المحلّل)، `tasks.recurrence.default_recur_from` («كل N أيام» من الإنجاز افتراضيًا كما في مثال ب.4)، `reminders.tick_lookahead_min`.
+- `config/limits.json`: `notifications.user_set_types = ["planner_reminder"]` (ب.5: تذكيرات المستخدم خارج الحد اليومي؛ تحترم الهدوء إلا «مهم»)، والإصدار `2026-11-05.4`.

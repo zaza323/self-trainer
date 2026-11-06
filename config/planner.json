@@ -68,7 +68,12 @@
         "schedule",
         "completion"
       ],
-      "every_n_days_max": 60
+      "every_n_days_max": 60,
+      "default_recur_from": {
+        "_note": "إضافة محلية: «كل N أيام» يتكرر من الإنجاز افتراضيًا (مثال ب.4)، والبقية من الجدول.",
+        "every_n_days": "completion",
+        "default": "schedule"
+      }
     },
     "views": [
       "today",
@@ -115,6 +120,14 @@
       "engine": "web_speech_api",
       "lang": "ar-JO",
       "server_stt": false
+    },
+    "period_hours": {
+      "_note": "إضافة محلية (المرحلة 9): ساعة افتراضية لكل كلمة فترة في المحلّل الحتمي.",
+      "morning": 9,
+      "noon": 12,
+      "afternoon": 16,
+      "evening": 19,
+      "night": 21
     }
   },
   "reminders": {
@@ -142,7 +155,8 @@
       "mode": "foreground_on_app_open",
       "store_location_history": false,
       "default_radius_m": 150
-    }
+    },
+    "tick_lookahead_min": 0
   },
   "summaries": {
     "morning": {
