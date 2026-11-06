@@ -45,7 +45,7 @@ describe("§2 نقاط التحدي", () => {
     expect(a.improvement_pts).toBe(Math.min(c.improvement_max, c.improvement_factor * 20));
     expect(b.improvement_pts).toBe(0);
     expect([a.rank, b.rank, cc.rank]).toEqual([1, 2, 2]);
-    expect(a.badges).toEqual(expect.arrayContaining(["most_improved", "most_persistent"]));
+    expect(a.badges).toEqual(expect.arrayContaining(["biggest_improvement", "most_persistent"]));
     expect(b.badges).toEqual(["most_persistent"]);
   });
 });

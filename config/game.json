@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.3",
+  "config_version": "2026-11-05.4",
   "incentive_stages": {
     "active_capability_min_confidence": 0.35,
     "advance": {
@@ -52,7 +52,9 @@
           1,
           2
         ]
-      }
+      },
+      "challenges": 30,
+      "surprises": 10
     },
     "never_hidden": [
       "progress_awareness_text"
@@ -71,7 +73,25 @@
       "transfer_report": 25,
       "transfer_guardian_confirmed": 10,
       "comeback": 10,
-      "mastery_check_pass": 20
+      "mastery_check_pass": 20,
+      "step_planned": 3,
+      "step_prediction": 2,
+      "step_resumed": 3,
+      "step_distraction_handled": 2,
+      "planner_estimate_kept": 3,
+      "planner_block_kept": 3,
+      "focus_session_done": 2,
+      "habit_checkin": 2,
+      "weekly_review_done": 15,
+      "daily_plan_set": 3,
+      "evening_review_done": 3,
+      "followup_checkin": 1,
+      "transition_started": 2,
+      "muhasaba_done": 5,
+      "increment_achieved": 10,
+      "habit_consolidated": 10,
+      "day_reconstructed": 3,
+      "mirror_reviewed": 10
     },
     "fading": {
       "gate1_zero_when": {
@@ -82,6 +102,23 @@
     },
     "daily_cap": 150,
     "level_formula": "cumulative_xp_for_level(n) = 50 * n * (n + 1)",
+    "step_rules": {
+      "max_distraction_steps_per_mission": 2,
+      "awarded_at": "reflected",
+      "zero_when_primary_support_level": "L3_free",
+      "zero_when_mastered": true
+    },
+    "planner_rules": {
+      "estimate_tolerance": 0.2,
+      "focus_sessions_max_per_day": 4,
+      "habit_checkins_max_per_day": 3,
+      "task_completion_count_xp": 0,
+      "fade_in_stage_4": false,
+      "followup_checkin_max_per_day": 5,
+      "followup_same_xp_any_answer": true,
+      "transition_started_max_per_day": 3,
+      "muhasaba_replaces_evening_review_xp_same_day": true
+    },
     "step_rewards": {
       "_note": "تعديل 0.3 §1: نقاط الخطوات تُمنح عند reflected ما دامت القدرة الأساسية قيد التدريب؛ source_id = mission_id (وmission_id:n لخطوات المشتت).",
       "step_planned": 3,
@@ -142,27 +179,46 @@
       "min_worked_transfer_reports": 3,
       "max_capability_drop_points": 10,
       "require_all_mastery_checks_passed": true
+    },
+    "first_full_week": {
+      "requires": [
+        "weekly_review_done",
+        "focus_session_on_days>=5"
+      ]
+    },
+    "habit_7_days": {
+      "days": 7,
+      "flex_days_count": true
+    },
+    "restful_week": {
+      "restorative_sessions_per_week": 5
+    },
+    "pace_rising": {
+      "consecutive_weeks": 3
     }
   },
   "challenges": {
-    "_note": "تعديل 0.3 §2: التحديات العادلة — قالب واحد، 7 أيام، نافذة بدء 48 ساعة، تكافؤ يفرضه الخادم.",
     "min_participants": 2,
     "max_participants": 6,
     "duration_days": 7,
-    "start_window_hours": 48,
-    "fairness": {
+    "join_window_hours": 48,
+    "matching": {
       "same_age_mode": true,
       "same_training_level": true,
-      "max_support_level_gap": 1,
+      "max_support_level_diff": 1,
       "fixed_difficulty": true
     },
-    "min_intensity": 30,
-    "auto_match_age_modes": [
-      "teen",
-      "adult"
-    ],
-    "child_requires_guardian_approval": true,
     "scoring": {
+      "attempt_points": 4,
+      "attempts_max_per_day": 2,
+      "attempts_max_total": 10,
+      "gate2_shown_points": 12,
+      "gate2_partial_points": 4,
+      "transfer_confirmed_points": 15,
+      "transfer_self_points": 7,
+      "transfers_max": 4,
+      "improvement_multiplier": 2,
+      "improvement_max": 30,
       "attempts_per_reflected": 4,
       "attempts_daily_cap": 2,
       "attempts_total_cap": 10,
@@ -171,13 +227,33 @@
       "transfer_confirmed": 15,
       "transfer_self": 7,
       "transfer_cap": 4,
-      "improvement_factor": 2,
-      "improvement_max": 30
+      "improvement_factor": 2
     },
-    "badges": {
-      "most_improved": "improvement_pts",
-      "most_persistent": "reflected_count"
+    "badges": [
+      "biggest_improvement",
+      "most_persistent"
+    ],
+    "ties": "shared_rank",
+    "loss_penalty": 0,
+    "visibility": "participants_only",
+    "child": {
+      "invite_only": true,
+      "requires_guardian_approval": true
     },
+    "auto_match_age_modes": [
+      "teen",
+      "adult"
+    ],
+    "_note": "تعديل 0.3 §2: التحديات العادلة — قالب واحد، 7 أيام، نافذة بدء 48 ساعة، تكافؤ يفرضه الخادم.",
+    "start_window_hours": 48,
+    "fairness": {
+      "same_age_mode": true,
+      "same_training_level": true,
+      "max_support_level_gap": 1,
+      "fixed_difficulty": true
+    },
+    "min_intensity": 30,
+    "child_requires_guardian_approval": true,
     "forbidden": [
       "public_leaderboard",
       "participant_chat",
@@ -187,13 +263,13 @@
     ]
   },
   "surprises": {
-    "_note": "تعديل 0.3 §3: مفاجأة مجانية بعد reflected باحتمال حسب المرحلة، بمولّد عشوائي حتمي ببذرة mission_id.",
     "probability_by_stage": {
       "1": 0.1,
       "2": 0.06,
       "3": 0.03,
       "4": 0.0
     },
+    "rng": "deterministic_seed_mission_id",
     "kinds": {
       "cosmetic": 0.5,
       "xp_bonus": 0.3,
@@ -203,6 +279,11 @@
       5,
       10
     ],
+    "max_per_day": 1,
+    "max_per_week": 3,
+    "paid": false,
+    "tied_to_streaks": false,
+    "_note": "تعديل 0.3 §3: مفاجأة مجانية بعد reflected باحتمال حسب المرحلة، بمولّد عشوائي حتمي ببذرة mission_id.",
     "daily_cap": 1,
     "weekly_cap": 3,
     "min_intensity": 10,

@@ -10,6 +10,7 @@ import customizationJson from "@config/customization.json";
 import aiJson from "@config/ai.json";
 import limitsJson from "@config/limits.json";
 import trialJson from "@config/trial.json";
+import plannerJson from "@config/planner.json";
 
 export const AGE_MODES = ["child", "teen", "adult"] as const;
 export type AgeMode = (typeof AGE_MODES)[number];
@@ -41,18 +42,32 @@ export type MechanicId = (typeof MECHANIC_IDS)[number];
 export const TRAINING_LEVELS = ["simulated", "guided_real", "independent_real", "transfer"] as const;
 export type TrainingLevel = (typeof TRAINING_LEVELS)[number];
 
+export const RESPONSE_MODES = ["quick_replies", "choices_plus_other", "free_text"] as const;
+export type ResponseMode = (typeof RESPONSE_MODES)[number];
+export const MOMENTS = ["confirm", "logistics", "feeling_check", "strategy_choice", "goal_why", "goal_what", "reflection_core", "reflection_secondary", "obstacle_naming", "priority_pick", "stuck", "free_chat"] as const;
+export type Moment = (typeof MOMENTS)[number];
+export const OPTION_SOURCES = ["user_words", "template", "ai"] as const;
+export type OptionSource = (typeof OPTION_SOURCES)[number];
+
 const byMode = <T extends z.ZodTypeAny>(v: T) => z.object({ child: v, teen: v, adult: v });
 
+const catalogExtras = { allowed_age_modes: z.array(z.enum(AGE_MODES)).optional(), max_by_age_mode: byMode(z.number()).optional(), semantics: z.string().optional() };
 const catalogEntrySchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("int"), min: z.number(), max: z.number(), default: byMode(z.number()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("int_or_null"), min: z.number(), max: z.number(), default: byMode(z.number().nullable()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("bool"), default: byMode(z.boolean()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("enum"), values: z.array(z.string()), default: byMode(z.string()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("enum_or_null"), values: z.array(z.union([z.string(), z.number()])), default: byMode(z.union([z.string(), z.number()]).nullable()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("capability_array"), max_items: z.number(), default: byMode(z.array(z.enum(CAPABILITY_IDS))), mission_override: z.boolean() }),
-  z.object({ type: z.literal("time_windows"), max_items: z.number(), default: byMode(z.array(z.unknown())), mission_override: z.boolean() }),
-  z.object({ type: z.literal("time_local"), default: byMode(z.string()), mission_override: z.boolean() }),
-  z.object({ type: z.literal("time_range"), default: byMode(z.tuple([z.string(), z.string()])), mission_override: z.boolean() }),
+  z.object({ type: z.literal("int"), min: z.number(), max: z.number(), default: byMode(z.number()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("int_or_null"), min: z.number(), max: z.number(), default: byMode(z.number().nullable()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("int_or_auto"), min: z.number(), max: z.number().optional(), default: byMode(z.union([z.number(), z.literal("auto")])), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("bool"), default: byMode(z.boolean()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("enum"), values: z.array(z.string()), default: byMode(z.string()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("enum_or_null"), values: z.array(z.union([z.string(), z.number()])), default: byMode(z.union([z.string(), z.number()]).nullable()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("enum_array"), values: z.array(z.string()), default: byMode(z.array(z.string())), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("capability_array"), max_items: z.number(), default: byMode(z.array(z.enum(CAPABILITY_IDS))), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("time_windows"), max_items: z.number(), default: byMode(z.array(z.unknown())), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("time_local"), default: byMode(z.string()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("time_local_or_null"), default: byMode(z.string().nullable()), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("time_range"), default: byMode(z.tuple([z.string(), z.string()])), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("moment_windows"), default: byMode(z.record(z.string(), z.tuple([z.string(), z.string()]))), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("list"), max_items: z.number(), item: z.record(z.string(), z.string()), default: byMode(z.array(z.unknown())), mission_override: z.boolean(), ...catalogExtras }),
+  z.object({ type: z.literal("category_list"), max_items: z.number(), unknown_required: z.boolean(), default: byMode(z.array(z.string())), mission_override: z.boolean(), ...catalogExtras }),
 ]);
 export type CatalogEntry = z.infer<typeof catalogEntrySchema>;
 
@@ -96,6 +111,8 @@ const customizationSchema = z.object({
   personal_context: z.object({ fields: z.array(z.enum(["interests", "routine", "free_windows", "contexts"])), max_items_per_field: z.number().int(), forbidden_content: z.array(z.string()), suggestions_require_user_confirmation: z.boolean() }),
   strategy_memory: z.object({ show_in_planning_up_to_support_level: z.enum(SUPPORT_LEVELS), min_uses_to_show: z.number().int().positive(), min_shown_rate_to_show: z.number().min(0).max(1) }),
   template_metrics: z.object({ min_missions_to_evaluate: z.number().int().positive(), flag_if_shown_rate_below: z.number().min(0).max(1), flag_if_abandon_rate_above: z.number().min(0).max(1), recompute_every_days: z.number().int().positive() }),
+  permissions_all: z.array(z.string()),
+  permission_defaults: z.record(z.string(), z.record(z.string(), z.boolean())),
 });
 
 const supportSchema = z.object({
@@ -205,7 +222,7 @@ const gameSchema = z.object({
     fairness: z.object({ same_age_mode: z.boolean(), same_training_level: z.boolean(), max_support_level_gap: z.number().int().nonnegative(), fixed_difficulty: z.boolean() }),
     min_intensity: z.number().int().nonnegative(), auto_match_age_modes: z.array(z.enum(AGE_MODES)), child_requires_guardian_approval: z.boolean(),
     scoring: z.object({ attempts_per_reflected: z.number(), attempts_daily_cap: z.number().int(), attempts_total_cap: z.number().int(), shown: z.number(), partial: z.number(), transfer_confirmed: z.number(), transfer_self: z.number(), transfer_cap: z.number().int(), improvement_factor: z.number(), improvement_max: z.number() }),
-    badges: z.record(z.string(), z.string()), forbidden: z.array(z.string()),
+    badges: z.array(z.string()), forbidden: z.array(z.string()),
   }),
   surprises: z.object({
     probability_by_stage: z.object({ "1": z.number(), "2": z.number(), "3": z.number(), "4": z.number() }),
@@ -220,12 +237,36 @@ const aiSchema = z.object({
   functions: z.object({
     goal_builder: aiFn, mission_selector: aiFn, task_classifier: aiFn, reflection_coach: aiFn, progress_narrator: aiFn,
     companion_chat: aiFn, weekly_summary: aiFn, strategy_normalizer: aiFn, adaptation_advisor: aiFn, template_drafter: aiFn,
+    task_parser: aiFn, task_breakdown: aiFn, day_planner: aiFn, weekly_review: aiFn, day_reconstructor: aiFn,
   }),
   validation: z.object({ retries_on_invalid: z.number().int().nonnegative(), max_questions_per_reply: z.number().int().positive(), reflection_max_turns: z.number().int().positive() }),
   safety: z.object({ classify_inbound: z.boolean(), classify_outbound: z.boolean(), guardian_alert_max_seconds: z.number() }),
   prompt_caching: z.boolean(),
   cost_monitoring: z.object({ daily_soft_alert_usd_per_profile: z.number() }),
   model_switch_requires: z.string(),
+  response_modes: z.object({
+    modes: z.array(z.enum(RESPONSE_MODES)),
+    moments: z.array(z.enum(MOMENTS)),
+    policy: z.record(z.enum(MOMENTS), z.object({
+      L0_L1: z.enum(RESPONSE_MODES), L2_L3: z.enum(RESPONSE_MODES), after_stuck: z.enum(RESPONSE_MODES).optional(),
+      never_choices: z.boolean().optional(), exempt_from_budget: z.boolean().optional(), child_override: z.enum(RESPONSE_MODES).optional(),
+      options_from: z.string().optional(), max_options: z.number().int().positive().optional(), optional_shortcuts_max: z.number().int().positive().optional(),
+    })),
+    moment_capability: z.record(z.string(), z.enum(CAPABILITY_IDS)),
+    stuck_triggers: z.object({ phrases: z.array(z.string()), hesitation_seconds: z.number().positive() }),
+    free_text_budget: z.object({
+      per_session: z.number().int().nonnegative(), reduced: z.number().int().nonnegative(),
+      reduced_when: z.object({ local_time_between: z.tuple([z.string(), z.string()]), comeback_session: z.boolean(), setting: z.string() }),
+      degrade_to: z.enum(RESPONSE_MODES),
+    }),
+    soft_min_words: z.object({ moments: z.array(z.enum(MOMENTS)), child: z.number().int().nonnegative(), teen: z.number().int().nonnegative(), adult: z.number().int().nonnegative(), follow_up_once: z.boolean() }),
+    options: z.object({
+      min: z.number().int().positive(), max: z.number().int().positive(), max_chars: z.number().int().positive(),
+      source_priority: z.array(z.enum(OPTION_SOURCES)), require_user_words_when_available: z.boolean(), other_button_added_by_ui: z.boolean(), fallback_file: z.string(),
+    }),
+    evidence: z.object({ reflection_quality_only_from: z.literal("free_text"), choice_answers_negative: z.boolean() }),
+    session_kinds_extra: z.array(z.string()),
+  }),
 });
 const limitsSchema = z.object({
   config_version: z.string(),
@@ -278,6 +319,8 @@ const trialSchema = z.object({
   readiness: z.object({ required_env: z.array(z.string()), optional_env: z.array(z.string()), require_safety_resources_verified: z.boolean(), min_active_templates: z.number().int() }),
 });
 export const trial = trialSchema.parse(trialJson);
+/** المخطط (0.4 ب): الشكل الكامل يُتحقق منه في المرحلة 9؛ هنا يُتحقق من الإصدار فقط ليدخل في CONFIG_VERSION. */
+export const planner = z.object({ config_version: z.string() }).passthrough().parse(plannerJson) as { config_version: string } & Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export type SettingKey = keyof typeof customizationJson.catalog;
 export const SETTING_KEYS = Object.keys(customization.catalog) as SettingKey[];
@@ -291,6 +334,7 @@ export const CONFIG_VERSION = [
   `ai:${ai.config_version}`,
   `limits:${limits.config_version}`,
   `trial:${trial.config_version}`,
+  `planner:${planner.config_version}`,
 ].join("|");
 
 export function catalogEntry(key: string): CatalogEntry | undefined {

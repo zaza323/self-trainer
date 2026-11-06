@@ -31,13 +31,20 @@ describe("شاشات المرافق", () => {
     expect(c).not.toContain("تدخّل");
   });
   it("P02: المسودة الحية قابلة للتعديل بكلمات المستخدم (AI-16)", () => {
-    const html = renderToString(<GoalDialog initial={{ sessionId: "s", turn: 1, source: "ai", history: [{ role: "assistant", content: "ولماذا هذا؟" }], output: { next_question: "ولماذا هذا؟", reflection_of_user_words: "x", thinking_move_named: "clarify_motive", phase: "climb_why", draft: { goals: [{ temp_id: "g1", parent_temp_id: null, title_user_words: "أنهي واجباتي قبل العشاء", why_user_words: null }], first_step_user_words: null }, needs_user_confirmation: false, safety: { flag: false, category: null, severity: null } } }} intro="لنبدأ" namingMove="حوّلت أمنية إلى خطوة." />);
+    const html = renderToString(<GoalDialog initial={{ sessionId: "s", turn: 1, source: "ai", history: [{ role: "assistant", content: "ولماذا هذا؟" }], output: { next_question: "ولماذا هذا؟", reflection_of_user_words: "x", thinking_move_named: "clarify_motive", phase: "climb_why", draft: { goals: [{ temp_id: "g1", parent_temp_id: null, title_user_words: "أنهي واجباتي قبل العشاء", why_user_words: null }], first_step_user_words: null }, needs_user_confirmation: false, safety: { flag: false, category: null, severity: null }, moment: "goal_why", response_mode: "free_text", options: [] } }} intro="لنبدأ" namingMove="حوّلت أمنية إلى خطوة." voiceLang="ar-JO" />);
     expect(html).toContain('value="أنهي واجباتي قبل العشاء"');
     expect(html).toContain("clarify_motive");
     expect(html).toContain("ولماذا هذا؟");
+    expect(html).not.toContain("غير ذلك"); // goal_why: كتابة فقط، لا خيارات
+  });
+  it("0.4 أ: choices_plus_other يعرض الخيارات وزر «غير ذلك» الذي تضيفه الواجهة", () => {
+    const html = renderToString(<ReflectionDialog missionId="00000000-0000-4000-8000-000000000009" gate1 voiceLang="ar-JO" initial={{ sessionId: "s", turn: 1, source: "ai", history: [{ role: "assistant", content: "ما الذي عطّلك؟" }], output: { next_question: "ما الذي عطّلك؟", done: false, reflection_summary_user_words: null, thinking_move_named: null, custom_strategy_fit: null, evidence_candidates: [], safety: { flag: false, category: null, severity: null }, moment: "reflection_secondary", response_mode: "choices_plus_other", options: [{ id: "o1", label: "تشتت", source: "template" }, { id: "o2", label: "تعب", source: "ai" }] } }} />);
+    expect(html).toContain("تشتت");
+    expect(html).toContain("غير ذلك");
+    expect(html).not.toContain("<textarea"); // الحقل يظهر بعد الضغط على «غير ذلك»
   });
   it("P09: حوار التأمل يعرض السؤال الواحد وزر المتابعة", () => {
-    const html = renderToString(<ReflectionDialog missionId="00000000-0000-4000-8000-000000000009" gate1 initial={{ sessionId: "s", turn: 1, source: "ai", history: [{ role: "assistant", content: "ما الذي ساعدك؟" }], output: { next_question: "ما الذي ساعدك؟", done: false, reflection_summary_user_words: null, thinking_move_named: null, custom_strategy_fit: null, evidence_candidates: [], safety: { flag: false, category: null, severity: null } } }} />);
+    const html = renderToString(<ReflectionDialog missionId="00000000-0000-4000-8000-000000000009" gate1 voiceLang="ar-JO" initial={{ sessionId: "s", turn: 1, source: "ai", history: [{ role: "assistant", content: "ما الذي ساعدك؟" }], output: { next_question: "ما الذي ساعدك؟", done: false, reflection_summary_user_words: null, thinking_move_named: null, custom_strategy_fit: null, evidence_candidates: [], safety: { flag: false, category: null, severity: null }, moment: "reflection_core", response_mode: "free_text", options: [] } }} />);
     expect(html).toContain("ما الذي ساعدك؟");
     expect(html).toContain("<textarea");
   });

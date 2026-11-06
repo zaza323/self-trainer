@@ -174,3 +174,32 @@ describe("canWriteSetting — من يعدّل ماذا (4.11.2)", () => {
     expect(canWriteSetting({ key: "space_theme", ageMode: "teen", actor: player, rows: [], lock: true }).allowed).toBe(false);
   });
 });
+
+describe("أنواع الكتالوج الجديدة (0.4)", () => {
+  it("int_or_auto: auto أو عدد ضمن الحدود", () => {
+    expect(validateValue("notification_max_per_day", "auto")).toEqual({ ok: true });
+    expect(validateValue("notification_max_per_day", 2)).toEqual({ ok: true });
+    expect(validateValue("notification_max_per_day", "many")).toMatchObject({ ok: false });
+    expect(validateValue("notification_max_per_day", 999)).toMatchObject({ ok: false, reason: "out_of_range" });
+    expect(resolveEffective({ key: "notification_max_per_day", ageMode: "teen", rows: [] }).value).toBe("auto");
+  });
+  it("time_local_or_null و enum_array و moment_windows و list و category_list", () => {
+    expect(validateValue("target_bedtime", null)).toEqual({ ok: true });
+    expect(validateValue("target_bedtime", "22:30")).toEqual({ ok: true });
+    expect(validateValue("target_bedtime", "10pm")).toMatchObject({ ok: false });
+    expect(validateValue("rest_activities_enabled", ["nap", "walk"])).toEqual({ ok: true });
+    expect(validateValue("rest_activities_enabled", ["nap", "nap"])).toMatchObject({ ok: false, reason: "duplicate_items" });
+    expect(validateValue("rest_activities_enabled", ["tv"])).toMatchObject({ ok: false });
+    expect(validateValue("moment_windows", { morning_plan: ["05:00", "11:00"] })).toEqual({ ok: true });
+    expect(validateValue("moment_windows", { morning_plan: ["05:00"] })).toMatchObject({ ok: false });
+    expect(validateValue("custom_rest_activities", [{ title: "تأمل", default_min: 10 }])).toEqual({ ok: true });
+    expect(validateValue("custom_rest_activities", [{ title: "", default_min: 10 }])).toMatchObject({ ok: false });
+    expect(validateValue("custom_rest_activities", [{ title: "ا", default_min: 0 }])).toMatchObject({ ok: false });
+    expect(validateValue("reconstruction_categories", ["sleep", "unknown"])).toEqual({ ok: true });
+    expect(validateValue("reconstruction_categories", ["sleep"])).toMatchObject({ ok: false, reason: "unknown_required" });
+  });
+  it("القراءة المتسامحة تقص القيم الفاسدة إلى الافتراضي", () => {
+    const eff = resolveEffective({ key: "rest_activities_enabled", ageMode: "child", rows: [{ key: "rest_activities_enabled", value: "bad", set_by_role: "player", set_by_user_id: null, locked: false, locked_by_user_id: null }] });
+    expect(eff.value).toEqual(customization.catalog.rest_activities_enabled!.default.child);
+  });
+});

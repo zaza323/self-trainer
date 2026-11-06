@@ -1,20 +1,100 @@
 {
-  "config_version": "2026-11-05.2",
+  "config_version": "2026-11-05.4",
   "models": {
     "main_env": "AI_MODEL_ID",
     "light_env": "AI_MODEL_ID_LIGHT"
   },
   "functions": {
-    "goal_builder":        { "model": "main",  "max_output_tokens": 600,  "daily_calls_per_profile": 60, "streaming": false },
-    "mission_selector":    { "model": "light", "max_output_tokens": 400,  "daily_calls_per_profile": 10, "streaming": false },
-    "task_classifier":     { "model": "light", "max_output_tokens": 400,  "daily_calls_per_profile": 20, "streaming": false },
-    "reflection_coach":    { "model": "main",  "max_output_tokens": 500,  "daily_calls_per_profile": 40, "streaming": false },
-    "progress_narrator":   { "model": "light", "max_output_tokens": 300,  "daily_calls_per_profile": 10, "streaming": false },
-    "companion_chat":      { "model": "main",  "max_output_tokens": 500,  "daily_calls_per_profile": 80, "streaming": true },
-    "weekly_summary":      { "model": "light", "max_output_tokens": 600,  "daily_calls_per_profile": 2,  "streaming": false },
-    "strategy_normalizer": { "model": "light", "max_output_tokens": 50,   "daily_calls_per_profile": 20, "streaming": false },
-    "adaptation_advisor":  { "model": "main",  "max_output_tokens": 600,  "daily_calls_per_profile": 1,  "streaming": false },
-    "template_drafter":    { "model": "main",  "max_output_tokens": 3000, "daily_calls_global": 20,      "streaming": false }
+    "goal_builder": {
+      "model": "main",
+      "max_output_tokens": 600,
+      "daily_calls_per_profile": 60,
+      "streaming": false
+    },
+    "mission_selector": {
+      "model": "light",
+      "max_output_tokens": 400,
+      "daily_calls_per_profile": 10,
+      "streaming": false
+    },
+    "task_classifier": {
+      "model": "light",
+      "max_output_tokens": 400,
+      "daily_calls_per_profile": 20,
+      "streaming": false
+    },
+    "reflection_coach": {
+      "model": "main",
+      "max_output_tokens": 500,
+      "daily_calls_per_profile": 40,
+      "streaming": false
+    },
+    "progress_narrator": {
+      "model": "light",
+      "max_output_tokens": 300,
+      "daily_calls_per_profile": 10,
+      "streaming": false
+    },
+    "companion_chat": {
+      "model": "main",
+      "max_output_tokens": 500,
+      "daily_calls_per_profile": 80,
+      "streaming": true
+    },
+    "weekly_summary": {
+      "model": "light",
+      "max_output_tokens": 600,
+      "daily_calls_per_profile": 2,
+      "streaming": false
+    },
+    "strategy_normalizer": {
+      "model": "light",
+      "max_output_tokens": 50,
+      "daily_calls_per_profile": 20,
+      "streaming": false
+    },
+    "adaptation_advisor": {
+      "model": "main",
+      "max_output_tokens": 600,
+      "daily_calls_per_profile": 1,
+      "streaming": false
+    },
+    "template_drafter": {
+      "model": "main",
+      "max_output_tokens": 3000,
+      "daily_calls_global": 20,
+      "streaming": false
+    },
+    "task_parser": {
+      "model": "light",
+      "max_output_tokens": 300,
+      "daily_calls_per_profile": 40,
+      "streaming": false
+    },
+    "task_breakdown": {
+      "model": "main",
+      "max_output_tokens": 500,
+      "daily_calls_per_profile": 15,
+      "streaming": false
+    },
+    "day_planner": {
+      "model": "main",
+      "max_output_tokens": 600,
+      "daily_calls_per_profile": 3,
+      "streaming": false
+    },
+    "weekly_review": {
+      "model": "main",
+      "max_output_tokens": 500,
+      "daily_calls_per_profile": 12,
+      "streaming": false
+    },
+    "day_reconstructor": {
+      "model": "light",
+      "max_output_tokens": 700,
+      "daily_calls_per_profile": 6,
+      "streaming": false
+    }
   },
   "validation": {
     "retries_on_invalid": 1,
@@ -30,5 +110,147 @@
   "cost_monitoring": {
     "daily_soft_alert_usd_per_profile": 0.25
   },
-  "model_switch_requires": "all_golden_tests_pass"
+  "model_switch_requires": "all_golden_tests_pass",
+  "response_modes": {
+    "modes": [
+      "quick_replies",
+      "choices_plus_other",
+      "free_text"
+    ],
+    "moments": [
+      "confirm",
+      "logistics",
+      "feeling_check",
+      "strategy_choice",
+      "goal_why",
+      "goal_what",
+      "reflection_core",
+      "reflection_secondary",
+      "obstacle_naming",
+      "priority_pick",
+      "stuck",
+      "free_chat"
+    ],
+    "policy": {
+      "confirm": {
+        "L0_L1": "quick_replies",
+        "L2_L3": "quick_replies"
+      },
+      "logistics": {
+        "L0_L1": "quick_replies",
+        "L2_L3": "quick_replies"
+      },
+      "feeling_check": {
+        "L0_L1": "quick_replies",
+        "L2_L3": "quick_replies"
+      },
+      "strategy_choice": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "free_text",
+        "after_stuck": "choices_plus_other"
+      },
+      "goal_why": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text",
+        "never_choices": true,
+        "exempt_from_budget": true
+      },
+      "goal_what": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text",
+        "after_stuck": "choices_plus_other",
+        "options_from": "user_words"
+      },
+      "reflection_core": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text"
+      },
+      "reflection_secondary": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "choices_plus_other"
+      },
+      "obstacle_naming": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text",
+        "child_override": "choices_plus_other"
+      },
+      "priority_pick": {
+        "L0_L1": "quick_replies",
+        "L2_L3": "choices_plus_other",
+        "options_from": "user_tasks"
+      },
+      "stuck": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "choices_plus_other",
+        "max_options": 3
+      },
+      "free_chat": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text",
+        "optional_shortcuts_max": 3
+      }
+    },
+    "moment_capability": {
+      "strategy_choice": "planning",
+      "priority_pick": "planning",
+      "reflection_core": "self_awareness",
+      "reflection_secondary": "self_awareness",
+      "obstacle_naming": "self_awareness",
+      "goal_why": "motive_awareness",
+      "goal_what": "motive_awareness"
+    },
+    "stuck_triggers": {
+      "phrases": [
+        "لا أعرف",
+        "ما بعرف",
+        "مش عارف",
+        "ما بعرف شو",
+        "I don't know"
+      ],
+      "hesitation_seconds": 45
+    },
+    "free_text_budget": {
+      "per_session": 2,
+      "reduced": 1,
+      "reduced_when": {
+        "local_time_between": [
+          "22:00",
+          "05:00"
+        ],
+        "comeback_session": true,
+        "setting": "companion_prefer_choices"
+      },
+      "degrade_to": "choices_plus_other"
+    },
+    "soft_min_words": {
+      "moments": [
+        "reflection_core",
+        "obstacle_naming"
+      ],
+      "child": 0,
+      "teen": 3,
+      "adult": 5,
+      "follow_up_once": true
+    },
+    "options": {
+      "min": 2,
+      "max": 4,
+      "max_chars": 40,
+      "source_priority": [
+        "user_words",
+        "template",
+        "ai"
+      ],
+      "require_user_words_when_available": true,
+      "other_button_added_by_ui": true,
+      "fallback_file": "content/fixed_options.ar.json"
+    },
+    "evidence": {
+      "reflection_quality_only_from": "free_text",
+      "choice_answers_negative": false
+    },
+    "session_kinds_extra": [
+      "mirror"
+    ]
+  }
 }

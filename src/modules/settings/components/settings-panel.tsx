@@ -36,6 +36,8 @@ function display(entry: CatalogEntry, value: unknown, enumLabels: Record<string,
   if (value === null || value === undefined) return t("common.none");
   switch (entry.type) {
     case "bool": return value ? t("common.yes") : t("common.no");
+    case "int_or_auto": return value === "auto" ? t("settings.auto") : String(value);
+    case "enum_array": return (value as string[]).length ? (value as string[]).map((v) => enumLabels[v] ?? v).join("، ") : t("common.none");
     case "enum": case "enum_or_null": return enumLabels[String(value)] ?? String(value);
     case "capability_array": return (value as string[]).length ? (value as string[]).map((c) => capNames[c] ?? c).join("، ") : t("common.none");
     case "time_windows": return (value as Array<{ from: string; to: string }>).length ? (value as Array<{ from: string; to: string }>).map((w) => `${w.from}–${w.to}`).join("، ") : t("common.none");
@@ -50,6 +52,24 @@ function ValueInput({ entry, current, enumLabels, capNames }: { entry: CatalogEn
       return <Input name="value" type="number" dir="ltr" min={entry.min} max={entry.max} step={1} defaultValue={typeof current === "number" ? current : ""} required className="max-w-32" />;
     case "int_or_null":
       return <Input name="value" type="number" dir="ltr" min={entry.min} max={entry.max} step={1} defaultValue={typeof current === "number" ? current : ""} placeholder={t("common.none")} className="max-w-32" />;
+    case "int_or_auto":
+      return <Input name="value" dir="ltr" defaultValue={current === "auto" || current === undefined ? "auto" : String(current)} placeholder="auto" className="max-w-32" aria-label={t("settings.auto")} />;
+    case "enum_array": {
+      const selected = new Set((current as string[]) ?? []);
+      return (
+        <div className="grid grid-cols-2 gap-1 text-sm">
+          {entry.values.map((v) => (
+            <label key={v} className="flex items-center gap-2 rounded-lg border p-2">
+              <input type="checkbox" name="value" value={v} defaultChecked={selected.has(v)} /> {enumLabels[v] ?? v}
+            </label>
+          ))}
+        </div>
+      );
+    }
+    case "time_local_or_null":
+      return <Input name="value" type="time" dir="ltr" defaultValue={typeof current === "string" ? current : ""} className="max-w-40" />;
+    case "moment_windows": case "list": case "category_list":
+      return <Input name="value" dir="ltr" defaultValue={JSON.stringify(current ?? null)} />;
     case "bool":
       return (
         <Select name="value" defaultValue={current ? "true" : "false"} className="max-w-32">

@@ -2,7 +2,8 @@
  * مخططات مخرجات وظائف الذكاء الاصطناعي (7.2، الملحق أ.1) — تُتحقق بـ Zod قبل أي حفظ.
  */
 import { z } from "zod";
-import { CAPABILITY_IDS, MECHANIC_IDS } from "@/shared/config";
+import { CAPABILITY_IDS, MECHANIC_IDS, MOMENTS, OPTION_SOURCES, RESPONSE_MODES, type Moment, type ResponseMode } from "@/shared/config";
+import type { ChoiceOption } from "./response-mode/options";
 
 export const thinkingMoveSchema = z.enum(["decompose", "clarify_motive", "concretize", "prioritize", "estimate_time", "anticipate_obstacle", "reframe"]);
 export const safetySchema = z.object({
@@ -12,7 +13,20 @@ export const safetySchema = z.object({
 });
 export type Safety = z.infer<typeof safetySchema>;
 
+/**
+ * أشكال الرد (0.4 أ.7): النموذج يقترح، والخادم يقرر الشكل النهائي من السياسة ويستبدل عند المخالفة.
+ * الحقول اختيارية في مخرج النموذج حتى تبقى المخرجات القديمة صالحة؛ النهائية تُنتجها enforceShape.
+ */
+export const optionRawSchema = z.object({ id: z.string().optional(), label: z.string(), source: z.enum(OPTION_SOURCES).optional() });
+export const shapeFields = {
+  moment: z.enum(MOMENTS).optional(),
+  response_mode: z.enum(RESPONSE_MODES).optional(),
+  options: z.array(optionRawSchema).optional(),
+};
+export type Shaped<T> = T & { moment: Moment; response_mode: ResponseMode; options: ChoiceOption[] };
+
 export const goalBuilderOutput = z.object({
+  ...shapeFields,
   next_question: z.string().nullable(),
   reflection_of_user_words: z.string(),
   thinking_move_named: thinkingMoveSchema.nullable(),
@@ -27,6 +41,7 @@ export const goalBuilderOutput = z.object({
 export type GoalBuilderOutput = z.infer<typeof goalBuilderOutput>;
 
 export const reflectionCoachOutput = z.object({
+  ...shapeFields,
   next_question: z.string().nullable(),
   done: z.boolean(),
   reflection_summary_user_words: z.string().nullable(),

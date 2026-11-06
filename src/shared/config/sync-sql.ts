@@ -41,14 +41,17 @@ export function buildConfigSyncSql(): string {
   for (const [key, entry] of Object.entries(customization.catalog)) {
     const e = entry as Record<string, unknown>;
     lines.push(
-      `insert into public.settings_catalog (key, type, min, max, allowed_values, max_items, defaults, mission_override, player_editable_in_child, config_version)
+      `insert into public.settings_catalog (key, type, min, max, allowed_values, max_items, defaults, mission_override, player_editable_in_child, config_version, item_spec, unknown_required, max_by_age_mode, allowed_age_modes)
        values (${lit(key)}, ${lit(entry.type)}, ${numOrNull(e.min)}, ${numOrNull(e.max)},
                ${"values" in entry ? jsonLit(entry.values) : "null"}, ${numOrNull(e.max_items)},
-               ${jsonLit(entry.default)}, ${entry.mission_override}, ${editable.has(key)}, ${lit(CONFIG_VERSION)})
+               ${jsonLit(entry.default)}, ${entry.mission_override}, ${editable.has(key)}, ${lit(CONFIG_VERSION)},
+               ${"item" in entry ? jsonLit(entry.item) : "null"}, ${"unknown_required" in entry ? String(entry.unknown_required) : "false"},
+               ${entry.max_by_age_mode ? jsonLit(entry.max_by_age_mode) : "null"}, ${entry.allowed_age_modes ? jsonLit(entry.allowed_age_modes) : "null"})
        on conflict (key) do update set type = excluded.type, min = excluded.min, max = excluded.max,
          allowed_values = excluded.allowed_values, max_items = excluded.max_items, defaults = excluded.defaults,
          mission_override = excluded.mission_override, player_editable_in_child = excluded.player_editable_in_child,
-         config_version = excluded.config_version;`,
+         config_version = excluded.config_version, item_spec = excluded.item_spec, unknown_required = excluded.unknown_required,
+         max_by_age_mode = excluded.max_by_age_mode, allowed_age_modes = excluded.allowed_age_modes;`,
     );
   }
   const keys = Object.keys(customization.catalog).map(lit).join(", ");

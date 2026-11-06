@@ -1,19 +1,25 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { goalDialogTurn, confirmGoalDraft, type GoalDialogState } from "../actions";
 import type { GoalBuilderOutput } from "../schemas";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@/shared/ui";
 import { t } from "@/shared/i18n";
+import { AnswerInput, type AnswerValue } from "./answer-input";
 
 /** P02 بالذكاء الاصطناعي (GOAL-2، AI-16): حوار سؤال واحد في كل مرة + مسودة حية يعدّلها المستخدم بيده في أي لحظة. */
-export function GoalDialog({ initial, intro, namingMove }: { initial: GoalDialogState; intro: string; namingMove: string }) {
+export function GoalDialog({ initial, intro, namingMove, voiceLang }: { initial: GoalDialogState; intro: string; namingMove: string; voiceLang: string }) {
   const [state, act, pending] = useActionState(goalDialogTurn, null);
   const [, confirmAct, confirming] = useActionState(confirmGoalDraft, null);
   const [dialog, setDialog] = useState<GoalDialogState>(initial);
   const [draft, setDraft] = useState<GoalBuilderOutput["draft"]>(initial.output.draft);
-  const [text, setText] = useState("");
-  useEffect(() => { if (state?.ok && state.data) { const d = state.data as GoalDialogState; setDialog(d); setDraft(d.output.draft); setText(""); } }, [state]);
+  useEffect(() => { if (state?.ok && state.data) { const d = state.data as GoalDialogState; setDialog(d); setDraft(d.output.draft); } }, [state]);
   const goals = draft.goals;
+  const submit = (v: AnswerValue) => {
+    const fd = new FormData();
+    fd.set("text", v.text); fd.set("input_method", v.input_method); fd.set("hesitation", String(v.hesitation));
+    if (v.option_id) fd.set("option_id", v.option_id);
+    startTransition(() => act(fd));
+  };
   const update = (i: number, patch: Partial<GoalBuilderOutput["draft"]["goals"][number]>) => setDraft((d) => ({ ...d, goals: d.goals.map((g, j) => (j === i ? { ...g, ...patch } : g)) }));
 
   return (
@@ -28,10 +34,7 @@ export function GoalDialog({ initial, intro, namingMove }: { initial: GoalDialog
           </div>
           {dialog.output.thinking_move_named && <Badge variant="secondary">حركة تفكير: {dialog.output.thinking_move_named}</Badge>}
           {!dialog.output.needs_user_confirmation && dialog.output.next_question && (
-            <form action={act} className="flex gap-2">
-              <Input name="text" value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} required aria-label="إجابتك" />
-              <Button type="submit" disabled={pending || !text.trim()}>{t("common.continue")}</Button>
-            </form>
+            <AnswerInput mode={dialog.output.response_mode} options={dialog.output.options} voiceLang={voiceLang} pending={pending} onSubmit={submit} submitLabel={t("common.continue")} />
           )}
           {state && !state.ok && <Alert variant="error">{t("common.error_generic")}</Alert>}
         </CardContent>

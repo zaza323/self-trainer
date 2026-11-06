@@ -116,3 +116,13 @@
 - **pgcrypto lives in schema `extensions`** on Supabase, so `gen_random_bytes()` fails under `set search_path = public`. Migration 0010 now uses `gen_random_uuid()` for invite codes. `0001` still has `default encode(gen_random_bytes(6),'hex')` on `guardian_invites.code`; it worked on Supabase (resolved at DDL time) but is a pgcrypto dependency — consider switching to `gen_random_uuid()` as well.
 - **Default privileges**: Supabase grants `anon`/`authenticated` broad table privileges by default, so denial in several cases comes from RLS (0 rows) rather than `permission denied`. Consider explicit `revoke ... from anon` for defense in depth.
 - `tests/rls/*` need a direct Postgres connection; they run against local Postgres only. The phase0 assertions were ported to SQL for Supabase (74 checks, transactions rolled back).
+
+
+## 0.4 — الخطوة 1 (الجزء أ: أشكال رد المرافق)
+- **توليد الخيارات بالنموذج الحقيقي**: التحقق والاستبدال مختبران بمستدعٍ وهمي؛ جودة صياغة `options` (قصيرة، من كلمات المستخدم أولًا) تحتاج `ai:verify` بمفتاح حقيقي (لم يُشغَّل).
+- **الصوت (Web Speech API `ar-JO`)**: الزر يظهر حيث يتوفر فقط؛ لم يُجرَّب في متصفح حقيقي (لا يعمل في Firefox/معظم متصفحات سطح المكتب بنفس الجودة). لا تحويل صوت من الخادم.
+- **التردد (>45 ثانية)**: يُقاس في العميل (من لحظة ظهور السؤال) ويُرسل مع الرد؛ لم يُختبر على جهاز حقيقي.
+- **`companion_chat` (free_chat)**: الرد مبثوث نصًا فلا يحمل `options`؛ اقتراحات الاختصار (حتى 3) غير مولَّدة بعد. `weekly_review` غير موجودة بعد (الجزء ب/ح).
+- **المحتوى المؤقت**: `content/fixed_options.ar.json`، `soft_min_followup` في `companion_messages.ar.json`، تسميات مفاتيح 0.4 في `settings_labels.ar.json` — كلها صياغة أولية تحتاج مراجعة.
+- **أنواع إعدادات بلا واجهة بعد**: `moment_windows` و`list` و`category_list` تُتحقق في الكتالوج والمشغّل لكنها مخفية من شاشة الإعدادات حتى تُبنى ميزاتها (المراحل 9–11).
+- **Supabase الحقيقي**: الهجرة 0012 لم تُطبَّق على أي مشروع Supabase (أمر المستخدم: محلي فقط).

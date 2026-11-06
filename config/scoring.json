@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.1",
+  "config_version": "2026-11-05.4",
   "source_weights": {
     "auto": 1.0,
     "guardian": 0.9,
@@ -110,5 +110,13 @@
     },
     "difficulty_up_after": 2,
     "difficulty_down_after": 2
+  },
+  "planner_evidence": {
+    "see": "config/planner.json#evidence_bridge",
+    "unique": [
+      "planner_task_id",
+      "capability_id",
+      "type"
+    ]
   }
 }

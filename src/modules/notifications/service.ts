@@ -1,8 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { limits, type AgeMode } from "@/shared/config";
+import { limits, planner, type AgeMode } from "@/shared/config";
 import { effective } from "@/modules/settings";
-import { decideDelivery, localParts, nextDailySlot, type TimeRange } from "./plan";
+import { decideDelivery, localParts, nextDailySlot, resolveMaxPerDay, type TimeRange } from "./plan";
 import { renderNotification, urlForNotification, containsForbidden, type Audience } from "./texts";
 import type { PushSender } from "./sender";
 import capabilities from "@content/capabilities.ar.json";
@@ -10,14 +10,14 @@ import capabilities from "@content/capabilities.ar.json";
 type Profile = { id: string; user_id: string; age_mode: AgeMode | null; timezone: string; display_name: string; kind: string };
 type NotifRow = { id: string; profile_id: string; type: string; scheduled_for: string; payload: Record<string, unknown>; deferred_count: number };
 
-async function playerSettings(db: SupabaseClient, profileId: string) {
+async function playerSettings(db: SupabaseClient, profileId: string, ageMode: AgeMode) {
   const [time, max, quiet, brk] = await Promise.all([
     effective<string>(db, profileId, "notification_time"),
-    effective<number>(db, profileId, "notification_max_per_day"),
+    effective<number | "auto">(db, profileId, "notification_max_per_day"),
     effective<TimeRange>(db, profileId, "quiet_hours"),
     effective<boolean>(db, profileId, "break_mode"),
   ]);
-  return { notificationTime: time.value, maxPerDay: Math.min(max.value, limits.notifications.hard_cap_per_day), quiet: quiet.value ?? null, breakMode: brk.value };
+  return { notificationTime: time.value, maxPerDay: resolveMaxPerDay(max.value, planner.engagement.budget.low[ageMode] as number, limits.notifications.hard_cap_per_day), quiet: quiet.value ?? null, breakMode: brk.value };
 }
 
 /**
@@ -26,7 +26,7 @@ async function playerSettings(db: SupabaseClient, profileId: string) {
  */
 export async function planForProfile(admin: SupabaseClient, p: Profile, now = new Date()): Promise<number> {
   if (p.kind !== "player" || !p.age_mode) return 0;
-  const s = await playerSettings(admin, p.id);
+  const s = await playerSettings(admin, p.id, p.age_mode);
   if (s.breakMode) return 0;
   const slot = nextDailySlot(now, p.timezone, s.notificationTime);
   if (slot.getTime() - now.getTime() > limits.notifications.planner_lookahead_hours * 3600000) return 0;
@@ -95,7 +95,7 @@ export async function deliverDue(admin: SupabaseClient, sender: PushSender, now 
     const key = `${n.profile_id}:${typeof n.payload.guardian_id === "string" ? n.payload.guardian_id : ""}`;
     if (!bypass && inCap && p.age_mode) {
       let s = settingsCache.get(p.id);
-      if (!s) { s = await playerSettings(admin, p.id); settingsCache.set(p.id, s); }
+      if (!s) { s = await playerSettings(admin, p.id, p.age_mode); settingsCache.set(p.id, s); }
       if (!sentToday.has(key)) {
         const lp = localParts(now, p.timezone);
         const dayStart = new Date(now.getTime() - lp.minutes * 60000).toISOString();

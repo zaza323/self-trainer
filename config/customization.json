@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.3",
+  "config_version": "2026-11-05.4",
   "resolution_order": [
     "mission_override",
     "player",
@@ -32,7 +32,10 @@
     "space_theme",
     "companion_dialect",
     "notification_time",
-    "break_mode"
+    "break_mode",
+    "companion_prefer_choices",
+    "pomodoro_focus_min",
+    "pomodoro_break_min"
   ],
   "catalog": {
     "daily_mission_count": {
@@ -76,15 +79,21 @@
       "mission_override": false
     },
     "notification_max_per_day": {
-      "type": "int",
+      "type": "int_or_auto",
       "min": 0,
-      "max": 3,
-      "default": {
-        "child": 1,
-        "teen": 1,
-        "adult": 1
+      "max_by_age_mode": {
+        "child": 3,
+        "teen": 6,
+        "adult": 6
       },
-      "mission_override": false
+      "semantics": "user_can_lower_only",
+      "default": {
+        "child": "auto",
+        "teen": "auto",
+        "adult": "auto"
+      },
+      "mission_override": false,
+      "max": 3
     },
     "quiet_hours": {
       "type": "time_range",
@@ -244,6 +253,10 @@
         "teen": false,
         "adult": false
       },
+      "allowed_age_modes": [
+        "teen",
+        "adult"
+      ],
       "mission_override": false
     },
     "surprises_enabled": {
@@ -254,6 +267,606 @@
         "adult": true
       },
       "mission_override": false
+    },
+    "companion_prefer_choices": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "planner_tier_override": {
+      "type": "int_or_null",
+      "min": 0,
+      "max": 2,
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "morning_summary_time": {
+      "type": "time_local_or_null",
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "evening_summary_time": {
+      "type": "time_local_or_null",
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "pomodoro_focus_min": {
+      "type": "int",
+      "min": 15,
+      "max": 50,
+      "default": {
+        "child": 20,
+        "teen": 25,
+        "adult": 25
+      },
+      "mission_override": false
+    },
+    "pomodoro_break_min": {
+      "type": "int",
+      "min": 3,
+      "max": 15,
+      "default": {
+        "child": 5,
+        "teen": 5,
+        "adult": 5
+      },
+      "mission_override": false
+    },
+    "habit_flex_days_per_week": {
+      "type": "int",
+      "min": 0,
+      "max": 2,
+      "default": {
+        "child": 1,
+        "teen": 1,
+        "adult": 1
+      },
+      "mission_override": false
+    },
+    "overdue_auto_reschedule": {
+      "type": "bool",
+      "allowed_age_modes": [
+        "adult"
+      ],
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "week_start_day": {
+      "type": "enum",
+      "values": [
+        "sat",
+        "sun",
+        "mon"
+      ],
+      "default": {
+        "child": "sat",
+        "teen": "sat",
+        "adult": "sat"
+      },
+      "mission_override": false
+    },
+    "ambiguous_hour_pm_until": {
+      "type": "int",
+      "min": 1,
+      "max": 11,
+      "default": {
+        "child": 7,
+        "teen": 7,
+        "adult": 7
+      },
+      "mission_override": false
+    },
+    "start_screen": {
+      "type": "enum",
+      "values": [
+        "companion",
+        "planner_today",
+        "missions_home",
+        "map"
+      ],
+      "default": {
+        "child": "companion",
+        "teen": "companion",
+        "adult": "companion"
+      },
+      "mission_override": false
+    },
+    "daily_moments_enabled": {
+      "type": "enum_array",
+      "values": [
+        "morning_plan",
+        "midday_check",
+        "evening_review",
+        "night_plan",
+        "muhasaba"
+      ],
+      "default": {
+        "child": [
+          "morning_plan",
+          "muhasaba"
+        ],
+        "teen": [
+          "morning_plan",
+          "muhasaba"
+        ],
+        "adult": [
+          "morning_plan",
+          "muhasaba"
+        ]
+      },
+      "mission_override": false
+    },
+    "moment_windows": {
+      "type": "moment_windows",
+      "default": {
+        "child": {
+          "morning_plan": [
+            "05:00",
+            "11:00"
+          ],
+          "midday_check": [
+            "12:00",
+            "15:00"
+          ],
+          "evening_review": [
+            "17:00",
+            "21:00"
+          ],
+          "night_plan": [
+            "21:00",
+            "quiet_hours_start"
+          ],
+          "muhasaba": [
+            "wind_down_start_or_21:00",
+            "quiet_hours_start"
+          ]
+        },
+        "teen": {
+          "morning_plan": [
+            "05:00",
+            "11:00"
+          ],
+          "midday_check": [
+            "12:00",
+            "15:00"
+          ],
+          "evening_review": [
+            "17:00",
+            "21:00"
+          ],
+          "night_plan": [
+            "21:00",
+            "quiet_hours_start"
+          ],
+          "muhasaba": [
+            "wind_down_start_or_21:00",
+            "quiet_hours_start"
+          ]
+        },
+        "adult": {
+          "morning_plan": [
+            "05:00",
+            "11:00"
+          ],
+          "midday_check": [
+            "12:00",
+            "15:00"
+          ],
+          "evening_review": [
+            "17:00",
+            "21:00"
+          ],
+          "night_plan": [
+            "21:00",
+            "quiet_hours_start"
+          ],
+          "muhasaba": [
+            "wind_down_start_or_21:00",
+            "quiet_hours_start"
+          ]
+        }
+      },
+      "mission_override": false
+    },
+    "daily_moments_push": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "deadline_lookahead_hours": {
+      "type": "int",
+      "min": 12,
+      "max": 72,
+      "default": {
+        "child": 24,
+        "teen": 48,
+        "adult": 48
+      },
+      "mission_override": false
+    },
+    "deadline_urgent_hours": {
+      "type": "int",
+      "min": 1,
+      "max": 24,
+      "default": {
+        "child": 4,
+        "teen": 6,
+        "adult": 6
+      },
+      "mission_override": false
+    },
+    "followup_enabled": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "followup_grace_minutes": {
+      "type": "int",
+      "min": 0,
+      "max": 60,
+      "default": {
+        "child": 15,
+        "teen": 15,
+        "adult": 15
+      },
+      "mission_override": false
+    },
+    "followup_lookback_hours": {
+      "type": "int",
+      "min": 2,
+      "max": 24,
+      "default": {
+        "child": 12,
+        "teen": 12,
+        "adult": 12
+      },
+      "mission_override": false
+    },
+    "followup_default_duration_min": {
+      "type": "int",
+      "min": 10,
+      "max": 120,
+      "default": {
+        "child": 30,
+        "teen": 30,
+        "adult": 30
+      },
+      "mission_override": false
+    },
+    "followup_push": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "free_gap_minutes": {
+      "type": "int",
+      "min": 20,
+      "max": 180,
+      "default": {
+        "child": 45,
+        "teen": 60,
+        "adult": 60
+      },
+      "mission_override": false
+    },
+    "transition_minutes": {
+      "type": "int",
+      "min": 5,
+      "max": 30,
+      "default": {
+        "child": 10,
+        "teen": 10,
+        "adult": 10
+      },
+      "mission_override": false
+    },
+    "upcoming_soon_minutes": {
+      "type": "int",
+      "min": 10,
+      "max": 120,
+      "default": {
+        "child": 30,
+        "teen": 30,
+        "adult": 30
+      },
+      "mission_override": false
+    },
+    "rest_activities_enabled": {
+      "type": "enum_array",
+      "values": [
+        "nap",
+        "quran_listen",
+        "story_read",
+        "breathing",
+        "walk",
+        "stretch",
+        "water_window",
+        "sleep_early"
+      ],
+      "default": {
+        "child": [
+          "quran_listen",
+          "story_read",
+          "breathing",
+          "walk",
+          "stretch",
+          "water_window",
+          "sleep_early"
+        ],
+        "teen": [
+          "nap",
+          "quran_listen",
+          "story_read",
+          "breathing",
+          "walk",
+          "stretch",
+          "water_window",
+          "sleep_early"
+        ],
+        "adult": [
+          "nap",
+          "quran_listen",
+          "story_read",
+          "breathing",
+          "walk",
+          "stretch",
+          "water_window",
+          "sleep_early"
+        ]
+      },
+      "mission_override": false
+    },
+    "custom_rest_activities": {
+      "type": "list",
+      "max_items": 10,
+      "item": {
+        "title": "string",
+        "default_min": "int"
+      },
+      "default": {
+        "child": [],
+        "teen": [],
+        "adult": []
+      },
+      "mission_override": false
+    },
+    "nap_suggestions_enabled": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "nap_window": {
+      "type": "time_range",
+      "default": {
+        "child": [
+          "13:00",
+          "15:30"
+        ],
+        "teen": [
+          "13:00",
+          "15:30"
+        ],
+        "adult": [
+          "13:00",
+          "15:30"
+        ]
+      },
+      "mission_override": false
+    },
+    "nap_default_min": {
+      "type": "int",
+      "min": 10,
+      "max": 30,
+      "default": {
+        "child": 20,
+        "teen": 20,
+        "adult": 20
+      },
+      "mission_override": false
+    },
+    "target_bedtime": {
+      "type": "time_local_or_null",
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "target_wake": {
+      "type": "time_local_or_null",
+      "default": {
+        "child": null,
+        "teen": null,
+        "adult": null
+      },
+      "mission_override": false
+    },
+    "wind_down_minutes": {
+      "type": "int",
+      "min": 15,
+      "max": 60,
+      "default": {
+        "child": 30,
+        "teen": 30,
+        "adult": 30
+      },
+      "mission_override": false
+    },
+    "learn_busy_windows": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "pace_stretch_percent": {
+      "type": "int",
+      "min": 5,
+      "max": 20,
+      "allowed_age_modes": [
+        "adult"
+      ],
+      "default": {
+        "child": 10,
+        "teen": 10,
+        "adult": 10
+      },
+      "mission_override": false
+    },
+    "max_active_increments": {
+      "type": "int",
+      "min": 1,
+      "max": 2,
+      "max_by_age_mode": {
+        "child": 1,
+        "teen": 1,
+        "adult": 2
+      },
+      "default": {
+        "child": 1,
+        "teen": 1,
+        "adult": 1
+      },
+      "mission_override": false
+    },
+    "increments_require_guardian": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
+    "onboarding_start_with": {
+      "type": "enum",
+      "values": [
+        "reality",
+        "goals"
+      ],
+      "default": {
+        "child": "goals",
+        "teen": "reality",
+        "adult": "reality"
+      },
+      "mission_override": false
+    },
+    "mirror_days_required": {
+      "type": "int",
+      "min": 1,
+      "max": 7,
+      "default": {
+        "child": 2,
+        "teen": 3,
+        "adult": 3
+      },
+      "mission_override": false
+    },
+    "mirror_monthly": {
+      "type": "bool",
+      "default": {
+        "child": false,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "mirror_gap_suggestions": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": true,
+        "adult": true
+      },
+      "mission_override": false
+    },
+    "reconstruction_categories": {
+      "type": "category_list",
+      "max_items": 20,
+      "unknown_required": true,
+      "default": {
+        "child": [
+          "sleep",
+          "school",
+          "study",
+          "prayer_worship",
+          "meals",
+          "family_friends",
+          "play_outside",
+          "exercise",
+          "phone_screens",
+          "home_chores",
+          "unknown"
+        ],
+        "teen": [
+          "sleep",
+          "study",
+          "work",
+          "prayer_worship",
+          "meals",
+          "commute",
+          "family_friends",
+          "exercise",
+          "restorative_rest",
+          "phone_screens",
+          "home_chores",
+          "unknown"
+        ],
+        "adult": [
+          "sleep",
+          "study",
+          "work",
+          "prayer_worship",
+          "meals",
+          "commute",
+          "family_friends",
+          "exercise",
+          "restorative_rest",
+          "phone_screens",
+          "home_chores",
+          "unknown"
+        ]
+      },
+      "mission_override": false
     }
   },
   "guardrails_not_configurable": [
@@ -261,7 +874,7 @@
     "streak_threats",
     "loss_counters",
     "paid_rewards",
-    "notification_hard_cap_3",
+    "notification_adaptive_ceiling",
     "child_requires_alert_guardian",
     "ai_disclosure",
     "chat_visibility_disclosure",
@@ -270,7 +883,13 @@
     "data_export_and_deletion",
     "manual_support_level_raise",
     "challenge_fairness_matching",
-    "surprise_caps"
+    "surprise_caps",
+    "muhasaba_ends_on_next_step",
+    "no_pace_comparison_with_others",
+    "mirror_no_negative_evidence_from_behavior",
+    "mirror_neutral_language",
+    "reconstruction_details_private",
+    "notification_hard_cap_3"
   ],
   "guardian_temporary_support": {
     "allowed_direction": "down_only",
@@ -325,6 +944,19 @@
       },
       "surprise": {
         "params": {}
+      },
+      "habit_consistency": {
+        "params": {
+          "habit_id": "habit",
+          "min_weekly_rate": {
+            "min": 0.5,
+            "max": 1.0
+          },
+          "weeks": {
+            "min": 1,
+            "max": 12
+          }
+        }
       }
     },
     "forbidden_triggers": [
@@ -404,5 +1036,24 @@
     "flag_if_shown_rate_below": 0.15,
     "flag_if_abandon_rate_above": 0.5,
     "recompute_every_days": 1
+  },
+  "permissions_all": [
+    "view_progress",
+    "view_chat",
+    "intervene_chat",
+    "add_missions",
+    "receive_alerts",
+    "manage_guardians",
+    "add_rewards",
+    "manage_settings",
+    "approve_suggestions",
+    "view_planner"
+  ],
+  "permission_defaults": {
+    "view_planner": {
+      "child_creator": true,
+      "teen": false,
+      "adult": false
+    }
   }
 }

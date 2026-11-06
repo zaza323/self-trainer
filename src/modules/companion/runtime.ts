@@ -23,6 +23,8 @@ export type RunArgs<S extends z.ZodTypeAny> = {
   schema: S;
   /** تحقق إضافي بعد Zod (قواعد الخادم)؛ يعيد رسالة الخطأ أو null */
   verify?: (data: z.infer<S>) => string | null;
+  /** بيانات إضافية تُسجَّل في ai_calls.meta للمخرج الصالح (مثل استبدال شكل الرد، 0.4 أ.7) */
+  meta?: (data: z.infer<S>) => Record<string, unknown> | null;
   now?: Date;
 };
 
@@ -73,7 +75,7 @@ export async function runFunction<S extends z.ZodTypeAny>(a: RunArgs<S>): Promis
     const parsed = a.schema.safeParse(json);
     const verifyError = parsed.success ? (a.verify?.(parsed.data) ?? null) : parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     const valid = parsed.success && !verifyError;
-    await a.db.from("ai_calls").insert({ profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, output: valid ? parsed.data : null, valid, attempt, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, error: valid ? null : (verifyError ?? "invalid_json") });
+    await a.db.from("ai_calls").insert({ profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, output: valid ? parsed.data : null, valid, attempt, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, error: valid ? null : (verifyError ?? "invalid_json"), meta: valid ? (a.meta?.(parsed.data) ?? null) : null });
     if (valid) return { ok: true, data: parsed.data, modelId };
     lastError = verifyError ?? "invalid_json";
     messages = [...messages, { role: "assistant", content: text.slice(0, 2000) || "{}" }, { role: "user", content: `المخرج السابق مرفوض (${lastError}). أعد الإخراج كـ JSON صالح يطابق المخطط حرفيًا، بسؤال واحد كحد أقصى.` }];

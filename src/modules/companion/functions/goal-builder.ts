@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ai, limits, type AgeMode } from "@/shared/config";
+import { ai, limits, type AgeMode, type Moment, type SupportLevel } from "@/shared/config";
 import type { ModelCaller } from "../model";
 import { runFunction } from "../runtime";
 import { personaSystem, FUNCTION_INSTRUCTIONS } from "../prompts";
-import { goalBuilderOutput, questionMarks, type GoalBuilderOutput } from "../schemas";
+import { goalBuilderOutput, questionMarks, type GoalBuilderOutput, type Shaped } from "../schemas";
+import { enforceShape, isStuckText, isStuckHesitation, type Shape, type RawOption } from "../response-mode";
 import fixedQuestions from "@content/fixed_questions.ar.json";
 
 export type GoalTurnInput = {
@@ -12,7 +13,38 @@ export type GoalTurnInput = {
   userMessage: string;
   draft: GoalBuilderOutput["draft"] | null;
   turn: number;
+  /** 0.4 أ: مستوى دعم قدرة اللحظة (الوعي بالدوافع) وميزانية الكتابة الحالية للجلسة */
+  support?: SupportLevel;
+  session?: { used: number; budget: number };
+  /** تردد المستخدم قبل الرد بالثواني (لـ stuck) */
+  hesitationSeconds?: number;
 };
+
+/** لحظة السؤال القادم من مرحلة الحوار (أ.2). */
+export function goalMoment(phase: GoalBuilderOutput["phase"]): Moment {
+  return phase === "climb_why" ? "goal_why" : phase === "confirm" || phase === "done" ? "confirm" : "goal_what";
+}
+
+const SHORT = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
+function userWordsOf(i: GoalTurnInput, out: GoalBuilderOutput): string[] {
+  const fromDraft = out.draft.goals.flatMap((g) => [g.title_user_words, g.why_user_words ?? ""]);
+  const fromHistory = i.history.filter((m) => m.role === "user").map((m) => m.content);
+  return SHORT([...fromDraft, ...fromHistory, i.userMessage]);
+}
+
+/** يفرض شكل الرد من السياسة على مخرج صالح (أ.3). goal_why لا يحمل خيارات أبدًا. */
+export function shapeGoalOutput(i: GoalTurnInput, out: GoalBuilderOutput): { output: Shaped<GoalBuilderOutput>; shape: Shape } {
+  const moment = goalMoment(out.phase);
+  const afterStuck = isStuckText(i.userMessage) || (i.hesitationSeconds !== undefined && isStuckHesitation(i.hesitationSeconds));
+  const shape = enforceShape({
+    moment, support: i.support ?? "L1_hint", ageMode: i.mode, afterStuck,
+    session: i.session ?? { used: 0, budget: ai.response_modes.free_text_budget.per_session },
+    model: { response_mode: out.response_mode, options: out.options as RawOption[] | undefined },
+    userWords: moment === "goal_what" && afterStuck ? userWordsOf(i, out) : [],
+  });
+  const final = out.next_question === null && !out.needs_user_confirmation ? { ...shape, response_mode: "free_text" as const, options: [], consumesBudget: false } : shape;
+  return { output: { ...out, moment: final.moment, response_mode: final.response_mode, options: final.options }, shape: final };
+}
 
 const PLAN_REQUEST = /(اعمل|اعملي|سوّ|سوي|اكتب|اكتبي|حط|ضع)\s*(لي|لى)?\s*(خطة|خطه|جدول)|خطط لي|plan for me/i;
 
@@ -51,14 +83,15 @@ export function fixedGoalTurn(mode: AgeMode, turn: number, draft: GoalBuilderOut
   return { next_question: null, reflection_of_user_words: userMessage, thinking_move_named: "concretize", phase: "confirm", draft: { goals, first_step_user_words: userMessage }, needs_user_confirmation: true, safety: { flag: false, category: null, severity: null } };
 }
 
-export async function goalBuilderTurn(i: GoalTurnInput): Promise<{ output: GoalBuilderOutput; source: "ai" | "fixed" }> {
+export async function goalBuilderTurn(i: GoalTurnInput): Promise<{ output: Shaped<GoalBuilderOutput>; source: "ai" | "fixed"; shape: Shape }> {
   const dynamic = `الدور رقم ${i.turn}. المسودة الحالية: ${JSON.stringify(i.draft ?? { goals: [], first_step_user_words: null })}`;
   const r = await runFunction({
     db: i.db, caller: i.caller, fn: "goal_builder", profileId: i.profileId,
     system: `${personaSystem(i.mode)}\n\n${FUNCTION_INSTRUCTIONS.goal_builder}`, dynamicSystem: dynamic,
     messages: [...i.history, { role: "user", content: i.userMessage }], schema: goalBuilderOutput,
     verify: (o) => verifyGoalOutput(o, i.userMessage),
+    meta: (o) => shapeGoalOutput(i, o).shape.replaced,
   });
-  if (r.ok) return { output: r.data, source: "ai" };
-  return { output: fixedGoalTurn(i.mode, i.turn, i.draft, i.userMessage), source: "fixed" };
+  if (r.ok) return { ...shapeGoalOutput(i, r.data), source: "ai" };
+  return { ...shapeGoalOutput(i, fixedGoalTurn(i.mode, i.turn, i.draft, i.userMessage)), source: "fixed" };
 }

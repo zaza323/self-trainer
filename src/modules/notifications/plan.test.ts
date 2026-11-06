@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { localParts, instantForLocal, inQuietHours, quietEnd, nextDailySlot, decideDelivery, addDays } from "./plan";
+import { localParts, instantForLocal, inQuietHours, quietEnd, nextDailySlot, decideDelivery, addDays, resolveMaxPerDay } from "./plan";
 import { limits } from "@/shared/config";
 
 const TZ = "Asia/Amman"; // UTC+3 دائمًا منذ 2022
@@ -62,5 +62,13 @@ describe("قرار التسليم (NOTIF-1، NOTIF-5)", () => {
   it("الحد الصلب 3 لا يُتجاوز حتى لو ضُبط أعلى؛ وصفر يُسقط", () => {
     expect(decideDelivery({ ...base, now: instantForLocal("2026-11-05", "17:05", TZ), maxPerDay: 10, sentTodayCount: limits.notifications.hard_cap_per_day })).toMatchObject({ action: "defer" });
     expect(decideDelivery({ ...base, now: instantForLocal("2026-11-05", "17:05", TZ), maxPerDay: 0 })).toEqual({ action: "drop", reason: "cap_zero" });
+  });
+});
+
+describe("resolveMaxPerDay (auto — 0.4)", () => {
+  it("auto يأخذ ميزانية التفاعل الدنيا، والرقم يُقص بالحد الصلب", () => {
+    expect(resolveMaxPerDay("auto", 1, 3)).toBe(1);
+    expect(resolveMaxPerDay(2, 1, 3)).toBe(2);
+    expect(resolveMaxPerDay(10, 1, 3)).toBe(3);
   });
 });

@@ -1,3 +1,4 @@
+import { planner } from "@/shared/config";
 import { notFound } from "next/navigation";
 import { getSession } from "@/modules/accounts";
 import { getGoals } from "@/modules/goals";
@@ -87,7 +88,7 @@ export default async function MissionPage({ params }: { params: Promise<{ id: st
       goalOptions={activeGoals}
       chain={<GoalChain goals={goals} goalId={mission.goal_id} />}
       celebration={celebration}
-      reflectionOverride={reflectionDialog ? <ReflectionDialog missionId={id} initial={reflectionDialog} gate1={Boolean(mission.gate1)} /> : undefined}
+      reflectionOverride={reflectionDialog ? <ReflectionDialog voiceLang={planner.nlp.voice.lang} missionId={id} initial={reflectionDialog} gate1={Boolean(mission.gate1)} /> : undefined}
       after={mission.status === "reflected" && template.training_level !== "simulated" ? <TransferForm missionId={id} capabilityId={primaryCapability(template)} /> : undefined}
       reflectionPromptsAbandon={promptsAbandon}
       workedBefore={workedBefore}

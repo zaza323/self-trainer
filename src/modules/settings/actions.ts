@@ -20,6 +20,12 @@ function parseFormValue(key: SettingKey, raw: FormDataEntryValue | null, rawList
   switch (entry.type) {
     case "int": return s === "" ? NaN : Number(s);
     case "int_or_null": return s === "" ? null : Number(s);
+    case "int_or_auto": return s === "auto" || s === "" ? "auto" : Number(s);
+    case "enum_array": return rawList.map(String).filter(Boolean);
+    case "time_local_or_null": return s === "" ? null : s;
+    case "moment_windows": case "list": case "category_list": {
+      try { return JSON.parse(s); } catch { return "invalid"; }
+    }
     case "bool": return s === "on" || s === "true";
     case "enum": return s;
     case "enum_or_null": return s === "" ? null : (entry.values.every((v) => typeof v === "number") ? Number(s) : s);

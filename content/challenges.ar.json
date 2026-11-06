@@ -24,7 +24,7 @@
     "you": "أنت", "ends": "ينتهي", "window": "الانضمام حتى", "invite_code": "رمز الدعوة", "leave": "انسحب", "left": "انسحبت بلا أي خصم.", "no_scores": "النقاط تُحسب بعد أول مهمة من قالب التحدي.",
     "ties_share_rank": "التعادل يتقاسم المرتبة.", "my_missions": "مهمتي من هذا القالب"
   },
-  "badges": { "most_improved": "أكبر تحسن", "most_persistent": "أكثر مثابرة" },
+  "badges": { "biggest_improvement": "أكبر تحسن", "most_persistent": "أكثر مثابرة" },
   "guardian": { "title": "تحديات الطفل", "pending": "طلبات تنتظر موافقتك", "approve": "وافق", "approved": "تمت الموافقة.", "none": "لا طلبات." },
   "finished_title": "انتهى التحدي",
   "template_label": "المهمة"

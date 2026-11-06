@@ -1,0 +1,899 @@
+{
+  "config_version": "2026-11-05.4",
+  "tiers": {
+    "tools": {
+      "0": [
+        "quick_add",
+        "subtasks",
+        "checklist",
+        "priority",
+        "due_datetime",
+        "recurrence",
+        "views_basic",
+        "reminders",
+        "nlp_input"
+      ],
+      "1": [
+        "projects",
+        "sections",
+        "tags",
+        "saved_filters",
+        "calendar",
+        "pomodoro",
+        "focus_mode",
+        "habits"
+      ],
+      "2": [
+        "kanban",
+        "time_blocking",
+        "eisenhower",
+        "stats"
+      ]
+    },
+    "unlock": {
+      "1": {
+        "min_avg_support": 1.0,
+        "or_min_incentive_stage": 2
+      },
+      "2": {
+        "min_avg_support": 2.0,
+        "or_min_incentive_stage": 3
+      }
+    },
+    "start_by_age_mode": {
+      "child": 0,
+      "teen": 1,
+      "adult": 2
+    },
+    "never_lock_after_unlock": true
+  },
+  "tasks": {
+    "priorities": [
+      "high",
+      "medium",
+      "low",
+      "none"
+    ],
+    "subtask_max_depth": 1,
+    "checklist_max_items": 30,
+    "recurrence": {
+      "kinds": [
+        "daily",
+        "weekly",
+        "weekdays",
+        "every_n_days",
+        "monthly_day"
+      ],
+      "recur_from": [
+        "schedule",
+        "completion"
+      ],
+      "every_n_days_max": 60
+    },
+    "views": [
+      "today",
+      "upcoming",
+      "overdue",
+      "done",
+      "list",
+      "kanban",
+      "calendar_day",
+      "calendar_week",
+      "calendar_month"
+    ],
+    "upcoming_days": 7,
+    "postpone_prompt_after": 3
+  },
+  "nlp": {
+    "deterministic_first": true,
+    "ai_fallback_below_confidence": 0.7,
+    "languages": [
+      "ar-fusha",
+      "ar-levantine",
+      "en"
+    ],
+    "tag_prefix": "#",
+    "project_prefix": "/",
+    "priority_prefix": "!",
+    "priority_tokens": {
+      "high": [
+        "عالية",
+        "1"
+      ],
+      "medium": [
+        "متوسطة",
+        "2"
+      ],
+      "low": [
+        "منخفضة",
+        "3"
+      ]
+    },
+    "default_ambiguous_hour_pm_until": 7,
+    "preview_required": true,
+    "voice": {
+      "engine": "web_speech_api",
+      "lang": "ar-JO",
+      "server_stt": false
+    }
+  },
+  "reminders": {
+    "max_per_task": 5,
+    "relative_presets_min": [
+      10,
+      60,
+      1440
+    ],
+    "snooze_options": [
+      {
+        "minutes": 5
+      },
+      {
+        "minutes": 60
+      },
+      {
+        "tomorrow_at": "09:00"
+      }
+    ],
+    "user_reminders_exempt_from_daily_cap": true,
+    "respect_quiet_hours_unless_important": true,
+    "location": {
+      "priority": "C",
+      "mode": "foreground_on_app_open",
+      "store_location_history": false,
+      "default_radius_m": 150
+    }
+  },
+  "summaries": {
+    "morning": {
+      "includes": [
+        "today",
+        "overdue"
+      ],
+      "counts_toward_app_cap": true
+    },
+    "evening": {
+      "includes": [
+        "done",
+        "overdue"
+      ],
+      "counts_toward_app_cap": true
+    },
+    "channels": [
+      "push",
+      "inbox",
+      "email"
+    ]
+  },
+  "focus": {
+    "pomodoro_long_break_min": 15,
+    "long_break_after_sessions": 4,
+    "focus_mode_hides_other_ui": true
+  },
+  "habits": {
+    "primary_metric": "weekly_completion_rate",
+    "show_best_streak": true,
+    "notify_on_break": false,
+    "loss_counter": false,
+    "schedule_time_optional": {
+      "fields": [
+        "time_local",
+        "duration_min"
+      ]
+    }
+  },
+  "ai": {
+    "capability_for_support_level": "planning",
+    "task_breakdown": {
+      "L0_L1": {
+        "mode": "propose_draft",
+        "max_steps": 5
+      },
+      "L2_L3": {
+        "mode": "ask_first",
+        "min_user_steps_before_suggest": 1,
+        "max_suggested_steps": 2
+      }
+    },
+    "day_planner": {
+      "L0_L1": {
+        "mode": "propose_full_order"
+      },
+      "L2_L3": {
+        "mode": "user_picks_top_then_place",
+        "top_pick_range": [
+          1,
+          3
+        ]
+      }
+    },
+    "overdue": {
+      "auto_reschedule_default": false,
+      "auto_reschedule_age_modes": [
+        "adult"
+      ],
+      "exclude_auto_rescheduled_from_evidence": true
+    }
+  },
+  "evidence_bridge": {
+    "rule_weight": 0.5,
+    "daily_cap_per_capability": 3,
+    "rules": {
+      "P1": {
+        "type": "prediction_accuracy",
+        "capability": "self_awareness",
+        "source": "auto",
+        "value": {
+          "kind": "prediction_error",
+          "tolerance": 1.0
+        }
+      },
+      "P2": {
+        "type": "distraction_response",
+        "capability": "attention",
+        "source": "self",
+        "value": {
+          "returned": 0.6,
+          "ended_session": -0.2
+        }
+      },
+      "P3": {
+        "type": "recovery",
+        "capability": "perseverance",
+        "source": "auto",
+        "min_postpones": 2,
+        "value": 0.6
+      },
+      "P4": {
+        "type": "strategy_fit",
+        "capability": "planning",
+        "source": "auto",
+        "min_support_level": "L2_ask",
+        "value": 0.5
+      },
+      "P5": {
+        "type": "reflection_quality",
+        "capability": "self_awareness",
+        "source": "self",
+        "requires_cancel_reason": true,
+        "value": 0.5
+      }
+    },
+    "convert_to_mission": {
+      "levels": [
+        "guided_real",
+        "independent_real"
+      ],
+      "completing_mission_completes_task": true
+    }
+  },
+  "permissions": {
+    "guardian_view": "view_planner",
+    "guardian_add_task": "add_missions"
+  },
+  "daily_moments": {
+    "moments": {
+      "morning_plan": {
+        "reply_moment": "priority_pick",
+        "pick_range": [
+          1,
+          3
+        ],
+        "confirm_if_night_plan": true
+      },
+      "midday_check": {
+        "reply_moment": "feeling_check",
+        "default_enabled": false
+      },
+      "evening_review": {
+        "reply_moments": [
+          "reflection_core",
+          "logistics"
+        ],
+        "builds_on": "morning_plan"
+      },
+      "night_plan": {
+        "reply_moment": "priority_pick",
+        "pick_range": [
+          1,
+          3
+        ],
+        "never_after_quiet_hours_start_for": [
+          "child"
+        ]
+      },
+      "muhasaba": {
+        "steps": [
+          "achieved",
+          "shortfall",
+          "next"
+        ],
+        "reply_moments": [
+          "reflection_secondary",
+          "obstacle_naming",
+          "priority_pick"
+        ],
+        "shortfall_max_items": 3,
+        "must_end_on": "next",
+        "rest_day_skip": [
+          "shortfall"
+        ],
+        "child_steps": [
+          "did_well",
+          "do_better_tomorrow"
+        ],
+        "target_minutes": [
+          2,
+          4
+        ],
+        "next_becomes_morning_priorities": true,
+        "recurring_shortfall": {
+          "times": 3,
+          "days": 14,
+          "raise_in_weekly_review": true
+        }
+      }
+    },
+    "opener_priority": [
+      "safety_or_guardian_request",
+      "comeback",
+      "followup",
+      "deadline_urgent",
+      "time_moment",
+      "light_opener"
+    ],
+    "light_opener": {
+      "requires_answer": false,
+      "shortcuts_max": 3,
+      "exempt_from_free_text_budget": true
+    },
+    "deadline_cards_max": 3,
+    "once_per_day": true,
+    "dismiss_hides_until_window_end": true,
+    "max_free_text_moments_per_day": 2,
+    "disabled_in_break_mode": true,
+    "fade": {
+      "suggest_reduce_at_avg_support": 2.0,
+      "via": "adaptation_advisor",
+      "auto_disable": false
+    },
+    "notifications": {
+      "open_app_counts_toward_cap": false,
+      "push_counts_toward_cap": true,
+      "morning_evening_push_is_summary": true
+    },
+    "openers_content": "content/daily_openers.ar.json",
+    "opener_variables": [
+      "name",
+      "today_count",
+      "overdue_count",
+      "top_deadline",
+      "top_priorities"
+    ],
+    "ai_on_open": false,
+    "evidence": {
+      "rule_weight": 0.5,
+      "shares_daily_cap_with": "evidence_bridge",
+      "D1": {
+        "type": "strategy_fit",
+        "capability": "planning",
+        "source": "auto",
+        "value": {
+          "all_done": 0.8,
+          "half_or_more": 0.4,
+          "less": 0.0
+        }
+      },
+      "D2": {
+        "type": "reflection_quality",
+        "capability": "self_awareness",
+        "source": "ai",
+        "from": "evening_review_free_text"
+      },
+      "D3": {
+        "type": "prediction_accuracy",
+        "capability": "self_awareness",
+        "source": "auto",
+        "value": {
+          "max": 0.6,
+          "min": 0.0,
+          "scale": "done_ratio"
+        }
+      }
+    },
+    "max_sheets_per_open": 2,
+    "muhasaba_replaces_by_default": [
+      "evening_review",
+      "night_plan"
+    ]
+  },
+  "followup": {
+    "items": [
+      "task_with_time",
+      "time_block",
+      "habit_with_time",
+      "linked_mission"
+    ],
+    "replies": [
+      "done",
+      "partial",
+      "missed",
+      "postpone"
+    ],
+    "missed_followups": [
+      "tomorrow",
+      "pick_time",
+      "cancel"
+    ],
+    "max_cards_sequential": 3,
+    "batch_list_above": 3,
+    "snooze_max_per_item": 2,
+    "after_snooze_max": "move_to_overdue",
+    "duration_feel_question": {
+      "options": [
+        "less",
+        "about",
+        "more"
+      ],
+      "max_per_day": 1,
+      "evidence": false
+    },
+    "sync_close_all_devices": true,
+    "next": {
+      "fade": {
+        "capability": "planning",
+        "L0_L1": "suggest_next",
+        "L2_L3": "ask_priority_pick"
+      },
+      "rest_option": true,
+      "rest_suppress_next_minutes": 60,
+      "all_priorities_done": "no_more_work_prompt",
+      "after_quiet_hours": "no_next"
+    },
+    "upcoming_card": true,
+    "notifications": {
+      "on_open_counts_toward_cap": false,
+      "push_counts_toward_cap": true,
+      "respect_quiet_hours": true
+    },
+    "evidence": {
+      "F1": {
+        "type": "strategy_fit",
+        "capability": "self_control",
+        "source": "auto",
+        "rule_weight": 0.5,
+        "min_support_level": "L2_ask",
+        "value": 0.5,
+        "negative": false,
+        "shares_daily_cap_with": "evidence_bridge"
+      },
+      "rest_chosen": "no_evidence"
+    }
+  },
+  "rest": {
+    "activities": {
+      "nap": {
+        "durations": [
+          10,
+          20,
+          30
+        ],
+        "off_screen": true,
+        "only_in_window": "nap_window",
+        "alarm_advice": true
+      },
+      "quran_listen": {
+        "durations": [
+          10,
+          15,
+          20
+        ],
+        "audio": true,
+        "screen_off": true,
+        "sources": "content/quran_audio_sources.json"
+      },
+      "story_read": {
+        "durations": [
+          10,
+          15,
+          20
+        ],
+        "content": "content/rest_stories.ar.json",
+        "offline_option": true
+      },
+      "breathing": {
+        "durations": [
+          3,
+          5,
+          10
+        ],
+        "in_app": true,
+        "patterns": "content/breathing_patterns.json",
+        "short_break_first": true
+      },
+      "walk": {
+        "durations": [
+          10,
+          15,
+          20
+        ],
+        "off_screen": true,
+        "daytime_only": true
+      },
+      "stretch": {
+        "durations": [
+          3,
+          5,
+          10
+        ],
+        "off_screen": true,
+        "short_break": true
+      },
+      "water_window": {
+        "durations": [
+          2,
+          3
+        ],
+        "off_screen": true,
+        "short_break": true
+      },
+      "sleep_early": {
+        "opens": "wind_down",
+        "only_in_wind_down": true
+      }
+    },
+    "nap_latest": "16:00",
+    "nap_max_min": 30,
+    "never_suggest": [
+      "games",
+      "short_video",
+      "social_feed",
+      "browsing"
+    ],
+    "show_max": 4,
+    "duration_never_exceeds_gap": true,
+    "ordering": [
+      "time_fit",
+      "rest_outcomes",
+      "gap_length"
+    ],
+    "screens_explainer_once": true,
+    "no_tracking_of_other_apps": true,
+    "timer": {
+      "quiet_mode": true,
+      "suppress_app_notifications": true,
+      "safety_alerts_never_suppressed": true,
+      "end_push_from_server": true
+    },
+    "after": {
+      "ask_feel": [
+        "more",
+        "same",
+        "less"
+      ],
+      "then": "next_card"
+    },
+    "wind_down": {
+      "suggest": [
+        "story_read",
+        "quran_listen",
+        "breathing"
+      ],
+      "night_plan_before_or_at_start": true,
+      "suggest_bedtime_habit": true,
+      "sleep_tracking": false
+    },
+    "xp": 0,
+    "evidence": false,
+    "achievement": {
+      "code": "restful_week",
+      "restorative_sessions_per_week": 5
+    },
+    "pomodoro_breaks": {
+      "short": [
+        "breathing",
+        "stretch",
+        "water_window"
+      ],
+      "long": [
+        "story_read",
+        "walk",
+        "quran_listen"
+      ]
+    }
+  },
+  "engagement": {
+    "states": [
+      "momentum",
+      "steady",
+      "low",
+      "away"
+    ],
+    "overlay": "busy",
+    "metrics": {
+      "follow_through": {
+        "ewma_alpha": 0.3,
+        "window_days": 7
+      },
+      "active_days_window": 7,
+      "notif_response": {
+        "opened_within_hours": 2,
+        "last_n": 10
+      }
+    },
+    "rules": {
+      "momentum": {
+        "min_follow_through": 0.7,
+        "min_active_days": 4,
+        "min_wins_24h": 2
+      },
+      "low": {
+        "max_follow_through": 0.4,
+        "max_active_days": 2,
+        "ignored_in_row": 3
+      },
+      "away": {
+        "no_open_days": 3
+      },
+      "busy": [
+        "focus_session",
+        "time_block",
+        "scheduled_item_now",
+        "learned_busy_window",
+        "dnd"
+      ]
+    },
+    "productive_absence": {
+      "min_absence_hours": 8,
+      "min_done_ratio": 0.6,
+      "or_min_retro_completions": 2
+    },
+    "busy_windows": {
+      "min_occurrences": 3,
+      "lookback_weeks": 4,
+      "granularity": "weekday_hour",
+      "user_can_delete": true
+    },
+    "budget": {
+      "momentum": {
+        "child": 3,
+        "teen": 6,
+        "adult": 6
+      },
+      "steady": {
+        "child": 1,
+        "teen": 2,
+        "adult": 2
+      },
+      "low": {
+        "child": 1,
+        "teen": 1,
+        "adult": 1
+      },
+      "away": {
+        "every_days": 3,
+        "after_14_days": "weekly",
+        "after_30_days": "stop"
+      },
+      "busy": 0,
+      "break_mode": 0
+    },
+    "ceiling": {
+      "child": 3,
+      "teen": 6,
+      "adult": 6
+    },
+    "spacing_minutes": {
+      "default": 90,
+      "momentum": 60
+    },
+    "step_down": {
+      "ignored_in_momentum": 2,
+      "to": "steady",
+      "ignored_to_low": 3
+    },
+    "step_up_max_per_day": 1,
+    "low_forbid_backlog_counts": true,
+    "away_bundle_user_reminders_daily": true,
+    "busy_bundle_on_end": true,
+    "safety_alerts_exempt": true,
+    "state_visible_as_label": false,
+    "copy_file": "content/notifications.ar.json",
+    "retro_completions": {
+      "xp": 0,
+      "evidence": false,
+      "counts_in_stats_and_pace": true
+    }
+  },
+  "pace": {
+    "baseline": {
+      "window_active_days": 14,
+      "statistic": "median",
+      "min_active_days": 7,
+      "recompute": "weekly"
+    },
+    "metrics": [
+      "priorities_done_per_day",
+      "focus_minutes_per_day",
+      "follow_through",
+      "habit_adherence",
+      "mission_difficulty",
+      "bedtime_adherence"
+    ],
+    "increment_kinds": [
+      "more",
+      "longer",
+      "harder",
+      "new_habit",
+      "consolidate",
+      "hold",
+      "reallocate"
+    ],
+    "result_thresholds": {
+      "advance_at": 0.8,
+      "hold_from": 0.5
+    },
+    "stretch_default_percent": 10,
+    "min_step_units": 1,
+    "max_over_baseline_percent": 25,
+    "consolidate": {
+      "new_habit_adherence_below": 0.7,
+      "weeks": 2,
+      "blocks_other_increments": true
+    },
+    "proposed_in": "weekly_review",
+    "ai_role": "wording_only",
+    "morning_priorities_from_pace": {
+      "min": 1,
+      "max": 3
+    },
+    "no_comparison_with_others": true,
+    "achievement": {
+      "code": "pace_rising",
+      "consecutive_weeks": 3
+    }
+  },
+  "reality_mirror": {
+    "triggers": {
+      "onboarding": {
+        "age_modes_default": [
+          "teen",
+          "adult"
+        ],
+        "days": 1,
+        "target_minutes": [
+          3,
+          5
+        ],
+        "allow_goals_first": true
+      },
+      "gap": {
+        "max_follow_through": 0.4,
+        "weeks": 2,
+        "or_repeated_shortfall": {
+          "times": 3,
+          "days": 14
+        },
+        "suggest_once": true,
+        "reject_cooldown_days": 30
+      },
+      "monthly": true,
+      "manual": true
+    },
+    "mirror_week": {
+      "replaces_muhasaba_step": "achieved",
+      "no_plan_changes_during": true
+    },
+    "reconstruction": {
+      "target_minutes_max": 4,
+      "prefill_from": [
+        "followups",
+        "focus_sessions",
+        "time_blocks",
+        "habit_checkins",
+        "retro_completions",
+        "rest_sessions"
+      ],
+      "gap_fill_modes": [
+        "quick_replies",
+        "free_text_or_voice"
+      ],
+      "unknown_is_valid": true,
+      "energy_question_min_block_minutes": 60,
+      "screen_time": {
+        "auto_read": false,
+        "ask_estimate": true,
+        "suggest_os_screen_time": true
+      },
+      "data_minimization": {
+        "locations": false,
+        "person_names": false
+      }
+    },
+    "prediction": {
+      "categories": 3,
+      "pick": [
+        "largest",
+        "goal_related"
+      ],
+      "input": "hours_slider"
+    },
+    "mirror": {
+      "sections": [
+        "distribution",
+        "prediction_vs_reality",
+        "goals_vs_time",
+        "planned_vs_unplanned",
+        "energy_hours",
+        "patterns"
+      ],
+      "title_fixed": "مش حكم، صورة",
+      "forbid": [
+        "red",
+        "ضيّعت",
+        "comparison_with_others"
+      ],
+      "user_notices_first": true,
+      "patterns_as_questions": true,
+      "rest_family_prayer_sleep_valued": true,
+      "patterns": {
+        "max": 3,
+        "rules": [
+          "top_categories",
+          "same_window_3_days",
+          "unknown_share_above_0.25",
+          "unplanned_share",
+          "high_energy_hours"
+        ]
+      }
+    },
+    "planning": {
+      "one_change": true,
+      "increment_kinds": [
+        "reallocate",
+        "new_habit",
+        "hold"
+      ],
+      "suggest_available_windows": true,
+      "suggest_routine_with_consent": true,
+      "goal_without_time_question": true,
+      "follow_up_mirror_weeks": [
+        2,
+        4
+      ]
+    },
+    "evidence": {
+      "rule_weight": 0.5,
+      "shares_daily_cap_with": "evidence_bridge",
+      "negative_from_behavior": false,
+      "R1": {
+        "type": "prediction_accuracy",
+        "capability": "self_awareness",
+        "source": "self",
+        "value": {
+          "kind": "prediction_error",
+          "tolerance": 1.0
+        }
+      },
+      "R2": {
+        "type": "reflection_quality",
+        "capability": "self_awareness",
+        "source": "ai",
+        "from": "user_noticed"
+      },
+      "R3": {
+        "type": "reflection_quality",
+        "capability": "motive_awareness",
+        "source": "ai",
+        "from": "goal_alignment_answer"
+      }
+    },
+    "privacy": {
+      "details_private_all_modes": true,
+      "guardian_sees": "aggregate_distribution",
+      "guardian_permission": "view_planner",
+      "child_creator_default": true,
+      "disclose_before_first": true
+    }
+  }
+}

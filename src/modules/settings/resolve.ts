@@ -77,10 +77,34 @@ export function clampValue(entry: CatalogEntry, value: unknown, fallback: unknow
       if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
       return Math.min(entry.max, Math.max(entry.min, Math.round(value)));
     }
+    case "int_or_auto": {
+      if (value === "auto") return "auto";
+      if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+      return Math.min(entry.max ?? Number.MAX_SAFE_INTEGER, Math.max(entry.min, Math.round(value)));
+    }
     case "bool":
       return typeof value === "boolean" ? value : fallback;
     case "enum":
       return typeof value === "string" && entry.values.includes(value) ? value : fallback;
+    case "enum_array": {
+      if (!Array.isArray(value)) return fallback;
+      const out: string[] = [];
+      for (const v of value) if (typeof v === "string" && entry.values.includes(v) && !out.includes(v)) out.push(v);
+      return out;
+    }
+    case "time_local_or_null":
+      if (value === null) return null;
+      return typeof value === "string" && TIME_RE.test(value) ? value : fallback;
+    case "moment_windows":
+      return isMomentWindows(value) ? value : fallback;
+    case "list":
+      return Array.isArray(value) && value.every((v) => isListItem(entry.item, v)) ? value.slice(0, entry.max_items) : fallback;
+    case "category_list": {
+      if (!Array.isArray(value)) return fallback;
+      const out: string[] = [];
+      for (const v of value) if (typeof v === "string" && v && !out.includes(v)) out.push(v);
+      return out.slice(0, entry.max_items);
+    }
     case "enum_or_null":
       if (value === null) return null;
       return (typeof value === "string" || typeof value === "number") && entry.values.includes(value) ? value : fallback;
@@ -112,6 +136,18 @@ export function isTimeWindow(v: unknown): v is { from: string; to: string } {
   );
 }
 
+export function isMomentWindows(v: unknown): v is Record<string, [string, string]> {
+  return typeof v === "object" && v !== null && !Array.isArray(v) &&
+    Object.values(v).every((w) => Array.isArray(w) && w.length === 2 && w.every((x) => typeof x === "string" && x.length > 0));
+}
+
+/** عنصر قائمة مخصصة: كل حقل من نوعه المعلن في الكتالوج ("string" نص غير فارغ، "int" عدد صحيح موجب). */
+export function isListItem(spec: Record<string, string>, v: unknown): boolean {
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return false;
+  const o = v as Record<string, unknown>;
+  return Object.entries(spec).every(([k, kind]) => (kind === "int" ? Number.isInteger(o[k]) && (o[k] as number) > 0 : typeof o[k] === "string" && (o[k] as string).trim().length > 0));
+}
+
 export type ValidationResult = { ok: true } | { ok: false; reason: string };
 
 /** تحقق صارم قبل الكتابة (CUST-2). يطابق app.settings_validate() في قاعدة البيانات. */
@@ -128,10 +164,33 @@ export function validateValue(key: string, value: unknown): ValidationResult {
       if (typeof value !== "number" || !Number.isInteger(value)) return { ok: false, reason: "must_be_integer_or_null" };
       if (value < entry.min || value > entry.max) return { ok: false, reason: "out_of_range" };
       return { ok: true };
+    case "int_or_auto":
+      if (value === "auto") return { ok: true };
+      if (typeof value !== "number" || !Number.isInteger(value)) return { ok: false, reason: "must_be_integer_or_auto" };
+      if (value < entry.min || value > (entry.max ?? Number.MAX_SAFE_INTEGER)) return { ok: false, reason: "out_of_range" };
+      return { ok: true };
     case "bool":
       return typeof value === "boolean" ? { ok: true } : { ok: false, reason: "must_be_boolean" };
     case "enum":
       return typeof value === "string" && entry.values.includes(value) ? { ok: true } : { ok: false, reason: "value_not_allowed" };
+    case "enum_array":
+      if (!Array.isArray(value)) return { ok: false, reason: "must_be_array" };
+      if (!value.every((v) => typeof v === "string" && entry.values.includes(v))) return { ok: false, reason: "value_not_allowed" };
+      return new Set(value).size === value.length ? { ok: true } : { ok: false, reason: "duplicate_items" };
+    case "time_local_or_null":
+      if (value === null) return { ok: true };
+      return typeof value === "string" && TIME_RE.test(value) ? { ok: true } : { ok: false, reason: "must_be_hh_mm" };
+    case "moment_windows":
+      return isMomentWindows(value) ? { ok: true } : { ok: false, reason: "must_be_moment_windows" };
+    case "list":
+      if (!Array.isArray(value)) return { ok: false, reason: "must_be_array" };
+      if (value.length > entry.max_items) return { ok: false, reason: "too_many_items" };
+      return value.every((v) => isListItem(entry.item, v)) ? { ok: true } : { ok: false, reason: "invalid_item" };
+    case "category_list":
+      if (!Array.isArray(value)) return { ok: false, reason: "must_be_array" };
+      if (value.length > entry.max_items) return { ok: false, reason: "too_many_items" };
+      if (!value.every((v) => typeof v === "string" && v.length > 0) || new Set(value).size !== value.length) return { ok: false, reason: "invalid_item" };
+      return entry.unknown_required && !value.includes("unknown") ? { ok: false, reason: "unknown_required" } : { ok: true };
     case "enum_or_null":
       if (value === null) return { ok: true };
       return (typeof value === "string" || typeof value === "number") && entry.values.includes(value)

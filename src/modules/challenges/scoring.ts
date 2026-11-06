@@ -45,7 +45,7 @@ export function computeChallengeScores(participants: ParticipantInput[]): Partic
   return scored.map((s) => ({
     ...s, rank: rankOf.get(s.profile_id)!,
     badges: [
-      ...(maxImprovement > 0 && s.improvement_pts === maxImprovement ? ["most_improved"] : []),
+      ...(maxImprovement > 0 && s.improvement_pts === maxImprovement ? ["biggest_improvement"] : []),
       ...(maxReflected > 0 && s.reflected_count === maxReflected ? ["most_persistent"] : []),
     ],
   }));

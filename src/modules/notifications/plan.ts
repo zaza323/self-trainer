@@ -96,3 +96,12 @@ export function decideDelivery(i: DeliveryInput): DeliveryDecision {
   }
   return { action: "send" };
 }
+
+
+/**
+ * notification_max_per_day = "auto" (0.4): السقف اليومي تحدده حالة التفاعل (الجزء و، الخطوة 3).
+ * إلى أن تُبنى حالات التفاعل، "auto" = أدنى ميزانية غير صفرية (planner.engagement.budget.low) فيبقى سلوك 0.3 كما هو.
+ */
+export function resolveMaxPerDay(setting: number | "auto", autoBudget: number, hardCap: number): number {
+  return Math.min(setting === "auto" ? autoBudget : setting, hardCap);
+}

@@ -11,6 +11,8 @@ import explainers from "@content/explainers.ar.json";
 type Labels = Record<string, { label: string; help: string }> & { enum_values: Record<string, Record<string, string>> };
 const L = labels as unknown as Labels;
 
+const HIDDEN_UNTIL_FEATURE = new Set<string>(["moment_windows", "list", "category_list"]);
+
 /** يبني بيانات شاشة الإعدادات (CUST-7) لمتدرب: القيمة الفعّالة، من ضبطها، القفل، وهل يستطيع الفاعل التعديل. */
 export async function buildSettingsView(db: SupabaseClient, args: { profileId: string; actor: SettingsActor; links: GuardianLinkRow[] }) {
   const { ageMode, rows, items } = await effectiveAll(db, args.profileId);
@@ -18,7 +20,9 @@ export async function buildSettingsView(db: SupabaseClient, args: { profileId: s
   const creatorUserIds = args.links.filter((l) => l.is_creator && l.status === "active").map((l) => l.guardian_id);
   const who = explainers.settings_who_set as Record<string, string>;
 
-  const views: SettingView[] = SETTING_KEYS.map((key) => {
+  // مفاتيح المخطط والمرافق الجديدة (0.4) تظهر في الشاشة حين تُبنى ميزتها (واجهة أنواعها المركبة: المراحل 9–11).
+  const visibleKeys = SETTING_KEYS.filter((k) => !HIDDEN_UNTIL_FEATURE.has(catalogEntry(k)!.type));
+  const views: SettingView[] = visibleKeys.map((key) => {
     const eff = items.find((i) => i.key === key)!;
     const myRow = rows.find((r) => r.key === key && r.set_by_role === args.actor.role) ?? null;
     const common = { key, ageMode: ageMode as AgeMode, actor: args.actor, rows, creatorUserIds };
