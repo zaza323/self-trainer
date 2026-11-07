@@ -5,6 +5,8 @@ import { getOrCreateReview } from "@/modules/planner/review-service";
 import { recurringShortfalls } from "@/modules/muhasaba/flow";
 import { ReviewFlow } from "@/modules/planner/components/phase10-panels";
 import content from "@content/planner.ar.json";
+import { PaceReviewSection } from "@/modules/pace/components/review-section";
+import type { AgeMode } from "@/shared/config";
 
 /** P32 المراجعة الأسبوعية الموجّهة (ب.9) + ز.4 التقصير المتكرر. */
 export default async function ReviewPage() {
@@ -16,5 +18,5 @@ export default async function ReviewPage() {
   const rec = recurringShortfalls((entries ?? []) as Array<{ local_date: string; shortfalls: Array<{ text: string; reason: string | null; task_id: string | null }> }>, ctx.today);
   const { data: titles } = rec.length ? await db.from("planner_tasks").select("id, title").in("id", rec.map((r) => r.key).filter((k) => /^[0-9a-f-]{36}$/.test(k))) : { data: [] };
   const names = rec.map((r) => ((titles ?? []) as Array<{ id: string; title: string }>).find((t) => t.id === r.key)?.title ?? r.key);
-  return <div className="space-y-3"><h2 className="text-lg font-semibold">{content.review.title}</h2><ReviewFlow review={review} recurring={names} /></div>;
+  return <div className="space-y-3"><h2 className="text-lg font-semibold">{content.review.title}</h2><ReviewFlow review={review} recurring={names} /><PaceReviewSection db={db} profile={{ id: s.profile!.id, age_mode: s.profile!.age_mode as AgeMode, timezone: s.profile!.timezone }} /></div>;
 }

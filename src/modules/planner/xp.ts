@@ -10,7 +10,7 @@ const pr = game.xp.planner_rules;
 export type PlannerXpReason =
   | "planner_estimate_kept" | "planner_block_kept" | "focus_session_done" | "habit_checkin" | "weekly_review_done"
   | "daily_plan_set" | "evening_review_done" | "followup_checkin" | "transition_started" | "muhasaba_done"
-  | "day_reconstructed" | "mirror_reviewed";
+  | "day_reconstructed" | "mirror_reviewed" | "increment_achieved" | "habit_consolidated";
 
 export type PlannerXpAward = { reason: PlannerXpReason; amount: number; source_id: string };
 
@@ -44,6 +44,7 @@ export function dailyLimitFor(reason: PlannerXpReason): number {
     case "followup_checkin": return pr.followup_checkin_max_per_day;
     case "transition_started": return pr.transition_started_max_per_day;
     case "daily_plan_set": case "evening_review_done": case "muhasaba_done": case "day_reconstructed": return 1;
+    case "increment_achieved": return 1;
     default: return Number.MAX_SAFE_INTEGER;
   }
 }

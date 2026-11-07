@@ -11,7 +11,8 @@ import type { AgeMode } from "@/shared/config";
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? ""));
 
 /** P46 محاسبة النفس: ثلاث خطوات بشريط تقدم صغير، تنتهي دائمًا بالخطوة القادمة، ثم الختام. */
-export function MuhasabaFlow({ view, ageMode, alreadyDone }: { view: MuhasabaView; ageMode: AgeMode; alreadyDone: boolean }) {
+/** ط.12-10: في أسبوع المرآة تحل إعادة بناء اليوم محل خطوة replacedStep، بلا لحظة جديدة. */
+export function MuhasabaFlow({ view, ageMode, alreadyDone, replacedStep = null }: { view: MuhasabaView; ageMode: AgeMode; alreadyDone: boolean; replacedStep?: string | null }) {
   const [s, act, pending] = useActionState(muhasabaStepAction, null);
   const [r, reasonAct, asking] = useActionState(muhasabaReasonAction, null);
   const [i, setI] = useState(0);
@@ -29,7 +30,15 @@ export function MuhasabaFlow({ view, ageMode, alreadyDone }: { view: MuhasabaVie
     <Card data-testid={`muhasaba-${step}`}>
       <CardHeader><CardTitle className="text-base">{q(step)}</CardTitle><Progress />{view.restDay && <p className="text-xs text-muted-foreground">{content.rest_day_note}</p>}</CardHeader>
       <CardContent className="space-y-3">
-        {(step === "achieved" || step === "did_well") && (
+        {replacedStep === step && (
+          <form action={act} className="space-y-2" onSubmit={next} data-testid="muhasaba-mirror-week">
+            <input type="hidden" name="entry_id" value={view.entry.id} /><input type="hidden" name="step" value={step} />
+            <p className="text-sm">{content.mirror_week.note}</p>
+            <Button asChild size="sm" variant="outline"><Link href="/app/mirror/reconstruct?date=today&source=muhasaba">{content.mirror_week.open}</Link></Button>
+            <Button size="sm" type="submit" disabled={pending}>{content.mirror_week.continue}</Button>
+          </form>
+        )}
+        {(step === "achieved" || step === "did_well") && replacedStep !== step && (
           <form action={act} className="space-y-2" onSubmit={next}>
             <input type="hidden" name="entry_id" value={view.entry.id} /><input type="hidden" name="step" value={step} />
             <ul className="space-y-1 text-sm">{view.suggestedAchieved.length ? view.suggestedAchieved.map((a, k) => <li key={k}><label className="flex items-center gap-2"><input type="checkbox" name="achieved" value={a.text} defaultChecked /> {a.text}</label></li>) : <li className="text-muted-foreground">{content.steps.achieved.none}</li>}</ul>
@@ -44,7 +53,7 @@ export function MuhasabaFlow({ view, ageMode, alreadyDone }: { view: MuhasabaVie
             <ul className="space-y-1 text-sm">{view.suggestedShortfalls.map((x, k) => <li key={k}><label className="flex items-center gap-2"><input type="checkbox" checked={picked.some((p) => (p.task_id ?? p.text) === (x.task_id ?? x.text))} onChange={(e) => setPicked((ps) => e.target.checked ? (ps.length < muhasabaShortfallMax ? [...ps, x] : ps) : ps.filter((p) => (p.task_id ?? p.text) !== (x.task_id ?? x.text)))} /> {x.text}</label></li>)}</ul>
             {picked.length < muhasabaShortfallMax && <Input placeholder={content.steps.shortfall.pick_label} maxLength={200} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = (e.target as HTMLInputElement).value.trim(); if (v) { setPicked((ps) => [...ps, { text: v, task_id: null }]); (e.target as HTMLInputElement).value = ""; } } }} />}
             {picked.map((p, k) => <div key={k} className="rounded-xl border p-2"><input type="hidden" name="sf_text" value={p.text} /><input type="hidden" name="sf_task" value={p.task_id ?? ""} /><Label htmlFor={`r-${k}`}>{p.text} — {content.steps.shortfall.reason_label}</Label><Input id={`r-${k}`} name="sf_reason" maxLength={300} placeholder={content.steps.shortfall.reason_hint} /></div>)}
-            {picked.length > 0 && <div className="flex flex-wrap items-end gap-2"><Button size="sm" type="button" variant="outline" disabled={asking} onClick={() => { const fd = new FormData(); fd.set("entry_id", view.entry.id); fd.set("shortfall", picked[0]!.text); const el = document.getElementById("r-0") as HTMLInputElement | null; fd.set("reason", el?.value ?? ""); if (el?.value) reasonAct(fd); }}>{"المرافق"}</Button>{r?.ok && <Alert className="text-sm" data-testid="muhasaba-reply">{(r.data as { reply: string }).reply}</Alert>}</div>}
+            {picked.length > 0 && <div className="flex flex-wrap items-end gap-2"><Button size="sm" type="button" variant="outline" disabled={asking} onClick={() => { const fd = new FormData(); fd.set("entry_id", view.entry.id); fd.set("shortfall", picked[0]!.text); const el = document.getElementById("r-0") as HTMLInputElement | null; fd.set("reason", el?.value ?? ""); if (el?.value) reasonAct(fd); }}>{content.companion_button}</Button>{r?.ok && <Alert className="text-sm" data-testid="muhasaba-reply">{(r.data as { reply: string }).reply}</Alert>}</div>}
             <Button size="sm" type="submit" disabled={pending}>{content.continue}</Button><Err />
           </form>
         )}

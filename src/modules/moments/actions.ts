@@ -1,4 +1,7 @@
 "use server";
+import { paceConfig } from "@/modules/pace/rules";
+import { aiEnabled, anthropicCaller } from "@/modules/companion";
+import { evidenceFromFreeText } from "@/modules/planner/reflection-evidence";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/db/server";
@@ -33,13 +36,16 @@ export async function answerMomentAction(_: unknown, form: FormData): Promise<Re
   const today = todayIn(o.p.timezone);
   const { data: tasks } = p.data.task_ids.length ? await db.from("planner_tasks").select("id, title").in("id", p.data.task_ids) : { data: [] };
   const titles = new Map(((tasks ?? []) as Array<{ id: string; title: string }>).map((t) => [t.id, t.title]));
-  let priorities = [...p.data.task_ids.map((id) => ({ task_id: id, text: titles.get(id) ?? "" })), ...p.data.texts.filter(Boolean).map((text) => ({ task_id: null, text }))].slice(0, 3);
+  let priorities = [...p.data.task_ids.map((id) => ({ task_id: id, text: titles.get(id) ?? "" })), ...p.data.texts.filter(Boolean).map((text) => ({ task_id: null, text }))].slice(0, paceConfig.morning_priorities_from_pace.max);
   if (p.data.confirm === "yes" && priorities.length === 0) {
     const { data: y } = await db.from("daily_checkins").select("top_priorities").eq("profile_id", o.p.id).in("moment", ["night_plan", "muhasaba"]).eq("status", "answered").order("local_date", { ascending: false }).limit(1);
     priorities = ((y ?? [])[0]?.top_priorities as typeof priorities | undefined) ?? [];
   }
   if (p.data.confirm === "change") { await dismissMoment(db, o.p.id, today, p.data.moment); await db.from("daily_checkins").update({ status: "shown" }).eq("profile_id", o.p.id).eq("local_date", today).eq("moment", p.data.moment); return { ok: true, data: { change: true } }; }
-  const r = await answerMoment(db, adminOrNull(), o.p, { date: today, moment: p.data.moment, priorities, text: p.data.free || null, confirm: p.data.confirm === "yes" });
+  const admin = adminOrNull();
+  const r = await answerMoment(db, admin, o.p, { date: today, moment: p.data.moment, priorities, text: p.data.free || null, confirm: p.data.confirm === "yes" });
+  // D2: التأمل المسائي المكتوب ⇒ reflection_quality عبر مرشح reflection_coach (مصدر ai)
+  if (r.ok && admin && aiEnabled() && p.data.moment === "evening_review" && p.data.free) await evidenceFromFreeText(admin, anthropicCaller(), o.p, { ruleId: "D2", capability: "self_awareness", text: p.data.free, dedupeKey: `${o.p.id}:${today}`, context: "التأمل المسائي: شو مشي وشو ما مشي اليوم؟" });
   revalidatePath("/app", "layout");
   return r.ok ? { ok: true, data: { xp: r.xp } } : { ok: false, error: "save_failed" };
 }

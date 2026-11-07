@@ -7,7 +7,8 @@ import { addDays, type WeekStart } from "@/modules/planner/recurrence";
 import { scheduledOn, type HabitSchedule } from "@/modules/planner/habits";
 import { completeTask, postponeTask, cancelTask } from "@/modules/planner/service";
 import { checkinHabit } from "@/modules/planner/habits-service";
-import { awardPlannerXp, awardTaskCompletionXp } from "@/modules/planner/xp-service";
+import { awardPlannerXp } from "@/modules/planner/xp-service";
+import { afterTaskCompleted } from "@/modules/planner/bridge-service";
 import { recordPlannerEvidence, supportIndexFor } from "@/modules/planner/evidence-service";
 import { f1Value } from "@/modules/planner/evidence-values";
 import { buildScheduled, endedItems, presentation, snoozeAllowed, nextCard, transitionStarted, upcomingSoon, followupConfig, type ScheduledItem, type NextDecision } from "./compute";
@@ -86,9 +87,9 @@ export async function answerFollowup(db: Db, admin: Db | null, p: Profile, i: { 
   }
   const today = localParts(now, p.timezone).date;
   if (i.reply === "done") {
-    if (row.item_kind === "task") { const r = await completeTask(db, { taskId: row.item_id, tz: p.timezone, weekStart: i.weekStart, now }); if (r.ok && admin) await awardTaskCompletionXp(admin, r.data.task, now); }
+    if (row.item_kind === "task") { const r = await completeTask(db, { taskId: row.item_id, tz: p.timezone, weekStart: i.weekStart, now }); if (r.ok && admin) await afterTaskCompleted(admin, p, r.data.task, now); }
     else if (row.item_kind === "habit") await checkinHabit(db, admin, { habitId: row.item_id, profileId: p.id, date: row.occurrence_date, weekStart: i.weekStart, now });
-    else if (row.item_kind === "block") { await db.from("planner_time_blocks").update({ kept: true }).eq("id", row.item_id); const { data: b } = await db.from("planner_time_blocks").select("task_id").eq("id", row.item_id).maybeSingle(); if (b?.task_id) { const r = await completeTask(db, { taskId: b.task_id as string, tz: p.timezone, weekStart: i.weekStart, now }); if (r.ok && admin) await awardTaskCompletionXp(admin, r.data.task, now); } }
+    else if (row.item_kind === "block") { await db.from("planner_time_blocks").update({ kept: true }).eq("id", row.item_id); const { data: b } = await db.from("planner_time_blocks").select("task_id").eq("id", row.item_id).maybeSingle(); if (b?.task_id) { const r = await completeTask(db, { taskId: b.task_id as string, tz: p.timezone, weekStart: i.weekStart, now }); if (r.ok && admin) await afterTaskCompleted(admin, p, r.data.task, now); } }
   } else if (i.reply === "missed") {
     if (row.item_kind === "block") await db.from("planner_time_blocks").update({ kept: false }).eq("id", row.item_id);
     if (row.item_kind === "habit") await checkinHabit(db, null, { habitId: row.item_id, profileId: p.id, date: row.occurrence_date, done: false, weekStart: i.weekStart, now });

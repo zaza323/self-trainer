@@ -2,6 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/shared/db/server";
+import { createAdminClient } from "@/shared/db/admin";
+import { afterTaskCompleted, afterTaskCancelled } from "./bridge-service";
 import { getSession } from "@/modules/accounts";
 import { effective } from "@/modules/settings";
 import { todayIn } from "@/modules/missions/queries";
@@ -16,6 +18,7 @@ export type PlannerActionResult = { ok: true; data?: unknown } | { ok: false; er
 const uuid = z.string().uuid();
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const timeStr = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const adminOrNull = () => { try { return createAdminClient(); } catch { return null; } };
 
 async function owner() {
   const s = await getSession();
@@ -83,8 +86,11 @@ export async function completeTaskAction(_: unknown, form: FormData): Promise<Pl
   const { weekStart } = await prefs(db, o.profile.id, o.profile.timezone);
   const r = await svc.completeTask(db, { taskId: p.data.task_id, actualMin: typeof p.data.actual_min === "number" ? p.data.actual_min : null, tz: o.profile.timezone, weekStart });
   if (!r.ok) return r;
+  // ب.8 + ب.11: XP بشرط التقدير/الكتلة، وأدلة P1/P3 (مرة واحدة لكل مهمة)
+  const admin = adminOrNull();
+  const bridge = admin ? await afterTaskCompleted(admin, o.profile, r.data.task) : null;
   revalidatePath("/app/planner", "layout");
-  return { ok: true, data: { nextTaskId: r.data.nextTaskId } };
+  return { ok: true, data: { nextTaskId: r.data.nextTaskId, xp: bridge?.xp ?? 0 } };
 }
 
 export async function reopenTaskAction(_: unknown, form: FormData): Promise<PlannerActionResult> {
@@ -119,7 +125,10 @@ export async function postponeAnswerAction(_: unknown, form: FormData): Promise<
   const o = await owner();
   if (!o) return { ok: false, error: "not_allowed" };
   const db = await createClient();
-  if (p.data.choice === "not_important") { const r = await svc.cancelTask(db, { taskId: p.data.task_id, reason: p.data.text || null }); if (!r.ok) return r; }
+  if (p.data.choice === "not_important") {
+    const r = await svc.cancelTask(db, { taskId: p.data.task_id, reason: p.data.text || null }); if (!r.ok) return r;
+    const t = await svc.getTask(db, p.data.task_id); const admin = adminOrNull(); if (t && admin) await afterTaskCancelled(admin, o.profile, t);
+  }
   else if (p.data.choice === "other" && p.data.text) {
     const t = await svc.getTask(db, p.data.task_id);
     await svc.updateTask(db, p.data.task_id, { notes: [t?.notes, p.data.text].filter(Boolean).join("\n") });
@@ -131,9 +140,14 @@ export async function postponeAnswerAction(_: unknown, form: FormData): Promise<
 export async function cancelTaskAction(_: unknown, form: FormData): Promise<PlannerActionResult> {
   const p = z.object({ task_id: uuid, reason: z.string().trim().max(300).optional().or(z.literal("")) }).safeParse({ task_id: form.get("task_id"), reason: form.get("reason") ?? "" });
   if (!p.success) return { ok: false, error: "invalid_input" };
-  if (!(await owner())) return { ok: false, error: "not_allowed" };
-  const r = await svc.cancelTask(await createClient(), { taskId: p.data.task_id, reason: p.data.reason || null });
-  if (r.ok) revalidatePath("/app/planner", "layout");
+  const o = await owner();
+  if (!o) return { ok: false, error: "not_allowed" };
+  const db = await createClient();
+  const r = await svc.cancelTask(db, { taskId: p.data.task_id, reason: p.data.reason || null });
+  if (!r.ok) return r;
+  // P5: إلغاء واعٍ مع سبب مكتوب
+  const t = await svc.getTask(db, p.data.task_id); const admin = adminOrNull(); if (t && admin) await afterTaskCancelled(admin, o.profile, t);
+  revalidatePath("/app/planner", "layout");
   return r;
 }
 

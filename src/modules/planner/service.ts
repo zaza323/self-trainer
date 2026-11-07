@@ -158,7 +158,8 @@ export async function postponeTask(db: Db, i: { taskId: string; newDate: string;
   if (!task) return fail("not_found");
   if (task.status !== "open") return fail("bad_state");
   const postponeCount = task.postpone_count + 1;
-  const { data, error } = await db.from("planner_tasks").update({ due_date: i.newDate, postpone_count: postponeCount, auto_rescheduled: Boolean(i.auto) }).eq("id", task.id).select("id");
+  // علامة auto_rescheduled لاصقة: مهمة أُعيدت جدولتها تلقائيًا مرة تبقى مستثناة من الأدلة (ب.10)
+  const { data, error } = await db.from("planner_tasks").update({ due_date: i.newDate, postpone_count: postponeCount, auto_rescheduled: task.auto_rescheduled || Boolean(i.auto) }).eq("id", task.id).select("id");
   if (error) return fail(error.message);
   if (!data?.length) return fail("not_allowed");
   const prompt = postponeCount >= planner.tasks.postpone_prompt_after && !task.postpone_prompted;
@@ -169,7 +170,7 @@ export async function markPostponePrompted(db: Db, taskId: string): Promise<void
   await db.from("planner_tasks").update({ postpone_prompted: true }).eq("id", taskId);
 }
 
-/** إلغاء واعٍ مع سبب (ب.11 P5 لاحقًا). */
+/** إلغاء واعٍ مع سبب (ب.11 P5 عبر bridge-service.afterTaskCancelled). */
 export async function cancelTask(db: Db, i: { taskId: string; reason: string | null }): Promise<Result> {
   const { data, error } = await db.from("planner_tasks").update({ status: "cancelled", cancel_reason: i.reason?.trim() || null }).eq("id", i.taskId).select("id");
   if (error) return fail(error.message);

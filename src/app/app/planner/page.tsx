@@ -6,6 +6,11 @@ import { listTasks, tagsByTask } from "@/modules/planner/service";
 import { groupTasks, applyFilter, type PlannerView, type SavedFilterQuery } from "@/modules/planner/views";
 import { hasTool } from "@/modules/planner/tiers";
 import { QuickAdd } from "@/modules/planner/components/quick-add";
+import paceContent from "@content/pace.ar.json";
+import { DayPlanPanel } from "@/modules/planner/components/phase11-panels";
+import { planningLevel } from "@/modules/planner/bridge-service";
+import { dayPlanModeFor } from "@/modules/planner/ai";
+import type { AgeMode } from "@/shared/config";
 import { TaskList } from "@/modules/planner/components/task-list";
 import { Alert, Badge } from "@/shared/ui";
 import { planner } from "@/shared/config";
@@ -42,6 +47,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
         {hasTool(ctx.tier.tier, "eisenhower") && <Link href="/app/planner/eisenhower" className="text-sm underline">{content.eisenhower.title}</Link>}
         {hasTool(ctx.tier.tier, "stats") && <Link href="/app/planner/stats" className="text-sm underline">{content.stats.title}</Link>}
         <Link href="/app/planner/review" className="text-sm underline">{content.review.title}</Link>
+        <Link href="/app/pace" className="text-sm underline">{paceContent.title}</Link>
         <Link href="/app/mirror" className="text-sm underline">{content.review.mirror_link}</Link>
         {groups.overdue.length > 0 && <Link href="/app/planner/overdue" className="text-sm text-destructive underline">{content.overdue.title} ({groups.overdue.length})</Link>}
       </div>
@@ -51,6 +57,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
       <nav className="flex flex-wrap gap-1" aria-label={content.title}>
         {views.map((v) => <Link key={v} href={`/app/planner?view=${v}`} className={`rounded-full border px-3 py-1 text-sm ${v === view && !filterName ? "bg-primary text-primary-foreground" : ""}`}>{content.views[v]} ({groups[v].length})</Link>)}
       </nav>
+      {view === "today" && !filterName && <DayPlanPanel tasks={groups.today.filter((t) => t.status === "open").map((t) => ({ id: t.id, title: t.title }))} pickMode={dayPlanModeFor(await planningLevel(db, { id: profile.id, age_mode: profile.age_mode as AgeMode, timezone: profile.timezone })) === "user_picks_top_then_place"} />}
       {filterName && <Badge>{filterName}</Badge>}
       <TaskList tasks={shown} today={ctx.today} emptyText={content.empty[view]} />
     </div>

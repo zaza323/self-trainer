@@ -12,6 +12,7 @@ import { loadPlannerContext } from "./context";
 import type { WeekStart } from "./recurrence";
 import { createHabit, checkinHabit } from "./habits-service";
 import { startFocus, endFocus, recordDistraction, focusSessionsOn } from "./focus-service";
+import { afterDistraction } from "./bridge-service";
 import { createBlock, deleteBlock } from "./blocks-service";
 import { getOrCreateReview, saveReviewStep } from "./review-service";
 import { updateTask } from "./service";
@@ -92,7 +93,14 @@ export async function focusDistractionAction(_: unknown, form: FormData): Promis
   if (!p.success) return { ok: false, error: "invalid_input" };
   const c = await ctxFor("focus_mode");
   if (!c) return { ok: false, error: "tool_locked" };
-  await recordDistraction(c.db, p.data.session_id, p.data.returned === "null" ? null : p.data.returned === "true");
+  const returned = p.data.returned === "null" ? null : p.data.returned === "true";
+  await recordDistraction(c.db, p.data.session_id, returned);
+  // P2: الجواب على «رجعت؟» فقط يولّد دليلًا (مصدر self)
+  const admin = adminOrNull();
+  if (admin && returned !== null) {
+    const { data: fs } = await c.db.from("planner_focus_sessions").select("task_id, distraction_count").eq("id", p.data.session_id).maybeSingle();
+    if (fs) await afterDistraction(admin, c.profile, { sessionId: p.data.session_id, taskId: (fs.task_id as string | null) ?? null, returned, distractionNo: Number(fs.distraction_count) || 1 });
+  }
   return { ok: true };
 }
 

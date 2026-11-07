@@ -6,6 +6,7 @@ import { instantForLocal, localParts } from "@/modules/notifications/plan";
 import { addDays } from "@/modules/planner/recurrence";
 import { awardPlannerXp } from "@/modules/planner/xp-service";
 import { recordPlannerEvidence } from "@/modules/planner/evidence-service";
+import { createReallocateIncrement } from "@/modules/pace/service";
 import { prefillSegments, gaps, distribution, unknownShare, plannedShare, energyHours, detectPatterns, predictionAwareness, pickPredictionCategories, UNKNOWN, type Segment, type Pattern } from "./reconstruct";
 import categoriesContent from "@content/reconstruction_categories.ar.json";
 
@@ -13,7 +14,7 @@ type Db = SupabaseClient;
 export type Profile = { id: string; age_mode: AgeMode; timezone: string };
 export type ReconstructionRow = { id: string; profile_id: string; local_date: string; source: "muhasaba" | "onboarding" | "manual"; completed: boolean; unknown_minutes: number; screen_estimate_min: number | null; created_at: string };
 export type ActualBlockRow = Segment & { id: string; reconstruction_id: string };
-export type MirrorReportRow = { id: string; profile_id: string; period_start: string; period_end: string; days_count: number; distribution: Record<string, number>; predictions: Array<{ category: string; predicted_hours: number; actual_hours: number }>; goal_alignment: Array<{ goal_id: string; title: string; minutes: number }>; patterns: Pattern[]; user_noticed: string | null; chosen_change_text: string | null; created_at: string };
+export type MirrorReportRow = { id: string; profile_id: string; period_start: string; period_end: string; days_count: number; distribution: Record<string, number>; predictions: Array<{ category: string; predicted_hours: number; actual_hours: number }>; goal_alignment: Array<{ goal_id: string; title: string; minutes: number }>; patterns: Pattern[]; user_noticed: string | null; chosen_change_text: string | null; created_at: string; follow_up_of?: string | null; goal_answer?: string | null };
 
 export async function categoriesFor(db: Db, profileId: string): Promise<Array<{ key: string; label: string }>> {
   const keys = (await effective<string[]>(db, profileId, "reconstruction_categories")).value;
@@ -106,7 +107,11 @@ export async function saveMirror(db: Db, admin: Db | null, p: Profile, i: { days
   const m = await buildMirror(db, p, { days: i.days, now: i.now });
   if (!m) return { ok: false, r1: false };
   const predictions = i.predictions.map((x) => ({ category: x.category, predicted_hours: x.predicted_hours, actual_hours: Number((((m.report.distribution[x.category] ?? 0) / 60)).toFixed(2)) }));
-  const { data, error } = await db.from("mirror_reports").insert({ ...m.report, predictions }).select("id").single();
+  // ط.6-5: مرآة متابعة إن قبل المستخدم اقتراح المتابعة لمرآة سابقة
+  const { data: fu } = await db.from("mirror_suggestions").select("id, follow_up_of").eq("profile_id", p.id).eq("reason", "follow_up").eq("status", "accepted").order("decided_at", { ascending: false }).limit(1);
+  const followUpOf = ((fu ?? [])[0] as { follow_up_of: string | null } | undefined)?.follow_up_of ?? null;
+  const { data: already } = followUpOf ? await db.from("mirror_reports").select("id").eq("follow_up_of", followUpOf).limit(1) : { data: [] };
+  const { data, error } = await db.from("mirror_reports").insert({ ...m.report, predictions, follow_up_of: already?.length ? null : followUpOf }).select("id").single();
   if (error) return { ok: false, r1: false };
   let r1 = false;
   const v = predictionAwareness(predictions);
@@ -116,15 +121,35 @@ export async function saveMirror(db: Db, admin: Db | null, p: Profile, i: { days
 
 export async function saveNoticed(db: Db, reportId: string, text: string): Promise<void> { await db.from("mirror_reports").update({ user_noticed: text.trim() }).eq("id", reportId); }
 
-/** P51: تغيير واحد بوعي ⇒ XP mirror_reviewed. (زيادة reallocate وربطها بالوتيرة في المرحلة 11) */
-export async function chooseChange(db: Db, admin: Db | null, p: Profile, i: { reportId: string; text: string; now?: Date }): Promise<{ ok: boolean; xp: number }> {
+/** P51: تغيير واحد بوعي ⇒ زيادة reallocate (ح، تحتاج موافقة المربي للطفل إن ضُبط) + XP mirror_reviewed. */
+export async function chooseChange(db: Db, admin: Db | null, p: Profile, i: { reportId: string; text: string; now?: Date }): Promise<{ ok: boolean; xp: number; incrementId: string | null }> {
   const { error } = await db.from("mirror_reports").update({ chosen_change_text: i.text.trim() }).eq("id", i.reportId);
-  if (error) return { ok: false, xp: 0 };
+  if (error) return { ok: false, xp: 0, incrementId: null };
+  const inc = admin ? await createReallocateIncrement(admin, p, { text: i.text, now: i.now }) : null;
+  if (inc && admin) await admin.from("mirror_reports").update({ chosen_change_increment_id: inc.id }).eq("id", i.reportId);
   const xp = admin ? await awardPlannerXp(admin, p.id, "mirror_reviewed", i.reportId, i.now) : 0;
-  return { ok: true, xp };
+  return { ok: true, xp, incrementId: inc?.id ?? null };
 }
 
 export async function latestMirror(db: Db, profileId: string): Promise<MirrorReportRow | null> {
   const { data } = await db.from("mirror_reports").select("*").eq("profile_id", profileId).order("created_at", { ascending: false }).limit(1);
   return ((data ?? [])[0] as MirrorReportRow | undefined) ?? null;
+}
+
+export async function saveGoalAnswer(db: Db, reportId: string, text: string): Promise<void> { await db.from("mirror_reports").update({ goal_answer: text.trim() }).eq("id", reportId); }
+
+/**
+ * أسبوع المرآة (ط.2/ط.12-10): بعد قبول اقتراح المرآة أو بداية الانضمام بالواقع، حتى تكتمل mirror_days_required إعادة بناء
+ * خلال 7 أيام. خلاله تحل إعادة البناء محل خطوة المحاسبة المحددة في config، بلا لحظة جديدة.
+ */
+export async function isMirrorWeek(db: Db, profileId: string, today: string): Promise<boolean> {
+  const since = addDays(today, -7);
+  const [days, { data: acc }, { data: recs }] = await Promise.all([
+    effective<number>(db, profileId, "mirror_days_required"),
+    db.from("mirror_suggestions").select("id").eq("profile_id", profileId).eq("status", "accepted").gte("decided_at", instantForLocal(since, "00:00", "UTC").toISOString()).limit(1),
+    db.from("day_reconstructions").select("source, completed").eq("profile_id", profileId).gte("local_date", since),
+  ]);
+  const rows = (recs ?? []) as Array<{ source: string; completed: boolean }>;
+  const started = Boolean(acc?.length) || rows.some((r) => r.source === "onboarding");
+  return started && rows.filter((r) => r.completed).length < days.value;
 }

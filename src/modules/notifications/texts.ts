@@ -45,6 +45,7 @@ export function urlForNotification(type: string, payload: Record<string, unknown
     case "daily_moment": case "followup_push": case "away_checkin": return "/app";
     case "busy_bundle": return "/app/notifications";
     case "daily_moments_fade": return "/app/settings";
+    case "mirror_suggestion": return "/app/mirror";
     case "planner_reminder": return typeof payload.task_id === "string" ? `/app/planner/${payload.task_id}${typeof payload.reminder_id === "string" ? `?reminder=${payload.reminder_id}` : ""}` : "/app/planner";
     default: return "/app/notifications";
   }

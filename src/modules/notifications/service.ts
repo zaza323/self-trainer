@@ -1,4 +1,9 @@
 import "server-only";
+import { autoRescheduleFor } from "@/modules/planner/bridge-service";
+import { evaluateMirrorSuggestion } from "@/modules/mirror/suggest-service";
+import { runWeeklyPace } from "@/modules/pace/service";
+import { weekStartOf } from "@/modules/planner/habits";
+import type { WeekStart } from "@/modules/planner/recurrence";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { limits, planner, type AgeMode } from "@/shared/config";
 import { effective } from "@/modules/settings";
@@ -220,6 +225,13 @@ export async function dailyEngagementTick(admin: SupabaseClient, p: Profile, now
     await evaluateDayPlanEvidence(admin, prof, addDays(lp.date, -1), now);
     await evaluateMuhasabaNextDay(admin, prof, lp.date, now);
     if (lp.weekday === 0) await learnBusyWindowsFor(admin, prof, now);
+    // 0.4 المرحلة 11: إعادة جدولة المتأخر للبالغ (إن فُعّل)، اقتراح أسبوع المرآة، والدورة الأسبوعية للوتيرة في أول يوم من الأسبوع
+    try {
+      await autoRescheduleFor(admin, prof, now);
+      await evaluateMirrorSuggestion(admin, prof, now);
+      const ws = (await effective<WeekStart>(admin, p.id, "week_start_day")).value;
+      if (weekStartOf(lp.date, ws) === lp.date) await runWeeklyPace(admin, prof, now);
+    } catch (e) { console.error("phase11 daily failed", e); }
   }
   const away = await maybeAwayNotification(admin, prof, now);
   const ms = await momentSettings(admin, p.id);

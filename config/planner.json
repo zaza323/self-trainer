@@ -219,6 +219,12 @@
           1,
           3
         ]
+      },
+      "defaults": {
+        "day_end": "22:00",
+        "default_estimate_min": 25,
+        "buffer_min": 5,
+        "_note_local": "مفاتيح محلية (المرحلة 11): نهاية اليوم والتقدير الافتراضي والفاصل بين المهام للترتيب الحتمي الاحتياطي."
       }
     },
     "overdue": {
@@ -227,6 +233,10 @@
         "adult"
       ],
       "exclude_auto_rescheduled_from_evidence": true
+    },
+    "task_parser": {
+      "merge": "deterministic_matched_wins",
+      "_note_local": "مفتاح محلي (المرحلة 11): ما فهمه المحلّل الحتمي يغلب؛ النموذج يملأ الناقص فقط، والمعاينة إلزامية."
     }
   },
   "evidence_bridge": {
@@ -278,7 +288,14 @@
         "guided_real",
         "independent_real"
       ],
-      "completing_mission_completes_task": true
+      "completing_mission_completes_task": true,
+      "default_mechanic": "decompose",
+      "default_minutes": 20,
+      "independent_from_training_levels": [
+        "independent_real",
+        "transfer"
+      ],
+      "_note_local": "مفاتيح محلية (0.4 المرحلة 11): الميكانيكية والمدة الافتراضيتان عند تعذّر task_classifier، ومستويات تدريب القدرة التي تجعل المهمة independent_real."
     }
   },
   "permissions": {
@@ -767,7 +784,14 @@
     "achievement": {
       "code": "pace_rising",
       "consecutive_weeks": 3
-    }
+    },
+    "self_compare_tolerance": 0.05,
+    "hard_week_low_days": 3,
+    "evaluation_window_days": 7,
+    "new_habit_window_days": 56,
+    "_note_local": "مفاتيح محلية (المرحلة 11): هامش «ثابت» في المقارنة بالنفس، أيام حالة low التي تجعل الأسبوع صعبًا (hold)، نافذة تقييم الزيادة، وعمر العادة «الجديدة».",
+    "lookback_days": 28,
+    "self_compare_days_ago": 28
   },
   "reality_mirror": {
     "triggers": {
@@ -794,7 +818,9 @@
         "reject_cooldown_days": 30
       },
       "monthly": true,
-      "manual": true
+      "manual": true,
+      "monthly_days": 30,
+      "_note_local": "مفتاح محلي (المرحلة 11): monthly_days = الفاصل الأدنى بين مرآة شهرية وأخرى."
     },
     "mirror_week": {
       "replaces_muhasaba_step": "achieved",

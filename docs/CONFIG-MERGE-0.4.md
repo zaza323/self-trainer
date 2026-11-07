@@ -28,3 +28,11 @@
 - `config/planner.json`: `daily_moments.moments.muhasaba.m2_value = 0.6` (ز.5 M2).
 - `config/limits.json`: `notifications.types_in_cap` += `daily_moment, followup_push, away_checkin, busy_bundle, daily_moments_fade`؛ `hard_cap_per_day` 3 → 6 (السقف الفعلي حسب الوضع في `planner.engagement.ceiling`).
 - `config/game.json`: المخطط Zod الآن يشمل `xp.planner_rules` وكل أسباب XP الجديدة وإنجازات `first_full_week` / `habit_7_days` / `restful_week` / `pace_rising`.
+
+## إضافات محلية في الخطوة 4 (المرحلة 11)
+كلها مفاتيح جديدة لم تكن في ملفات 0.4، أُضيفت لأن «لا أرقام في الكود». لا تعارض قيم في هذه الخطوة.
+- `config/planner.json` → `pace`: `self_compare_tolerance = 0.05` (هامش «ثابت» في المقارنة بالنفس)، `hard_week_low_days = 3` (أيام حالة low في الأسبوع ⇒ اقتراح hold)، `evaluation_window_days = 7`، `new_habit_window_days = 56`، `lookback_days = 28`، `self_compare_days_ago = 28`.
+- `config/planner.json` → `evidence_bridge.convert_to_mission`: `default_mechanic = "decompose"`، `default_minutes = 20`، `independent_from_training_levels = ["independent_real", "transfer"]`.
+- `config/planner.json` → `ai.day_planner.defaults`: `day_end = "22:00"`، `default_estimate_min = 25`، `buffer_min = 5`؛ و`ai.task_parser.merge = "deterministic_matched_wins"`.
+- `config/planner.json` → `reality_mirror.triggers.monthly_days = 30`.
+- `config/limits.json` → `notifications.types_in_cap` += `mirror_suggestion`.

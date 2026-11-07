@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { noticedAction, chooseChangeAction } from "../actions";
+import { noticedAction, chooseChangeAction, goalAnswerAction } from "../actions";
 import type { MirrorReportRow } from "../service";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from "@/shared/ui";
 import content from "@content/mirror.ar.json";
@@ -11,7 +11,8 @@ const label = (k: string) => (cats.labels as Record<string, string>)[k] ?? k;
 const hrs = (m: number) => (m / 60).toFixed(1);
 
 /** P50 المرآة + P51 تغيير واحد: «مش حكم، صورة». المستخدم يلاحظ أولًا؛ الأنماط تُعرض بعد جوابه كأسئلة؛ لا أحمر ولا «ضيّعت». */
-export function MirrorReport({ report, supportBand }: { report: MirrorReportRow; supportBand: "L0_L1" | "L2_L3" }) {
+export function MirrorReport({ report, supportBand, followUp = null }: { report: MirrorReportRow; supportBand: "L0_L1" | "L2_L3"; followUp?: Array<{ category: string; before: number; now: number }> | null }) {
+  const [ga, goalAct, goalPending] = useActionState(goalAnswerAction, null);
   const [n, noticeAct, noticing] = useActionState(noticedAction, null);
   const [c, changeAct, changing] = useActionState(chooseChangeAction, null);
   const [noticed, setNoticed] = useState(Boolean(report.user_noticed));
@@ -32,9 +33,15 @@ export function MirrorReport({ report, supportBand }: { report: MirrorReportRow;
       </CardContent></Card>}
       {report.goal_alignment.length > 0 && <Card><CardHeader><CardTitle className="text-base">{content.sections.goals_vs_time}</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
         {report.goal_alignment.map((g) => <p key={g.goal_id}>{g.minutes > 0 ? fill(content.goal_line, { goal: g.title, minutes: g.minutes }) : `${g.title}: ${content.goal_no_time}`}</p>)}
+        {report.goal_alignment.some((g) => g.minutes === 0) && (report.goal_answer || ga?.ok ? <p className="text-muted-foreground">{report.goal_answer ?? content.goal_answer.saved}</p> : (
+          <form action={goalAct} className="space-y-2"><input type="hidden" name="report_id" value={report.id} /><Label htmlFor="ga">{content.goal_answer.label}</Label><textarea id="ga" name="text" rows={2} maxLength={1000} required className="w-full rounded-xl border border-input bg-background p-3" /><Button size="sm" type="submit" disabled={goalPending}>{content.goal_answer.save}</Button></form>
+        ))}
+      </CardContent></Card>}
+      {followUp && followUp.length > 0 && <Card data-testid="mirror-follow-up"><CardHeader><CardTitle className="text-base">{content.follow_up.title}</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
+        {followUp.map((f) => <p key={f.category}>{fill(content.follow_up.line, { category: label(f.category), before: f.before.toFixed(1), now: f.now.toFixed(1) })}</p>)}
       </CardContent></Card>}
       <Card className="border-primary/40"><CardHeader><CardTitle className="text-base">{content.notice_question}</CardTitle></CardHeader><CardContent className="space-y-2">
-        {!noticed ? <form action={noticeAct} className="space-y-2" onSubmit={() => setNoticed(true)}><input type="hidden" name="report_id" value={report.id} /><Label htmlFor="nt">{content.notice_hint}</Label><textarea id="nt" name="text" rows={2} maxLength={1000} required className="w-full rounded-xl border border-input bg-background p-3" /><Button size="sm" type="submit" disabled={noticing}>{content.change.save === "" ? "" : "تم"}</Button></form>
+        {!noticed ? <form action={noticeAct} className="space-y-2" onSubmit={() => setNoticed(true)}><input type="hidden" name="report_id" value={report.id} /><Label htmlFor="nt">{content.notice_hint}</Label><textarea id="nt" name="text" rows={2} maxLength={1000} required className="w-full rounded-xl border border-input bg-background p-3" /><Button size="sm" type="submit" disabled={noticing}>{content.notice_save}</Button></form>
           : <>
             <p className="text-sm">{report.user_noticed ?? (n?.ok ? "✓" : "")}</p>
             <div className="space-y-1" data-testid="patterns">{report.patterns.map((p, i) => <p key={i} className="text-sm">{fill((content.pattern_questions as Record<string, string>)[p.rule] ?? "", { category: label(p.category ?? ""), minutes: p.minutes ?? "", hour: p.hour ?? "", share: Math.round((p.share ?? 0) * 100), hours: (p.hours ?? []).join("، ") })}</p>)}</div>

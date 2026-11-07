@@ -1,4 +1,5 @@
 import "server-only";
+import { paceConfig, morningPriorityCount } from "@/modules/pace/rules";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { game, type AgeMode } from "@/shared/config";
 import { effective } from "@/modules/settings";
@@ -61,6 +62,8 @@ export type StartScreenFacts = {
   decision: OpenerDecision; openerText: string; replyMoment: string | null;
   todayCount: number; overdueCount: number; topToday: PlannerTaskRow[]; deadlines: DeadlineCard[]; priorities: Array<{ task_id: string | null; text: string }>;
   settings: MomentSettings; quietNow: boolean; windDownNow: boolean; today: string; nowMin: number;
+  /** ح.5-5: عدد الأولويات المقترح صباحًا حسب الوتيرة (1–3)؛ null = لا خط أساس بعد. */
+  suggestedPriorities: number; paceBased: boolean;
 };
 
 /** P35: حقائق شاشة البداية حتميًا بلا ذكاء اصطناعي (ج.7). يسجّل «shown» للحظة المختارة (مرة واحدة يوميًا). */
@@ -83,6 +86,7 @@ export async function loadStartScreen(db: Db, p: Profile, i: { now: Date; safety
     checkinsToday, nightPlanExists: Boolean(nightPlan), quietNow, hasAnyTasks: tasks.some((t) => t.status === "open"),
   });
   const priorities = todaysPriorities(todayRows, yRows);
+  const pace = await suggestedPriorityCount(db, p.id);
   const doneIds = new Set(tasks.filter((t) => t.status === "done").map((t) => t.id));
   const vars = { name: p.display_name, today_count: groups.today.length, overdue_count: groups.overdue.length, top_deadline: urgent?.task.title ?? cards[0]?.task.title ?? "", top_priorities: priorities.map((x) => x.text).join("، "), schedule: groups.today.filter((t) => t.due_time).map((t) => `${t.title} ${t.due_time!.slice(0, 5)}`).join("، "), done_count: priorities.filter((x) => x.task_id && doneIds.has(x.task_id)).length, planned_count: priorities.length };
   let openerText = "", replyMoment: string | null = null;
@@ -93,7 +97,20 @@ export async function loadStartScreen(db: Db, p: Profile, i: { now: Date; safety
   } else if (decision.kind === "deadline") openerText = renderOpener("deadline_soon", p.age_mode, vars, rotationFor(today));
   else if (decision.kind === "light") openerText = renderOpener("light", p.age_mode, vars, rotationFor(today));
   else if (decision.kind === "no_tasks") openerText = renderOpener("no_tasks", p.age_mode, vars, rotationFor(today));
-  return { decision, openerText, replyMoment, todayCount: groups.today.length, overdueCount: groups.overdue.length, topToday: groups.today.slice(0, 3), deadlines: cards, priorities, settings: s, quietNow, windDownNow, today, nowMin: lp.minutes };
+  return { decision, openerText, replyMoment, todayCount: groups.today.length, overdueCount: groups.overdue.length, topToday: groups.today.slice(0, pace.count), deadlines: cards, priorities, settings: s, quietNow, windDownNow, today, nowMin: lp.minutes, suggestedPriorities: pace.count, paceBased: pace.paceBased };
+}
+
+/** ح.5-5: هدف الزيادة النشطة على priorities_done_per_day أو خط الأساس، بحد 1–3. بلا خط أساس ⇒ الحد الأعلى كما قبل. */
+export async function suggestedPriorityCount(db: Db, profileId: string): Promise<{ count: number; paceBased: boolean }> {
+  const metric = "priorities_done_per_day";
+  const [{ data: b }, { data: inc }] = await Promise.all([
+    db.from("pace_baselines").select("baseline").eq("profile_id", profileId).eq("metric", metric).order("week_start", { ascending: false }).limit(1),
+    db.from("growth_increments").select("target_value").eq("profile_id", profileId).eq("metric", metric).in("status", ["accepted", "edited"]).order("week_start", { ascending: false }).limit(1),
+  ]);
+  const baseline = (b ?? [])[0] ? Number((b as Array<{ baseline: number }>)[0]!.baseline) : null;
+  const target = (inc ?? [])[0] && (inc as Array<{ target_value: number | null }>)[0]!.target_value !== null ? Number((inc as Array<{ target_value: number }>)[0]!.target_value) : null;
+  if (baseline === null && target === null) return { count: paceConfig.morning_priorities_from_pace.max, paceBased: false };
+  return { count: morningPriorityCount(baseline, target), paceBased: true };
 }
 
 function parseHHMM(s: string): number { const [h, m] = s.split(":").map(Number); return h! * 60 + m!; }

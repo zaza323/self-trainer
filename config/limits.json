@@ -65,7 +65,8 @@
       "followup_push",
       "away_checkin",
       "busy_bundle",
-      "daily_moments_fade"
+      "daily_moments_fade",
+      "mirror_suggestion"
     ],
     "comeback_after_gap_days": 3,
     "comeback_repeat_days": 7,

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import plannerContent from "@content/planner.ar.json";
 import { getPlayerProfile, getMyLink, getSession } from "@/modules/accounts";
 import { listMissions } from "@/modules/missions";
 import { loadActiveTemplates, textByMode } from "@/modules/library";
@@ -55,6 +56,9 @@ export default async function PlayerOverviewPage({ params }: { params: Promise<{
             {(link.is_creator || link.permissions.add_rewards) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/rewards`}>{t("guardian.rewards")}</Link></Button>}
             <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/context`}>{t("guardian.context")}</Link></Button>
             <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/suggestions`}>{t("guardian.suggestions")}</Link></Button>
+            {(link.is_creator || link.permissions.view_planner || link.permissions.add_missions) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/planner`}>{plannerContent.guardian.link}</Link></Button>}
+            {(link.is_creator || link.permissions.view_planner) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/mirror`}>{plannerContent.review.mirror_link}</Link></Button>}
+            {player.age_mode === "child" && (link.is_creator || link.permissions.manage_settings) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/pace`}>{plannerContent.guardian.pace_link}</Link></Button>}
             {player.age_mode === "child" && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/challenges`}>{t("guardian.challenges")}</Link></Button>}
           </div>
         </CardContent>

@@ -63,6 +63,17 @@ options (عند choices_plus_other أو quick_replies): 2–4 خيارات قص�
   muhasaba_coach: `المهمة: محاسبة النفس قبل النوم (0.4 ز). المستخدم كتب سبب تقصيره. سؤال واحد يعمّق الفهم (next_question) أو تلخيص بكلماته (done=true).
 قواعد لا تُكسر: التقصير سلوك لا هوية؛ لا تؤكد أي حكم على الذات («فاشل»، «كسول»)؛ إن جلد المستخدم ذاته فاعكس كلامه بلطف وأعده للسلوك المحدد: «اليوم ما مشيت المراجعة. شو اللي صعّبها؟».
 evidence_candidates: حتى مرشح واحد reflection_quality على self_awareness فقط إن ربط السبب بشيء محدد قابل للتغيير. المخطط: { next_question, done, reflection_summary_user_words, thinking_move_named, custom_strategy_fit:null, evidence_candidates, safety, moment:"obstacle_naming", response_mode:"free_text", options:[] }`,
+  task_parser: `المهمة: احتياطي للمحلّل الحتمي للإدخال السريع (0.4 ب.4). استخرج حقول مهمة واحدة من نص المستخدم. التاريخ YYYY-MM-DD محسوبًا من «اليوم» المعطى، والوقت HH:MM (الساعة الغامضة 1..N مساءً حسب المعطى). لا تخترع موعدًا لم يُذكر: اتركه null.
+المخطط: { title, due_date, due_time, priority:"high"|"medium"|"low"|"none", tags:[], project, estimate_min, reminder_offset_min }`,
+  task_breakdown: `المهمة: تقسيم مهمة كبيرة إلى خطوات صغيرة قابلة للتنفيذ (0.4 ب.10). كل خطوة فعل واضح ≤ 80 حرفًا، بلا تكرار.
+mode=propose_draft: حتى max_steps خطوات كمسودة. mode=suggest_missing: المستخدم كتب خطواته؛ اقترح حتى max_steps خطوات ناقصة فقط، لا تكرر خطواته ولا تعيد صياغتها.
+المخطط: { steps:[{title, estimate_min}], note }`,
+  day_planner: `المهمة: اقتراح أماكن مهام اليوم (0.4 ب.10). استخدم فقط task_id من القائمة المعطاة، وفي mode=place_picks فقط المهام التي اختارها المستخدم. لا تضع مهمة في وقت مشغول ولا قبل «الآن». المهمة ذات الوقت تبقى في وقتها.
+المخطط: { placements:[{task_id, start:"HH:MM"}], note }`,
+  weekly_review: `المهمة: صياغة فقط لسطرين في المراجعة الأسبوعية (0.4 ح.5). الأرقام والقرارات محسوبة في الخادم ومعطاة لك؛ لا تضف رقمًا ليس في المعطيات، ولا تقارن بأي شخص آخر، ولا تلُم. لغة الوضع العمري.
+المخطط: { intro, increment_line }`,
+  day_reconstructor: `المهمة: تحويل كلام المستخدم عن يومه إلى مقاطع زمنية (0.4 ط.7). استخدم فقط الأوقات التي ذكرها المستخدم حرفيًا أو حدود المقاطع المعروفة المعطاة؛ لا تخترع وقتًا. ما لا وقت له لا يصير مقطعًا؛ الفجوات تبقى فجوات. category من القائمة المعطاة فقط. لا أسماء أشخاص ولا مواقع في label.
+المخطط: { blocks:[{start:"HH:MM", end:"HH:MM", category, label, confidence}], gaps:[{start, end}] }`,
   safety_classifier: `المهمة: صنّف النص للفئات: self_harm، abuse، immediate_danger، age_inappropriate. flag=true فقط عند وجود مؤشر حقيقي، مع severity. لا تفسير. المخطط: { flag, category, severity }`,
 } as const;
 

@@ -1,6 +1,7 @@
 "use client";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { createTaskAction, type PlannerActionResult } from "../actions";
+import { aiParseAction } from "../actions-phase11";
 import { parseQuickAdd, needsAiFallback, type ParsedTask, type ParseContext } from "../nlp";
 import { recurrenceLabel, reminderOffsetLabel, plannerContent as c } from "../labels";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select } from "@/shared/ui";
@@ -48,6 +49,19 @@ export function QuickAdd({ ctx, canUseTier1, parentTaskId = null }: { ctx: Parse
     startTransition(() => act(fd));
   };
   const set = (k: string, v: string) => setDraft((d) => ({ ...d, [k]: v }));
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiUsed, setAiUsed] = useState(false);
+  /** ب.4/ب.10: task_parser احتياطي عند الثقة المنخفضة فقط؛ النتيجة تملأ المعاينة نفسها، والحفظ يبقى بيد المستخدم. */
+  const aiAssist = () => {
+    const fd = new FormData(); fd.set("text", text); setAiBusy(true);
+    startTransition(async () => {
+      const r = await aiParseAction(null, fd); setAiBusy(false);
+      if (!r.ok) return;
+      const d = r.data as { parsed: ParsedTask; source: string };
+      const p = d.parsed; setParsed(p); setAiUsed(d.source === "ai");
+      setDraft({ title: p.title, due_date: p.due_date ?? "", due_time: p.due_time ?? "", priority: p.priority, tags: p.tags.join(" "), project: p.project ?? "", estimate_min: p.estimate_min ? String(p.estimate_min) : "", reminder_offset_min: p.reminder ? String(p.reminder.offset_min) : "" });
+    });
+  };
   const Err = ({ s }: { s: PlannerActionResult | null }) => (s && !s.ok ? <Alert variant="error" className="text-sm">{(c.refusals as Record<string, string>)[s.error] ?? s.error}</Alert> : null);
 
   return (
@@ -61,7 +75,7 @@ export function QuickAdd({ ctx, canUseTier1, parentTaskId = null }: { ctx: Parse
         </form>
         {parsed && (
           <div className="space-y-2 rounded-xl border p-3" data-testid="quick-add-preview">
-            <div className="flex items-center gap-2"><strong className="text-sm">{c.quick_add.preview_title}</strong>{needsAiFallback(parsed) && <Badge variant="secondary">{c.quick_add.low_confidence}</Badge>}</div>
+            <div className="flex items-center gap-2"><strong className="text-sm">{c.quick_add.preview_title}</strong>{needsAiFallback(parsed) && !aiUsed && <><Badge variant="secondary">{c.quick_add.low_confidence}</Badge><Button type="button" size="sm" variant="outline" onClick={aiAssist} disabled={aiBusy}>{c.ai.parser.ai_assist}</Button></>}{aiUsed && <Badge variant="secondary">{c.ai.parser.ai_used}</Badge>}</div>
             <div className="grid gap-2 sm:grid-cols-2">
               <div><Label htmlFor="qa-title">{c.quick_add.chips.title}</Label><Input id="qa-title" value={draft.title} onChange={(e) => set("title", e.target.value)} maxLength={200} required /></div>
               <div><Label htmlFor="qa-date">{c.quick_add.chips.date}</Label><Input id="qa-date" type="date" dir="ltr" value={draft.due_date} onChange={(e) => set("due_date", e.target.value)} /></div>

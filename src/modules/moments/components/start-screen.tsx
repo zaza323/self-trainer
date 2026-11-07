@@ -1,4 +1,5 @@
 "use client";
+import paceContent from "@content/pace.ar.json";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { answerMomentAction, dismissMomentAction } from "../actions";
@@ -46,7 +47,7 @@ function MomentAnswer({ data }: { data: StartData }) {
   return (
     <form action={act} className="space-y-2" data-testid={`moment-${supportBand}`}>
       <input type="hidden" name="moment" value={d.moment} />
-      {!free && facts.topToday.length > 0 && <div className="space-y-1"><Label>{a.pick_label}</Label>{facts.topToday.map((tk) => <label key={tk.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="task_ids" value={tk.id} /> {tk.title}</label>)}</div>}
+      {!free && facts.topToday.length > 0 && <div className="space-y-1"><Label>{a.pick_label}</Label>{facts.paceBased && <p className="text-xs text-muted-foreground">{paceContent.morning_hint.replace("{n}", String(facts.suggestedPriorities))}</p>}{facts.topToday.map((tk) => <label key={tk.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="task_ids" value={tk.id} /> {tk.title}</label>)}</div>}
       {(free || facts.topToday.length === 0) && <div><Label htmlFor="pt">{a.free_label}</Label><Input id="pt" name="texts" maxLength={200} required /></div>}
       {free && facts.topToday.length > 0 && <Button size="sm" variant="ghost" type="button" onClick={() => setFree(false)}>{a.pick_label}</Button>}
       <div className="flex gap-2"><Button size="sm" type="submit" disabled={pending}>{a.save}</Button></div><Skip />
