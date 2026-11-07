@@ -867,6 +867,22 @@
         ]
       },
       "mission_override": false
+    },
+    "pace_cap_mode": {
+      "type": "enum",
+      "values": [
+        "hard",
+        "soft"
+      ],
+      "allowed_age_modes": [
+        "child"
+      ],
+      "default": {
+        "child": "hard",
+        "teen": "soft",
+        "adult": "soft"
+      },
+      "mission_override": false
     }
   },
   "guardrails_not_configurable": [

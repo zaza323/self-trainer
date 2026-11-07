@@ -6,7 +6,8 @@ import { aiEnabled, anthropicCaller } from "@/modules/companion";
 import { weeklyReviewWording } from "@/modules/planner/ai";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import type { AgeMode } from "@/shared/config";
-import { runWeeklyPace, type IncrementRow } from "../service";
+import { runWeeklyPace, capContext, type IncrementRow } from "../service";
+import { localParts } from "@/modules/notifications/plan";
 import { incrementText, lastIncrementLine, paceContent as c } from "../labels";
 import { IncrementDecision } from "./increment-card";
 
@@ -29,13 +30,14 @@ export async function PaceReviewSection({ db, profile }: { db: SupabaseClient; p
     intro = w.intro;
   }
   const props = (pending ?? []) as IncrementRow[];
+  const cap = await capContext(admin ?? db, profile, localParts(new Date(), profile.timezone).date);
   return (
     <Card data-testid="pace-review">
       <CardHeader><CardTitle className="text-base">{c.review.section_title}</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
         {intro && <p>{intro}</p>}
         {props.length ? <><p className="text-muted-foreground">{c.review.next}</p>{props.map((p) => (
-          <IncrementDecision key={p.id} id={p.id} text={incrementText(p, profile.age_mode, titles)} canDecide={!p.requires_guardian} waitingGuardian={p.requires_guardian} editable={p.target_value !== null} />
+          <IncrementDecision key={p.id} id={p.id} text={incrementText(p, profile.age_mode, titles)} canDecide={!p.requires_guardian} waitingGuardian={p.requires_guardian} editable={p.target_value !== null} discovery={cap.discovery} />
         ))}</> : <p className="text-muted-foreground">{c.review.none}</p>}
       </CardContent>
     </Card>

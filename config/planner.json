@@ -768,7 +768,6 @@
     },
     "stretch_default_percent": 10,
     "min_step_units": 1,
-    "max_over_baseline_percent": 25,
     "consolidate": {
       "new_habit_adherence_below": 0.7,
       "weeks": 2,
@@ -791,7 +790,25 @@
     "new_habit_window_days": 56,
     "_note_local": "مفاتيح محلية (المرحلة 11): هامش «ثابت» في المقارنة بالنفس، أيام حالة low التي تجعل الأسبوع صعبًا (hold)، نافذة تقييم الزيادة، وعمر العادة «الجديدة».",
     "lookback_days": 28,
-    "self_compare_days_ago": 28
+    "self_compare_days_ago": 28,
+    "cap": {
+      "_note": "سقف الزيادة على مرحلتين (تعديل محلي بطلب المالك بعد 0.4): اكتشاف بلا سقف ثم سقف ناعم. السقف لا يمنع زيادة min_step_units أبدًا.",
+      "discovery": {
+        "min_days": 28,
+        "min_active_days": 14,
+        "rule": "whichever_later"
+      },
+      "soft_over_baseline_percent": 50,
+      "overreach_pattern": {
+        "times": 3,
+        "achieved_ratio_below": 0.5
+      },
+      "modes": [
+        "hard",
+        "soft"
+      ],
+      "child_default_mode": "hard"
+    }
   },
   "reality_mirror": {
     "triggers": {

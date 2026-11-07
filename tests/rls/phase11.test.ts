@@ -9,7 +9,8 @@ import { RlsHarness, type TestUser } from "./helpers";
 import { pgSupabaseShim } from "./pg-supabase-shim";
 import { createTask, completeTask, postponeTask, cancelTask, getTask } from "../../src/modules/planner/service";
 import { afterTaskCompleted, afterTaskCancelled, afterDistraction, afterUserBreakdown, convertTaskToMission, autoRescheduleFor } from "../../src/modules/planner/bridge-service";
-import { runWeeklyPace } from "../../src/modules/pace/service";
+import { runWeeklyPace, capContext } from "../../src/modules/pace/service";
+import { checkTarget } from "../../src/modules/pace/rules";
 import { evaluateMirrorSuggestion } from "../../src/modules/mirror/suggest-service";
 import { chooseChange, isMirrorWeek } from "../../src/modules/mirror/service";
 import { recomputeSnapshots } from "../../src/modules/evidence/service";
@@ -160,7 +161,7 @@ describe("الوتيرة الشخصية (ح.9)", () => {
     expect(r.evaluated[0]?.outcome).toBe("achieved"); expect(r.evaluated[0]?.achievedDays).toBe(6);
     expect((await h.service<{ n: number }>(`select count(*)::int as n from xp_events where profile_id = $1 and reason = 'increment_achieved'`, [childP])).rows[0]!.n).toBe(1);
   });
-  it("teen: لا يحتاج موافقة؛ المالك يقرر، والتعديل فوق السقف مرفوض في الواجهة (withinCap)", async () => {
+  it("teen: لا يحتاج موافقة؛ المالك يقرر ويعدّل الهدف", async () => {
     for (let d = 4; d <= 10; d++) await h.service(`insert into app_opens (profile_id, local_date) values ($1, $2) on conflict do nothing`, [teenP, addDays(TODAY, -d)]);
     for (let d = 1; d <= 10; d++) await h.service(`insert into planner_focus_sessions (profile_id, started_at, ended_at, minutes, completed) values ($1, $2, $2, 40, true)`, [teenP, T(addDays(TODAY, -d), "10:00").toISOString()]);
     const r = await runWeeklyPace(svc, P(teenP, "teen"), T(addDays(TODAY, 1), "12:00"));
@@ -209,5 +210,36 @@ describe("ب.18-7 إعادة الحساب حتمية مع أدلة المخطط"
     const a = await recomputeSnapshots(svc, adultP, NOW), b = await recomputeSnapshots(svc, adultP, NOW);
     expect(a).toEqual(b);
     expect(Number(a.find((s) => s.capability_id === "perseverance")!.score)).toBeGreaterThan(0);
+  });
+});
+
+describe("سقف الزيادة على مرحلتين (pace.cap)", () => {
+  it("ملف جديد في فترة الاكتشاف: لا سقف؛ بعد 28 يومًا و14 يوم نشاط: سقف ناعم يحتاج تأكيدًا", async () => {
+    const fresh = await capContext(svc, P(teenP, "teen"), TODAY);
+    expect(fresh.discovery).toBe(true);
+    expect(checkTarget({ baseline: 40, target: 100, discovery: fresh.discovery, mode: fresh.mode, confirmed: false }).allowed).toBe(true);
+    await h.service(`update profiles set created_at = $2 where id = $1`, [adultP, T(addDays(TODAY, -40), "09:00").toISOString()]);
+    for (let d = 1; d <= 14; d++) await h.service(`insert into app_opens (profile_id, local_date) values ($1, $2) on conflict do nothing`, [adultP, addDays(TODAY, -d)]);
+    const after = await capContext(svc, P(adultP, "adult"), TODAY);
+    expect(after.discovery).toBe(false); expect(after.mode).toBe("soft");
+    expect(checkTarget({ baseline: 30, target: 60, discovery: false, mode: after.mode, confirmed: false })).toEqual({ allowed: false, reason: "needs_confirm", cap: 45 });
+  });
+  it("child: السقف ثابت افتراضيًا، والمربي يحوّله ناعمًا", async () => {
+    expect((await capContext(svc, P(childP, "child"), TODAY)).mode).toBe("hard");
+    await h.service(`insert into settings (profile_id, key, value, set_by_role) values ($1, 'pace_cap_mode', '"soft"'::jsonb, 'guardian')`, [childP]);
+    expect((await capContext(svc, P(childP, "child"), TODAY)).mode).toBe("soft");
+  });
+  it("هدف مؤكَّد فوق السقف وغير محقق ⇒ noted مع الفرق، بلا رجوع لخط الأساس، والاقتراح التالي +10% عادي", async () => {
+    for (let d = 1; d <= 10; d++) await h.service(`insert into planner_focus_sessions (profile_id, started_at, ended_at, minutes, completed) values ($1, $2, $2, 30, true)`, [adultP, T(addDays(TODAY, -d), "18:00").toISOString()]);
+    const id = (await h.service<{ id: string }>(`insert into growth_increments (profile_id, week_start, kind, metric, from_value, target_value) values ($1, $2, 'longer', 'focus_minutes_per_day', 30, 60) returning id`, [adultP, addDays(TODAY, -7)])).rows[0]!.id;
+    await h.as(adult, (q) => q(`select public.decide_increment($1, 'accepted', null, true, false)`, [id]));
+    await h.service(`delete from engagement_states where profile_id = $1`, [adultP]); // أسبوع «low» من اختبار المرآة يفرض hold
+    const r = await runWeeklyPace(svc, P(adultP, "adult"), NOW);
+    const row = (await h.service<{ status: string; over_cap: boolean; gap: string; achieved_ratio: string }>(`select status, over_cap, gap, achieved_ratio from growth_increments where id = $1`, [id])).rows[0]!;
+    expect(row.status).toBe("noted"); expect(row.over_cap).toBe(true);
+    expect(Number(row.gap)).toBe(30); expect(Number(row.achieved_ratio)).toBe(0);
+    expect(r.evaluated.find((e) => e.id === id)?.outcome).toBe("noted");
+    expect(r.proposed?.kind).toBe("longer"); expect(Number(r.proposed?.target_value)).toBe(33);
+    expect((await h.service<{ n: number }>(`select count(*)::int as n from growth_increments where profile_id = $1 and status = 'stepped_back'`, [adultP])).rows[0]!.n).toBe(0);
   });
 });

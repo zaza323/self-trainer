@@ -7,11 +7,11 @@ import { instantForLocal, localParts } from "@/modules/notifications/plan";
 import { addDays, daysBetween, type WeekStart } from "@/modules/planner/recurrence";
 import { scheduledOn, weekStartOf, weeklyAdherence, type HabitSchedule, type Checkin } from "@/modules/planner/habits";
 import { awardPlannerXp } from "@/modules/planner/xp-service";
-import { paceConfig, baselines, incrementOutcome, proposeIncrement, stretchFor, paceRising, habitConsolidated, achievedDays, type DayMetrics, type IncrementKind, type NewHabitState } from "./rules";
+import { paceConfig, baselines, outcomeFor, inDiscovery, capModeFor, type CapMode, proposeIncrement, stretchFor, paceRising, habitConsolidated, achievedDays, type DayMetrics, type IncrementKind, type NewHabitState } from "./rules";
 
 type Db = SupabaseClient;
 export type Profile = { id: string; age_mode: AgeMode; timezone: string };
-export type IncrementRow = { id: string; profile_id: string; week_start: string; kind: IncrementKind; metric: string | null; from_value: number | null; target_value: number | null; description: string | null; status: string; achieved_days: number | null; window_days: number | null; requires_guardian: boolean; decided_at: string | null; created_at: string };
+export type IncrementRow = { over_cap?: boolean; discovery?: boolean; achieved_ratio?: number | null; achieved_value?: number | null; gap?: number | null; id: string; profile_id: string; week_start: string; kind: IncrementKind; metric: string | null; from_value: number | null; target_value: number | null; description: string | null; status: string; achieved_days: number | null; window_days: number | null; requires_guardian: boolean; decided_at: string | null; created_at: string };
 const ACTIVE = ["accepted", "edited"];
 
 /** مؤشرات يوم محلي واحد (ح.2). الإنجازات الرجعية تدخل الأولويات المنجزة. */
@@ -89,11 +89,16 @@ export async function runWeeklyPace(admin: Db, p: Profile, now = new Date()): Pr
     const span = window.filter((d) => d.date >= since && d.date < today).slice(0, paceConfig.evaluation_window_days);
     const vals = inc.metric ? span.map((d) => d.values[inc.metric!] ?? null) : [];
     const ach = inc.metric && inc.target_value !== null ? achievedDays(vals, Number(inc.target_value)) : 0;
-    const outcome = inc.kind === "hold" || inc.kind === "reallocate" || inc.kind === "new_habit" ? (span.length ? "achieved" : "held") : incrementOutcome(ach, Math.max(1, span.length));
-    await admin.from("growth_increments").update({ status: outcome, achieved_days: ach, window_days: span.length }).eq("id", inc.id);
+    const nums = vals.filter((v): v is number => typeof v === "number");
+    const achievedValue = nums.length ? Number((nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(3)) : null;
+    const target = inc.target_value === null ? null : Number(inc.target_value);
+    const ratio = span.length ? Number((ach / span.length).toFixed(3)) : null;
+    // الهدف فوق السقف أو في الاكتشاف وغير المحقق ⇒ noted (معلومة فقط، بلا رجوع)
+    const outcome = inc.kind === "hold" || inc.kind === "reallocate" || inc.kind === "new_habit" ? (span.length ? "achieved" : "held") : outcomeFor({ achievedDays: ach, windowDays: Math.max(1, span.length), overCap: Boolean(inc.over_cap), discovery: Boolean(inc.discovery) });
+    await admin.from("growth_increments").update({ status: outcome, achieved_days: ach, window_days: span.length, achieved_ratio: ratio, achieved_value: achievedValue, gap: target !== null && achievedValue !== null ? Number((target - achievedValue).toFixed(3)) : null }).eq("id", inc.id);
     if (outcome === "achieved" && inc.kind !== "hold") xp += await awardPlannerXp(admin, p.id, "increment_achieved", inc.id, now);
     evaluated.push({ id: inc.id, outcome, achievedDays: ach });
-    previous = { kind: inc.kind, metric: inc.metric, target: inc.target_value === null ? null : Number(inc.target_value), outcome };
+    if (outcome !== "noted") previous = { kind: inc.kind, metric: inc.metric, target, outcome };
   }
   if (!previous) {
     const { data: last } = await admin.from("growth_increments").select("*").eq("profile_id", p.id).in("status", ["achieved", "held", "stepped_back"]).order("week_start", { ascending: false }).limit(1);
@@ -157,4 +162,23 @@ export async function createReallocateIncrement(admin: Db, p: Profile, i: { text
   const guardianReq = (await effective<boolean>(admin, p.id, "increments_require_guardian")).value;
   const { data } = await admin.from("growth_increments").insert({ profile_id: p.id, week_start: weekStartOf(today, weekStart), kind: "reallocate", description: i.text.trim(), requires_guardian: p.age_mode === "child" && guardianReq }).select("*").single();
   return (data as IncrementRow | null) ?? null;
+}
+
+/** سياق السقف لملف: الاكتشاف (أيام منذ البداية وأيام النشاط)، النمط (ناعم/ثابت)، وتاريخ الأهداف فوق السقف. */
+export async function capContext(db: Db, p: { id: string; age_mode: AgeMode; created_at?: string | null }, today: string): Promise<{ discovery: boolean; mode: CapMode; history: Array<{ over_cap: boolean; achieved_ratio: number | null }> }> {
+  const [{ data: prof }, { data: opens }, { data: first }, mode, { data: hist }] = await Promise.all([
+    p.created_at ? Promise.resolve({ data: { created_at: p.created_at } }) : db.from("profiles").select("created_at").eq("id", p.id).maybeSingle(),
+    db.from("app_opens").select("local_date").eq("profile_id", p.id),
+    db.from("app_opens").select("local_date").eq("profile_id", p.id).order("local_date", { ascending: true }).limit(1),
+    effective<CapMode>(db, p.id, "pace_cap_mode"),
+    db.from("growth_increments").select("over_cap, achieved_ratio").eq("profile_id", p.id).eq("over_cap", true),
+  ]);
+  const created = (prof as { created_at: string } | null)?.created_at?.slice(0, 10) ?? today;
+  const firstOpen = ((first ?? [])[0] as { local_date: string } | undefined)?.local_date ?? created;
+  const start = firstOpen < created ? firstOpen : created;
+  return {
+    discovery: inDiscovery({ daysSinceStart: daysBetween(start, today), activeDays: (opens ?? []).length }),
+    mode: capModeFor(p.age_mode, mode.value),
+    history: ((hist ?? []) as Array<{ over_cap: boolean; achieved_ratio: number | string | null }>).map((h) => ({ over_cap: h.over_cap, achieved_ratio: h.achieved_ratio === null ? null : Number(h.achieved_ratio) })),
+  };
 }

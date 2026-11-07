@@ -36,3 +36,8 @@
 - `config/planner.json` → `ai.day_planner.defaults`: `day_end = "22:00"`، `default_estimate_min = 25`، `buffer_min = 5`؛ و`ai.task_parser.merge = "deterministic_matched_wins"`.
 - `config/planner.json` → `reality_mirror.triggers.monthly_days = 30`.
 - `config/limits.json` → `notifications.types_in_cap` += `mirror_suggestion`.
+
+## تعديل بطلب المالك: سقف الزيادة على مرحلتين
+- `config/planner.json` → `pace`: حُذف `max_over_baseline_percent = 25`، وأُضيف `pace.cap` = { `discovery`: { `min_days`: 28، `min_active_days`: 14 }، `soft_over_baseline_percent`: 50، `overreach_pattern`: { `times`: 3، `achieved_ratio_below`: 0.5 }، `modes`: [hard, soft]، `child_default_mode`: hard }. `stretch_default_percent` باقٍ 10.
+- `config/customization.json` → `catalog.pace_cap_mode` (enum hard/soft، للطفل فقط، الافتراضي hard للطفل).
+- تعارض مع CHANGE-0.4 ح.4/ح.9-8 («لا تتجاوز 25%» و«السقف يغلب الحد الأدنى»): حُسم لصالح طلب المالك (50% ناعم، والوحدة تغلب السقف).

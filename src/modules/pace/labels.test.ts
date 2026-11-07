@@ -22,9 +22,11 @@ describe("وتيرتي — نصوص", () => {
     expect(incrementText(inc, "adult")).toContain("22");
   });
 });
-describe("ح.9-8 السقف بعد زيادة محققة", () => {
-  it("هدف سابق محقق أعلى من الأساس لا يدفع الاقتراح فوق 25% من خط الأساس", () => {
+describe("السقف بعد زيادة محققة", () => {
+  it("هدف سابق محقق أعلى من الأساس لا يدفع الاقتراح فوق السقف (50% من خط الأساس)", () => {
     const p = proposeIncrement({ ageMode: "adult", stretchPercent: 20, baseline: { focus_minutes_per_day: 20 }, previous: { kind: "longer", metric: "focus_minutes_per_day", target: 24, outcome: "achieved" }, newHabits: [], hardWeek: false })!;
-    expect(withinCap(20, p.target!)).toBe(true); expect(p.target).toBe(25);
+    expect(withinCap(20, p.target!)).toBe(true); expect(p.target).toBe(28.8);
+    const far = proposeIncrement({ ageMode: "adult", stretchPercent: 20, baseline: { focus_minutes_per_day: 20 }, previous: { kind: "longer", metric: "focus_minutes_per_day", target: 29, outcome: "achieved" }, newHabits: [], hardWeek: false })!;
+    expect(far.target).toBe(30);
   });
 });

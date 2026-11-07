@@ -11,11 +11,11 @@ describe("ح.9", () => {
     const b = baselines([...days(7, { priorities_done_per_day: 2 }), { date: "2026-11-30", active: false, values: { priorities_done_per_day: 9 } }]);
     expect(b).toEqual({ sampleDays: 7, values: { priorities_done_per_day: 2 } });
   });
-  it("2: تحقيق 6 من 7 ⇒ زيادة ≈ 10% بحد أدنى وحدة (ولا تتجاوز 25%)", () => {
+  it("2: تحقيق 6 من 7 ⇒ زيادة ≈ 10% بحد أدنى وحدة (والسقف لا يمنع الوحدة)", () => {
     expect(incrementOutcome(6, 7)).toBe("achieved");
     expect(nextTarget(30, 10)).toBe(33);       // 10% = 3 > وحدة
-    expect(nextTarget(8, 10)).toBe(9);          // 10% = 0.8 < وحدة ⇒ +1 (12.5% ≤ 25%)
-    expect(nextTarget(2, 10)).toBe(2.5);        // وحدة = 50% > 25% ⇒ السقف يغلب
+    expect(nextTarget(8, 10)).toBe(9);          // 10% = 0.8 < وحدة ⇒ +1
+    expect(nextTarget(1, 10)).toBe(2);          // وحدة = 100% > سقف 50% ⇒ الوحدة تغلب دائمًا
     const p = proposeIncrement({ ageMode: "teen", stretchPercent: 10, baseline: { priorities_done_per_day: 8, focus_minutes_per_day: 30 }, previous: { kind: "more", metric: "priorities_done_per_day", target: 8, outcome: "achieved" }, newHabits: [], hardWeek: false });
     expect(p).toMatchObject({ kind: "more", metric: "priorities_done_per_day", from: 8, target: 9 });
   });
@@ -37,7 +37,7 @@ describe("ح.9", () => {
     expect(morningPriorityCount(6, null)).toBe(3);
     expect(morningPriorityCount(null, null)).toBe(1);
   });
-  it("8: لا زيادة تتجاوز 25% عن خط الأساس", () => {
+  it("8: اقتراح التطبيق لا يتجاوز السقف (50% فوق خط الأساس أو وحدة واحدة)", () => {
     for (const b of [1, 2, 3, 5, 8, 25, 60]) for (const s of [5, 10, 20]) expect(withinCap(b, nextTarget(b, s))).toBe(true);
     expect(stretchFor("teen", 20)).toBe(10); expect(stretchFor("adult", 20)).toBe(20);
   });
