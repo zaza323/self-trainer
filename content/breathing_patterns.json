@@ -1,0 +1,9 @@
+{
+  "_note": "نسخة مؤقتة (0.4 هـ.8): أنماط التنفّس داخل التطبيق بلا صوت. القيم بالثواني.",
+  "_temporary": true,
+  "patterns": [
+    { "key": "calm_4_4_6", "name": "هدوء", "inhale": 4, "hold": 4, "exhale": 6, "age_modes": ["child", "teen", "adult"] },
+    { "key": "box_4", "name": "مربّع", "inhale": 4, "hold": 4, "exhale": 4, "hold_after": 4, "age_modes": ["teen", "adult"] },
+    { "key": "long_exhale", "name": "زفير طويل", "inhale": 4, "hold": 0, "exhale": 8, "age_modes": ["teen", "adult"] }
+  ]
+}

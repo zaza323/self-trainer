@@ -1,0 +1,11 @@
+{
+  "_note": "نسخة مؤقتة (0.4 ط.3): تسميات فئات إعادة بناء اليوم. المفاتيح تطابق config/customization.json.catalog.reconstruction_categories.",
+  "_temporary": true,
+  "labels": {
+    "sleep": "نوم", "school": "مدرسة", "study": "دراسة", "work": "عمل", "prayer_worship": "صلاة وعبادة", "meals": "أكل", "commute": "مواصلات",
+    "family_friends": "أهل وأصدقاء", "play_outside": "لعب برّا", "exercise": "رياضة", "restorative_rest": "راحة مجدِّدة", "phone_screens": "جوال وشاشات",
+    "home_chores": "مهام البيت", "unknown": "ما بتذكر"
+  },
+  "valued": ["sleep", "prayer_worship", "family_friends", "restorative_rest", "meals"],
+  "goal_related_default": ["study", "work", "exercise"]
+}

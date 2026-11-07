@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { customization } from "@/shared/config";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/shared/db/server";
@@ -101,7 +102,9 @@ export async function createOwnProfile(_: unknown, form: FormData): Promise<Acti
     onboarded_at: new Date().toISOString(),
   });
   if (error) return { ok: false, error: error.message };
-  redirect(kind === "guardian" ? "/guardian" : "/onboarding/context");
+  // 0.4 ط.2: الانضمام من الواقع (teen/adult افتراضيًا) قبل بناء الغاية؛ الطفل من الغايات
+  const startWith = kind === "player" && age_mode ? (customization.catalog.onboarding_start_with!.default as Record<string, string>)[age_mode] : "goals";
+  redirect(kind === "guardian" ? "/guardian" : startWith === "reality" ? "/onboarding/path" : "/onboarding/context");
 }
 
 const createChildSchema = z.object({

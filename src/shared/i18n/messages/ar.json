@@ -36,7 +36,10 @@
     "notifications": "الإشعارات",
     "suggestions": "اقتراحات التكيّف",
     "challenges": "التحديات",
-    "planner": "أدواتي"
+    "planner": "أدواتي",
+    "start": "البداية",
+    "rest": "وقت راحة",
+    "muhasaba": "محاسبة النفس"
   },
   "auth": {
     "login": "تسجيل الدخول",

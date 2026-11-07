@@ -11,7 +11,7 @@ types.setTypeParser(1082, (v) => v);                      // date
 types.setTypeParser(1184, (v) => new Date(v).toISOString()); // timestamptz
 types.setTypeParser(20, (v) => parseInt(v, 10));          // int8
 
-type Filter = { col: string; op: "=" | "<>" | "in" | ">=" | "<=" | ">" | "<" | "is" | "@>"; val: unknown };
+type Filter = { col: string; op: "=" | "<>" | "in" | ">=" | "<=" | ">" | "<" | "is" | "is not" | "@>" | "or"; val: unknown };
 
 const colTypes = new Map<string, Promise<Map<string, string>>>();
 async function columnTypes(pool: Pool, table: string): Promise<Map<string, string>> {
@@ -63,6 +63,11 @@ class Builder implements PromiseLike<{ data: unknown; error: { message: string }
   lte(col: string, val: unknown) { this.filters.push({ col, op: "<=", val }); return this; }
   lt(col: string, val: unknown) { this.filters.push({ col, op: "<", val }); return this; }
   is(col: string, val: unknown) { this.filters.push({ col, op: "is", val }); return this; }
+  gt(col: string, val: unknown) { this.filters.push({ col, op: ">", val }); return this; }
+  /** PostgREST: .not(col, "is", null) ⇒ col is not null */
+  not(col: string, op: string, val: unknown) { if (op === "is") this.filters.push({ col, op: "is not", val }); else this.filters.push({ col, op: op === "eq" ? "<>" : (op as Filter["op"]), val }); return this; }
+  /** PostgREST: .or("a.is.null,b.gt.2026-01-01") */
+  or(expr: string) { this.filters.push({ col: "", op: "or", val: expr }); return this; }
   order(col: string, o?: { ascending?: boolean }) { this.orderBy = { col, asc: o?.ascending !== false }; return this; }
   limit(n: number) { this.limitN = n; return this; }
   maybeSingle() { this.singleMode = "maybe"; return this; }
@@ -73,6 +78,12 @@ class Builder implements PromiseLike<{ data: unknown; error: { message: string }
     return " where " + this.filters.map((f) => {
       if (f.op === "in") { params.push(f.val); return `"${f.col}" = any($${params.length})`; }
       if (f.op === "is") return f.val === null ? `"${f.col}" is null` : `"${f.col}" is ${f.val ? "true" : "false"}`;
+      if (f.op === "is not") return f.val === null ? `"${f.col}" is not null` : `"${f.col}" is not ${f.val ? "true" : "false"}`;
+      if (f.op === "or") {
+        const SYM: Record<string, string> = { eq: "=", neq: "<>", gt: ">", gte: ">=", lt: "<", lte: "<=" };
+        const parts = String(f.val).split(",").map((c) => { const [col, op, ...rest] = c.split("."); const v = rest.join("."); if (op === "is") return `"${col}" is ${v}`; params.push(v); return `"${col}" ${SYM[op ?? "eq"] ?? "="} $${params.length}`; });
+        return `(${parts.join(" or ")})`;
+      }
       if (f.op === "@>") { params.push(JSON.stringify(f.val)); return `"${f.col}" @> $${params.length}::jsonb`; }
       params.push(f.val); return `"${f.col}" ${f.op} $${params.length}`;
     }).join(" and ");

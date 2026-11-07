@@ -345,7 +345,9 @@
           "times": 3,
           "days": 14,
           "raise_in_weekly_review": true
-        }
+        },
+        "m2_value": 0.6,
+        "_note_m2": "إضافة محلية (المرحلة 10): قيمة M2 (ز.5) +0.6 ولا سلبي."
       }
     },
     "opener_priority": [

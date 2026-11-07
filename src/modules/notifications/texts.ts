@@ -8,10 +8,14 @@ const TYPES = content.types as Record<string, Partial<Record<Audience, Tpl>>>;
 
 export function notificationTypes(): string[] { return Object.keys(TYPES); }
 
-export function renderNotification(type: string, audience: Audience, vars: Record<string, string | number | null | undefined> = {}): Tpl | null {
+const VARIANTS = (content as unknown as { state_variants?: Record<string, Record<string, Partial<Record<Audience, Tpl[]>>>> }).state_variants ?? {};
+
+/** 0.4 و.6: صيغة حسب حالة التفاعل إن وُجدت (تتناوب بالتاريخ)، وإلا النص الافتراضي. */
+export function renderNotification(type: string, audience: Audience, vars: Record<string, string | number | null | undefined> = {}, state?: string | null, rotation = 0): Tpl | null {
   const byAud = TYPES[type];
   if (!byAud) return null;
-  const tpl = byAud[audience] ?? byAud.guardian ?? byAud.adult ?? byAud.teen ?? byAud.child;
+  const variants = state ? VARIANTS[type]?.[state]?.[audience as AgeMode] : undefined;
+  const tpl = variants?.length ? variants[Math.abs(rotation) % variants.length] : (byAud[audience] ?? byAud.guardian ?? byAud.adult ?? byAud.teen ?? byAud.child);
   if (!tpl) return null;
   const fill = (s: string) => s.replace(/\{(\w+)\}/g, (_, k: string) => (vars[k] === undefined || vars[k] === null ? "" : String(vars[k])));
   return { title: fill(tpl.title), body: fill(tpl.body) };
@@ -38,6 +42,9 @@ export function urlForNotification(type: string, payload: Record<string, unknown
     case "settings_changed_by_guardian": return "/app/settings";
     case "safety_resources": return "/app/chat";
     case "adaptation_suggestion": return "/app/suggestions";
+    case "daily_moment": case "followup_push": case "away_checkin": return "/app";
+    case "busy_bundle": return "/app/notifications";
+    case "daily_moments_fade": return "/app/settings";
     case "planner_reminder": return typeof payload.task_id === "string" ? `/app/planner/${payload.task_id}${typeof payload.reminder_id === "string" ? `?reminder=${payload.reminder_id}` : ""}` : "/app/planner";
     default: return "/app/notifications";
   }

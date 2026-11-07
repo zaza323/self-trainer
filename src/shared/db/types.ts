@@ -16,6 +16,7 @@ export type ProfileRow = {
   space_theme: string | null;
   incentive_stage: number;
   planner_tier_max: number;
+  onboarding_path: "reality" | "goals" | null;
   game_intensity: number | null;
   game_intensity_override: number | null;
   avatar_stage_max: number;

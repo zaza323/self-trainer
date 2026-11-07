@@ -3,16 +3,18 @@
  * المسموح: مَعلَم مهارة أو نقل. الممنوع (عدد المهام، XP، streak، وقت التطبيق) يُرفض مع السبب.
  * المرآة الفعلية في قاعدة البيانات: app.validate_reward_trigger.
  */
+import { habitConsistency, type HabitSchedule, type Checkin } from "@/modules/planner/habits";
+import type { WeekStart } from "@/modules/planner/recurrence";
 import { customization, CAPABILITY_IDS, type CapabilityId, type TrainingLevel } from "@/shared/config";
 
-export type TriggerType = "gate2_shown_count" | "training_level_reached" | "transfer_reports" | "achievement_earned" | "goal_completed" | "surprise";
+export type TriggerType = "gate2_shown_count" | "training_level_reached" | "transfer_reports" | "achievement_earned" | "goal_completed" | "surprise" | "habit_consistency";
 export type TriggerParams = Record<string, unknown>;
 
 const LEVEL_ORDER = ["simulated", "guided_real", "independent_real", "transfer", "mastered"] as const;
 
 export type TriggerValidation = { ok: true; type: TriggerType; params: TriggerParams } | { ok: false; reason: "forbidden" | "unknown" | "invalid_params" | "surprise_not_allowed"; explanation: string };
 
-export function validateTrigger(type: string, params: TriggerParams, opts: { allowSurprise: boolean; achievementCodes?: string[]; goalIds?: string[] }): TriggerValidation {
+export function validateTrigger(type: string, params: TriggerParams, opts: { allowSurprise: boolean; achievementCodes?: string[]; goalIds?: string[]; habitIds?: string[] }): TriggerValidation {
   const cfg = customization.real_rewards;
   if (cfg.forbidden_triggers.includes(type)) return { ok: false, reason: "forbidden", explanation: "يكافئ النشاط أو العملة أو السلسلة أو وقت الاستخدام لا التعلم (4.12.2)" };
   const spec = cfg.allowed_triggers[type]?.params as Record<string, unknown> | undefined;
@@ -25,6 +27,10 @@ export function validateTrigger(type: string, params: TriggerParams, opts: { all
   if ("level" in spec && !(spec.level as string[]).includes(String(params.level))) return bad("level");
   if ("achievement_code" in spec && opts.achievementCodes && !opts.achievementCodes.includes(String(params.achievement_code))) return bad("achievement_code");
   if ("goal_id" in spec && (!params.goal_id || (opts.goalIds && !opts.goalIds.includes(String(params.goal_id))))) return bad("goal_id");
+  // 0.4 ب.8: habit_consistency — نسبة التزام ≥ X لمدة N أسابيع (ليست سلسلة أيام متتالية)
+  if ("habit_id" in spec && (!params.habit_id || (opts.habitIds && !opts.habitIds.includes(String(params.habit_id))))) return bad("habit_id");
+  if ("min_weekly_rate" in spec) { const r = spec.min_weekly_rate as { min: number; max: number }; const n = Number(params.min_weekly_rate); if (!Number.isFinite(n) || n < r.min || n > r.max) return bad("min_weekly_rate"); }
+  if ("weeks" in spec) { const r = spec.weeks as { min: number; max: number }; const n = Number(params.weeks); if (!Number.isInteger(n) || n < r.min || n > r.max) return bad("weeks"); }
   return { ok: true, type: type as TriggerType, params };
 }
 
@@ -35,6 +41,9 @@ export type TriggerFacts = {
   transferReports: Array<{ worked: boolean; context_tag: string }>;
   achievementCodes: string[];
   completedGoalIds: string[];
+  /** 0.4: العادات مع تسجيلاتها، وسياق الأسبوع (اليوم وبدايته) لحساب habit_consistency */
+  habits?: Array<{ id: string; schedule: HabitSchedule; checkins: Checkin[] }>;
+  habitContext?: { today: string; weekStart: WeekStart };
 };
 
 export function triggerSatisfied(type: TriggerType, params: TriggerParams, facts: TriggerFacts): boolean {
@@ -52,6 +61,11 @@ export function triggerSatisfied(type: TriggerType, params: TriggerParams, facts
     case "achievement_earned": return facts.achievementCodes.includes(String(params.achievement_code));
     case "goal_completed": return facts.completedGoalIds.includes(String(params.goal_id));
     case "surprise": return true;
+    case "habit_consistency": {
+      const h = facts.habits?.find((x) => x.id === String(params.habit_id));
+      if (!h || !facts.habitContext) return false;
+      return habitConsistency(h.schedule, h.checkins, facts.habitContext.today, facts.habitContext.weekStart, Number(params.min_weekly_rate), Number(params.weeks));
+    }
   }
 }
 

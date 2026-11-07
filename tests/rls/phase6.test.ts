@@ -134,6 +134,8 @@ describe("Web Push والإشعارات (NOTIF-1..5)", () => {
   });
   it("التسليم: الحد اليومي (1) يؤجل الثاني إلى الغد؛ الدفع يصل لأجهزة المستلم؛ الاشتراك الميت يُحذف", async () => {
     const now = instantForLocal("2026-11-05", "17:05", TZ);
+    // 0.4 و.4: الميزانية تتبع حالة التفاعل (steady = 2 للمراهق)؛ المستخدم يخفض ولا يرفع — هنا يضعها 1 كما كان في 0.3
+    await h.as(n6, (q) => q(`insert into settings (profile_id, key, value, set_by_role) values ($1,'notification_max_per_day','1','player') on conflict (profile_id, key, set_by_role) do update set value = excluded.value`, [n6Profile]));
     await h.as(n6, (q) => q(`insert into push_subscriptions (user_id, endpoint, p256dh, auth) values ($1,'https://push.example/n6-a','k','a'), ($1,'https://push.example/n6-dead','k','a')`, [n6.id]));
     await h.service(`insert into notifications (profile_id, type, scheduled_for, dedupe_key) values ($1,'mission_today',$2,'t1'), ($1,'comeback',$2,'t2')`, [n6Profile, new Date(now.getTime() - 60000).toISOString()]);
     const sender = fakeSender((sub) => (sub.endpoint.endsWith("dead") ? "gone" : "ok"));

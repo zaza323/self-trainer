@@ -11,7 +11,7 @@ import type { AgeMode } from "@/shared/config";
 /** P14 المحادثة الحرة (AI-1، AI-4، AI-13). */
 export default async function ChatPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
   const { mode: modeParam } = await searchParams;
-  const mode = modeParam === "comeback" ? "comeback" : "free";
+  const mode = (["comeback", "daily_moment", "mirror", "weekly_review"].includes(modeParam ?? "") ? modeParam : "free") as "free" | "comeback" | "daily_moment" | "mirror" | "weekly_review";
   const s = (await getSession())!;
   const profile = s.profile!;
   const db = await createClient();

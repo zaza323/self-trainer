@@ -1,5 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { effective } from "@/modules/settings";
+import { todayIn } from "@/modules/missions/queries";
 import type { TrainingLevel } from "@/shared/config";
 import { triggerSatisfied, type TriggerFacts, type TriggerType } from "./triggers";
 
@@ -30,6 +32,15 @@ export async function evaluateRewardTriggers(admin: SupabaseClient, profileId: s
       const cap = (caps ?? [])[0]?.capability_id as string | undefined;
       if (cap) shown[cap] = (shown[cap] ?? 0) + 1;
     }
+    const { data: habitRows } = await admin.from("planner_habits").select("id, schedule").eq("profile_id", profileId).eq("archived", false);
+    const habits = [] as NonNullable<TriggerFacts["habits"]>;
+    for (const h of (habitRows ?? []) as Array<{ id: string; schedule: TriggerFacts["habits"] extends Array<infer H> | undefined ? (H extends { schedule: infer S } ? S : never) : never }>) {
+      const { data: ci } = await admin.from("planner_habit_checkins").select("date, done, flex_used").eq("habit_id", h.id).gte("date", since.slice(0, 10));
+      habits.push({ id: h.id, schedule: h.schedule, checkins: (ci ?? []) as Array<{ date: string; done: boolean; flex_used: boolean }> });
+    }
+    const { data: profRow } = await admin.from("profiles").select("timezone").eq("id", profileId).single();
+    const tz = (profRow as { timezone: string } | null)?.timezone ?? "Asia/Amman";
+    const weekStart = (await effective<"sat" | "sun" | "mon">(admin, profileId, "week_start_day")).value;
     const achIds = ((pa ?? []) as Array<{ achievement_id: string }>).map((a) => a.achievement_id);
     const { data: achRows } = achIds.length ? await admin.from("achievements").select("id, code").in("id", achIds) : { data: [] };
     return {
@@ -37,6 +48,7 @@ export async function evaluateRewardTriggers(admin: SupabaseClient, profileId: s
       transferReports: (tr ?? []) as Array<{ worked: boolean; context_tag: string }>,
       achievementCodes: ((achRows ?? []) as Array<{ code: string }>).map((a) => a.code),
       completedGoalIds: ((goals ?? []) as Array<{ id: string }>).map((g) => g.id),
+      habits, habitContext: { today: todayIn(tz, now), weekStart },
     };
   };
 

@@ -42,7 +42,7 @@
   },
   "notifications": {
     "_note": "الإشعارات (NOTIF-1..5): الحد الصلب 3 يوميًا من 4.11.3؛ الدورة بالدقائق؛ الاحتفاظ بالأيام.",
-    "hard_cap_per_day": 3,
+    "hard_cap_per_day": 6,
     "tick_minutes": 15,
     "planner_lookahead_hours": 36,
     "bypass_types": [
@@ -60,7 +60,12 @@
       "mission_approved",
       "reward_cancelled",
       "settings_changed_by_guardian",
-      "reward_earned_guardian"
+      "reward_earned_guardian",
+      "daily_moment",
+      "followup_push",
+      "away_checkin",
+      "busy_bundle",
+      "daily_moments_fade"
     ],
     "comeback_after_gap_days": 3,
     "comeback_repeat_days": 7,
@@ -71,6 +76,7 @@
     "user_set_types": [
       "planner_reminder"
     ],
-    "_note_04": "user_set_types (0.4 ب.5): تذكيرات ضبطها المستخدم؛ خارج الحد اليومي، تحترم ساعات الهدوء إلا إذا وُسمت مهمة."
+    "_note_04": "user_set_types (0.4 ب.5): تذكيرات ضبطها المستخدم؛ خارج الحد اليومي، تحترم ساعات الهدوء إلا إذا وُسمت مهمة.",
+    "_note_04_cap": "0.4 و.4: السقف الصلب صار حسب الوضع العمري في planner.engagement.ceiling (child 3، teen 6، adult 6)؛ هذا المفتاح حد عام أعلى فقط."
   }
 }

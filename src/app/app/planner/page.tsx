@@ -35,6 +35,14 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
         <h2 className="text-lg font-semibold">{content.title}</h2>
         <Badge variant="secondary">{content.tier_label}: {ctx.tier.tier}</Badge>
         {hasTool(ctx.tier.tier, "projects") && <Link href="/app/planner/projects" className="text-sm underline">{content.projects.title}</Link>}
+        {hasTool(ctx.tier.tier, "calendar") && <Link href="/app/planner/calendar" className="text-sm underline">{content.calendar.title}</Link>}
+        {hasTool(ctx.tier.tier, "habits") && <Link href="/app/planner/habits" className="text-sm underline">{content.habits.title}</Link>}
+        {hasTool(ctx.tier.tier, "pomodoro") && <Link href="/app/planner/focus" className="text-sm underline">{content.focus.title}</Link>}
+        {hasTool(ctx.tier.tier, "kanban") && <Link href="/app/planner/kanban" className="text-sm underline">{content.kanban.title}</Link>}
+        {hasTool(ctx.tier.tier, "eisenhower") && <Link href="/app/planner/eisenhower" className="text-sm underline">{content.eisenhower.title}</Link>}
+        {hasTool(ctx.tier.tier, "stats") && <Link href="/app/planner/stats" className="text-sm underline">{content.stats.title}</Link>}
+        <Link href="/app/planner/review" className="text-sm underline">{content.review.title}</Link>
+        <Link href="/app/mirror" className="text-sm underline">{content.review.mirror_link}</Link>
         {groups.overdue.length > 0 && <Link href="/app/planner/overdue" className="text-sm text-destructive underline">{content.overdue.title} ({groups.overdue.length})</Link>}
       </div>
       <p className="text-sm text-muted-foreground">{content.intro}</p>

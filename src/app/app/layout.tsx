@@ -14,8 +14,11 @@ export default async function PlayerLayout({ children }: { children: React.React
   const mode = s.profile.age_mode!;
   const showChallenges = await challengesVisible(await createClient(), { id: s.profile.id, game_intensity: s.profile.game_intensity });
   const nav = [
-    { href: "/app", label: t("nav.home") },
+    { href: "/app", label: t("nav.start") },
+    { href: "/app/home", label: t("nav.home") },
     { href: "/app/planner", label: t("nav.planner") },
+    { href: "/app/rest", label: t("nav.rest") },
+    { href: "/app/muhasaba", label: t("nav.muhasaba") },
     { href: "/app/goals", label: t("nav.goals") },
     { href: "/app/missions", label: t("nav.missions") },
     { href: "/app/map", label: t("nav.map") },

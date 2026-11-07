@@ -33,6 +33,9 @@ export class FakeDb {
       in(c: string, v: unknown[]) { this.filters.push((r) => v.includes(r[c])); return this; }
       gte(c: string, v: unknown) { this.filters.push((r) => String(r[c]) >= String(v)); return this; }
       lt(c: string, v: unknown) { this.filters.push((r) => String(r[c]) < String(v)); return this; }
+      gt(c: string, v: unknown) { this.filters.push((r) => String(r[c]) > String(v)); return this; }
+      not(c: string, op: string, v: unknown) { this.filters.push((r) => (op === "is" ? !(v === null ? r[c] === null || r[c] === undefined : r[c] === v) : r[c] !== v)); return this; }
+      or(expr: string) { const parts = expr.split(",").map((p) => p.split(".")); this.filters.push((r) => parts.some(([c, op, ...rest]) => { const v = rest.join("."); const x = r[c!]; if (op === "is") return v === "null" ? x === null || x === undefined : String(x) === v; if (op === "gt") return String(x) > v; if (op === "lt") return String(x) < v; return String(x) === v; })); return this; }
       is(c: string, v: unknown) { this.filters.push((r) => (v === null ? r[c] === null || r[c] === undefined : r[c] === v)); return this; }
       order(c: string, o?: { ascending?: boolean }) { this.orderBy = { col: c, asc: o?.ascending !== false }; return this; }
       limit(n: number) { this.limitN = n; return this; }

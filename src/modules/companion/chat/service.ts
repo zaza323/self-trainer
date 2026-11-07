@@ -14,7 +14,7 @@ import messagesContent from "@content/companion_messages.ar.json";
  * المحادثة الحرة (AI-1..AI-14): خيط واحد مشترك بين المتدرب ومربيه. الرد يُبث نصًا ثم يُحلَّل بوظيفة خفيفة مهيكلة.
  * كل الكتابات الآلية بعميل الخدمة (admin)؛ رسالة المتدرب تُدرج بعميله هو (RLS).
  */
-export type ChatMode = "free" | "goal" | "plan" | "reflect" | "comeback" | "review";
+export type ChatMode = "free" | "goal" | "plan" | "reflect" | "comeback" | "review" | "daily_moment" | "mirror" | "weekly_review";
 
 export type ChatContext = {
   profileId: string; mode: AgeMode; support: SupportLevel;

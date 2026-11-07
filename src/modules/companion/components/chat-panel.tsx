@@ -17,7 +17,7 @@ type Props = {
   handoffGuardianName?: string | null;
   guardianNames?: string[];
   canIntervene?: boolean;
-  mode?: "free" | "comeback";
+  mode?: "free" | "comeback" | "daily_moment" | "mirror" | "weekly_review";
   intro?: string;
   realtime?: boolean;
 };

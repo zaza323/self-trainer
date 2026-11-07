@@ -38,7 +38,7 @@ async function owner() {
 
 /** AI-1: إرسال رسالة (المسار غير المبثوث؛ المسار المبثوث في /api/companion/stream). */
 export async function sendChatMessage(_: unknown, form: FormData): Promise<CompanionActionResult> {
-  const p = z.object({ text: z.string().trim().min(1).max(2000), mode: z.enum(["free", "comeback"]).default("free") }).safeParse({ text: form.get("text"), mode: form.get("mode") ?? "free" });
+  const p = z.object({ text: z.string().trim().min(1).max(2000), mode: z.enum(["free", "comeback", "daily_moment", "mirror", "weekly_review"]).default("free") }).safeParse({ text: form.get("text"), mode: form.get("mode") ?? "free" });
   if (!p.success) return { ok: false, error: "invalid_input" };
   const o = await owner();
   if (!o) return { ok: false, error: "not_allowed" };

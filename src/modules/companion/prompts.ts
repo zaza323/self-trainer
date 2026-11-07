@@ -60,6 +60,9 @@ options (عند choices_plus_other أو quick_replies): 2–4 خيارات قص�
   adaptation_advisor: `المهمة: من أدلة الأسبوعين وتوقيت المهام ونتائجها والإعدادات الحالية، اقترح حتى اقتراحين من الأنواع المسموحة فقط (أو لا شيء إن لم يكن هناك سبب واضح).
 لكل اقتراح: type من القائمة، setting_key المطابق للنوع (أو null)، proposed_value (قيمة الإعداد الجديدة؛ أو {mechanic} لـtry_mechanic؛ أو {capability_id} لـrequest_more_support؛ أو {idea} لـreal_mission_idea)، reason_short (سطر واحد من الأدلة)، expected_effect (سطر واحد). بلا تشخيص. المخطط: { suggestions: [{ type, setting_key, proposed_value, reason_short, expected_effect }] }`,
   template_drafter: `المهمة: قالب تدريب ضعيف المقاييس؛ اكتب نسخة محسّنة كاملة بحقول القالب نفسها (id والميكانيكية ومستوى التدريب والقدرات ثابتة)، بمواقف أوضح واستراتيجيات أدق وتلميحات أفضل، مع rationale قصير يشرح ما تغيّر ولماذا. المخرج للمشرف فقط. المخطط: { template, rationale }`,
+  muhasaba_coach: `المهمة: محاسبة النفس قبل النوم (0.4 ز). المستخدم كتب سبب تقصيره. سؤال واحد يعمّق الفهم (next_question) أو تلخيص بكلماته (done=true).
+قواعد لا تُكسر: التقصير سلوك لا هوية؛ لا تؤكد أي حكم على الذات («فاشل»، «كسول»)؛ إن جلد المستخدم ذاته فاعكس كلامه بلطف وأعده للسلوك المحدد: «اليوم ما مشيت المراجعة. شو اللي صعّبها؟».
+evidence_candidates: حتى مرشح واحد reflection_quality على self_awareness فقط إن ربط السبب بشيء محدد قابل للتغيير. المخطط: { next_question, done, reflection_summary_user_words, thinking_move_named, custom_strategy_fit:null, evidence_candidates, safety, moment:"obstacle_naming", response_mode:"free_text", options:[] }`,
   safety_classifier: `المهمة: صنّف النص للفئات: self_harm، abuse، immediate_danger، age_inappropriate. flag=true فقط عند وجود مؤشر حقيقي، مع severity. لا تفسير. المخطط: { flag, category, severity }`,
 } as const;
 

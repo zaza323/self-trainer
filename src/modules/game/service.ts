@@ -20,7 +20,7 @@ async function achievementId(admin: Admin, code: string): Promise<string | null>
   return (data?.id as string) ?? null;
 }
 
-async function award(admin: Admin, profileId: string, code: string, tier: number, sourceKey = "", sourceId: string | null = null): Promise<boolean> {
+export async function award(admin: Admin, profileId: string, code: string, tier: number, sourceKey = "", sourceId: string | null = null): Promise<boolean> {
   const id = await achievementId(admin, code);
   if (!id) return false;
   const { data } = await admin.from("profile_achievements").upsert({ profile_id: profileId, achievement_id: id, tier, source_key: sourceKey, source_id: sourceId }, { onConflict: "profile_id,achievement_id,tier,source_key", ignoreDuplicates: true }).select("achievement_id");

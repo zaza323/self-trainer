@@ -8,7 +8,7 @@ import type { AgeMode } from "@/shared/config";
 
 /** AI-1 / 7.5: المحادثة الحرة بتدفق (SSE). الأحداث: delta (نص)، final (النص النهائي والنوع)، error. */
 export async function POST(request: Request) {
-  const body = z.object({ text: z.string().trim().min(1).max(2000), mode: z.enum(["free", "comeback"]).default("free") }).safeParse(await request.json().catch(() => null));
+  const body = z.object({ text: z.string().trim().min(1).max(2000), mode: z.enum(["free", "comeback", "daily_moment", "mirror", "weekly_review"]).default("free") }).safeParse(await request.json().catch(() => null));
   if (!body.success) return new Response("bad request", { status: 400 });
   const s = await getSession();
   if (!s?.profile || s.profile.kind !== "player") return new Response("unauthorized", { status: 401 });

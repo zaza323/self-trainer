@@ -23,3 +23,8 @@
 ## إضافات محلية في الخطوة 2 (المرحلة 9)
 - `config/planner.json`: `nlp.period_hours` (ساعة كل كلمة فترة في المحلّل)، `tasks.recurrence.default_recur_from` («كل N أيام» من الإنجاز افتراضيًا كما في مثال ب.4)، `reminders.tick_lookahead_min`.
 - `config/limits.json`: `notifications.user_set_types = ["planner_reminder"]` (ب.5: تذكيرات المستخدم خارج الحد اليومي؛ تحترم الهدوء إلا «مهم»)، والإصدار `2026-11-05.4`.
+
+## إضافات محلية في الخطوة 3 (المرحلة 10)
+- `config/planner.json`: `daily_moments.moments.muhasaba.m2_value = 0.6` (ز.5 M2).
+- `config/limits.json`: `notifications.types_in_cap` += `daily_moment, followup_push, away_checkin, busy_bundle, daily_moments_fade`؛ `hard_cap_per_day` 3 → 6 (السقف الفعلي حسب الوضع في `planner.engagement.ceiling`).
+- `config/game.json`: المخطط Zod الآن يشمل `xp.planner_rules` وكل أسباب XP الجديدة وإنجازات `first_full_week` / `habit_7_days` / `restful_week` / `pace_rising`.
