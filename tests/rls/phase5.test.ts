@@ -55,24 +55,30 @@ describe("المربي يضيف مهمة واقعية (LIFE-3، MIS-10)", () => 
   });
 });
 
+
+// 0017: لا كتابة مباشرة على rewards؛ الإنشاء وتغيير الحالة عبر دالتين لدور الخدمة (كما يفعل فعل الخادم بهوية الجلسة)
+const rewardCreate = (actor: TestUser, profile: string, title: string, type: string, params: string | null, status = "draft") =>
+  h.service<{ id: string }>(`select public.reward_create($1,$2,$3,null,null,$4,$5::jsonb,$6) as id`, [actor.id, profile, title, type, params, status]).then((r) => r.rows[0]!.id);
+const rewardTo = (actor: TestUser, id: string, to: string) => h.service(`select * from public.reward_transition($1,$2,$3)`, [actor.id, id, to]);
+const fails = async (p: Promise<unknown>): Promise<string | null> => { try { await p; return null; } catch (e) { return (e as Error).message; } };
 describe("المكافآت الواقعية (REWARD-1..8)", () => {
   it("محفز ممنوع يُرفض في قاعدة البيانات برسالة تشرح السبب (REWARD-2)", async () => {
     for (const f of customization.real_rewards.forbidden_triggers) {
-      const err = await h.failsAs(creator, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'نزهة',$3,'{"count":5}')`, [childProfile, creator.id, f]);
+      const err = await fails(rewardCreate(creator, childProfile, "نزهة", f, '{"count":5}'));
       expect(err).toMatch(/forbidden_trigger/);
       expect(err).toMatch(/التعلم/);
     }
-    expect(await h.failsAs(creator, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'x','gate2_shown_count','{"capability_id":"attention","count":1}')`, [childProfile, creator.id])).toMatch(/invalid_params: count/);
-    expect(await h.failsAs(stranger, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'x','gate2_shown_count','{"capability_id":"attention","count":2}')`, [childProfile, stranger.id])).toMatch(/row-level security/);
-    expect(await h.failsAs(childUser, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'x','gate2_shown_count','{"capability_id":"attention","count":2}')`, [childProfile, childUser.id])).toMatch(/row-level security/);
+    expect(await fails(rewardCreate(creator, childProfile, "x", "gate2_shown_count", '{"capability_id":"attention","count":1}'))).toMatch(/invalid_params: count/);
+    expect(await fails(rewardCreate(stranger, childProfile, "x", "gate2_shown_count", '{"capability_id":"attention","count":2}'))).toMatch(/not_permitted/);
+    expect(await fails(rewardCreate(childUser, childProfile, "x", "gate2_shown_count", '{"capability_id":"attention","count":2}'))).toMatch(/not_permitted/);
   });
   let rewardId: string;
   it("الدورة: draft → active (عهد معلن) → earned عند تحقق المحفز منذ التفعيل فقط → delivered → acknowledged، مع تسجيل كل انتقال", async () => {
-    rewardId = await h.as(creator, async (q) => (await q(`insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'نزهة الجمعة','gate2_shown_count','{"capability_id":"attention","count":2}') returning id`, [childProfile, creator.id])).rows[0].id);
+    rewardId = await rewardCreate(creator, childProfile, "نزهة الجمعة", "gate2_shown_count", '{"capability_id":"attention","count":2}');
     expect(await h.as(childUser, async (q) => (await q(`select count(*)::int as n from rewards where id = $1`, [rewardId])).rows[0].n)).toBe(0); // المسودة لا تظهر للمتدرب
-    await h.as(creator, (q) => q(`update rewards set status = 'active' where id = $1`, [rewardId]));
+    await rewardTo(creator, rewardId, "active");
     expect(await h.as(childUser, async (q) => (await q(`select status from rewards where id = $1`, [rewardId])).rows[0].status)).toBe("active");
-    expect(await h.failsAs(creator, `update rewards set status = 'delivered' where id = $1`, [rewardId])).toMatch(/not allowed/);
+    expect(await fails(rewardTo(creator, rewardId, "delivered"))).toMatch(/not allowed/);
     // مهمتان shown للانتباه بعد التفعيل
     for (let i = 0; i < 2; i++) {
       const mid = await h.as(childUser, async (q) => (await q(`insert into missions (profile_id, template_id, template_version, difficulty, support_level) values ($1,'rd-sim-01',1,2,'L0_instruct') returning id`, [childProfile])).rows[0].id);
@@ -91,25 +97,26 @@ describe("المكافآت الواقعية (REWARD-1..8)", () => {
     }
     expect(await h.service<{ status: string }>(`select status from rewards where id = $1`, [rewardId]).then((r) => r.rows[0]!.status)).toBe("earned");
     expect((await h.service<{ n: number }>(`select count(*)::int as n from notifications where type in ('reward_earned','reward_earned_guardian') and profile_id = $1`, [childProfile])).rows[0]!.n).toBe(2);
-    expect(await h.failsAs(creator, `update rewards set status = 'cancelled' where id = $1`, [rewardId])).toMatch(/not allowed/); // العهد لا يُلغى بعد earned
-    expect(await h.failsAs(childUser, `update rewards set status = 'delivered' where id = $1`, [rewardId])).toMatch(/not allowed/); // المتدرب لا يسلّم
-    await h.as(creator, (q) => q(`update rewards set status = 'delivered' where id = $1`, [rewardId]));
-    await h.as(childUser, (q) => q(`update rewards set status = 'acknowledged' where id = $1`, [rewardId]));
+    expect(await fails(rewardTo(creator, rewardId, "cancelled"))).toMatch(/not allowed/); // العهد لا يُلغى بعد earned
+    expect(await fails(rewardTo(childUser, rewardId, "delivered"))).toMatch(/not allowed/); // المتدرب لا يسلّم
+    await rewardTo(creator, rewardId, "delivered");
+    await rewardTo(childUser, rewardId, "acknowledged");
     const ev = await h.service<{ to_status: string }>(`select to_status from reward_events where reward_id = $1 order by at`, [rewardId]);
     expect(ev.rows.map((e) => e.to_status)).toEqual(["draft", "active", "earned", "delivered", "acknowledged"]);
   });
   it("المفاجأة تُنشأ earned مباشرة؛ حد 10 عهود نشطة", async () => {
-    const st = await h.as(creator, async (q) => (await q(`insert into rewards (profile_id, created_by, title, trigger_type) values ($1,$2,'آيس كريم','surprise') returning status`, [childProfile, creator.id])).rows[0].status);
+    const sid = await rewardCreate(creator, childProfile, "آيس كريم", "surprise", null);
+    const st = (await h.service<{ status: string }>(`select status from rewards where id = $1`, [sid])).rows[0]!.status;
     expect(st).toBe("earned");
     for (let i = 0; i < customization.real_rewards.max_active_per_player; i++) {
-      await h.as(creator, (q) => q(`insert into rewards (profile_id, created_by, title, trigger_type, trigger_params, status) values ($1,$2,$3,'transfer_reports','{"count":3}','active')`, [childProfile, creator.id, `عهد ${i}`]));
+      await rewardCreate(creator, childProfile, `عهد ${i}`, "transfer_reports", '{"count":3}', "active");
     }
-    expect(await h.failsAs(creator, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params, status) values ($1,$2,'زيادة','transfer_reports','{"count":3}','active')`, [childProfile, creator.id])).toMatch(/max_active_rewards_reached/);
+    expect(await fails(rewardCreate(creator, childProfile, "زيادة", "transfer_reports", '{"count":3}', "active"))).toMatch(/max_active_rewards_reached/);
   });
   it("البالغ ينشئ مكافأة لنفسه؛ المراهق لا", async () => {
     const adultProfile = (await h.service<{ id: string }>(`select id from profiles where display_name = 'غريب'`)).rows[0]!.id;
-    await h.as(stranger, (q) => q(`insert into rewards (profile_id, created_by, title, trigger_type, trigger_params, status) values ($1,$2,'كتاب','transfer_reports','{"count":2}','active')`, [adultProfile, stranger.id]));
-    expect(await h.failsAs(teen, `insert into rewards (profile_id, created_by, title, trigger_type, trigger_params) values ($1,$2,'x','transfer_reports','{"count":2}')`, [teenProfile, teen.id])).toMatch(/row-level security/);
+    await rewardCreate(stranger, adultProfile, "كتاب", "transfer_reports", '{"count":2}', "active");
+    expect(await fails(rewardCreate(teen, teenProfile, "x", "transfer_reports", '{"count":2}'))).toMatch(/not_permitted/);
   });
   it("إنجاز خاص (GAME-10): المحفزات نفسها عدا surprise", async () => {
     expect(await h.failsAs(creator, `insert into achievements (code, name_by_mode, owner_profile_id, created_by, trigger_type) values ('custom-x','{"child":"x"}',$1,$2,'surprise')`, [childProfile, creator.id])).toMatch(/surprise_not_allowed/);

@@ -29,21 +29,24 @@ export async function createReward(_: unknown, form: FormData): Promise<RewardAc
   const { data: goals } = await db.from("goals").select("id").eq("profile_id", p.data.profile_id);
   const v = validateTrigger(p.data.trigger_type, parseParams(form), { allowSurprise: true, achievementCodes: ((ach ?? []) as Array<{ code: string }>).map((a) => a.code), goalIds: ((goals ?? []) as Array<{ id: string }>).map((g) => g.id) });
   if (!v.ok) return { ok: false, error: v.reason, explanation: v.explanation };
-  const { data, error } = await db.from("rewards").insert({ profile_id: p.data.profile_id, created_by: s.userId, title: p.data.title, description: p.data.description || null, icon: p.data.icon || "🎁", trigger_type: v.type, trigger_params: v.params, status: p.data.activate === "on" && v.type !== "surprise" ? "active" : "draft" }).select("id").single();
+  // لا كتابة مباشرة على rewards (الهجرة 0017): دالة لدور الخدمة تتحقق من الصلاحية بهوية الجلسة
+  const { data, error } = await createAdminClient().rpc("reward_create", { p_actor: s.userId, p_profile_id: p.data.profile_id, p_title: p.data.title, p_description: p.data.description || null, p_icon: p.data.icon || "🎁", p_trigger_type: v.type, p_trigger_params: v.params, p_status: p.data.activate === "on" && v.type !== "surprise" ? "active" : "draft" });
   if (error) return { ok: false, error: mapErr(error.message) };
   revalidatePath("/", "layout");
-  return { ok: true, id: data.id as string };
+  return { ok: true, id: data as string };
 }
 
 /** REWARD-3: دورة الحالات. المتدرب: acknowledged فقط. المربي: active/delivered/cancelled. */
 export async function transitionReward(_: unknown, form: FormData): Promise<RewardActionResult> {
   const p = z.object({ reward_id: uuid, to: z.enum(["active", "delivered", "acknowledged", "cancelled"]) }).safeParse({ reward_id: form.get("reward_id"), to: form.get("to") });
   if (!p.success) return { ok: false, error: "invalid_input" };
-  const db = await createClient();
-  const { data, error } = await db.from("rewards").update({ status: p.data.to }).eq("id", p.data.reward_id).select("id, profile_id, title");
+  const s = await getSession();
+  if (!s) return { ok: false, error: "not_allowed" };
+  const { data, error } = await createAdminClient().rpc("reward_transition", { p_actor: s.userId, p_id: p.data.reward_id, p_to: p.data.to });
   if (error) return { ok: false, error: mapErr(error.message) };
-  if (!data?.length) return { ok: false, error: "not_allowed" };
-  if (p.data.to === "cancelled") await createAdminClient().from("notifications").insert({ profile_id: data[0]!.profile_id, type: "reward_cancelled", payload: { reward_id: p.data.reward_id, title: data[0]!.title } });
+  const row = ((data ?? []) as Array<{ id: string; profile_id: string; title: string }>)[0];
+  if (!row) return { ok: false, error: "not_allowed" };
+  if (p.data.to === "cancelled") await createAdminClient().from("notifications").insert({ profile_id: row.profile_id, type: "reward_cancelled", payload: { reward_id: p.data.reward_id, title: row.title } });
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -70,6 +73,7 @@ export async function reevaluateRewards(profileId: string) {
 }
 
 function mapErr(m: string) {
+  if (/not_permitted/.test(m)) return "not_allowed";
   if (/forbidden_trigger/.test(m)) return "forbidden";
   if (/max_active_rewards/.test(m)) return "max_active";
   if (/not allowed/.test(m)) return "bad_transition";

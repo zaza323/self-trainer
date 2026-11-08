@@ -14,12 +14,20 @@ export type Profile = { id: string; age_mode: AgeMode; timezone: string };
 export type IncrementRow = { over_cap?: boolean; discovery?: boolean; achieved_ratio?: number | null; achieved_value?: number | null; gap?: number | null; id: string; profile_id: string; week_start: string; kind: IncrementKind; metric: string | null; from_value: number | null; target_value: number | null; description: string | null; status: string; achieved_days: number | null; window_days: number | null; requires_guardian: boolean; decided_at: string | null; created_at: string };
 const ACTIVE = ["accepted", "edited"];
 
-/** مؤشرات يوم محلي واحد (ح.2). الإنجازات الرجعية تدخل الأولويات المنجزة. */
-/** bedtime_adherence (تقريب موثَّق في VERIFY-LATER): آخر استعمال للتطبيق في اليوم المحلي ≤ موعد النوم المضبوط. */
-export async function dayMetrics(db: Db, p: Profile, date: string, habits: Array<{ id: string; schedule: HabitSchedule; checkins: Checkin[] }>, weekStart: WeekStart, bedtime: string | null): Promise<DayMetrics> {
+/** عادة النوم = العادة التي أنشأها المستخدم كعادة نوم (schedule.bedtime، هـ.5). */
+export function sleepHabitOf<T extends { schedule: HabitSchedule }>(habits: T[]): T | null {
+  return habits.find((h) => (h.schedule as HabitSchedule & { bedtime?: boolean }).bedtime === true) ?? null;
+}
+
+/**
+ * مؤشرات يوم محلي واحد (ح.2). الإنجازات الرجعية تدخل الأولويات المنجزة.
+ * bedtime_adherence: فقط من تسجيل المستخدم لعادة النوم في يوم مجدول. بلا عادة نوم لا يُحسب أبدًا،
+ * ولا يُستنتج النوم من أي نشاط في التطبيق (فتح، آخر استعمال، مهام...).
+ */
+export async function dayMetrics(db: Db, p: Profile, date: string, habits: Array<{ id: string; schedule: HabitSchedule; checkins: Checkin[] }>, weekStart: WeekStart): Promise<DayMetrics> {
   const start = instantForLocal(date, "00:00", p.timezone).toISOString(), end = instantForLocal(addDays(date, 1), "00:00", p.timezone).toISOString();
   const [{ data: opens }, { data: checkins }, { data: done }, { data: retro }, { data: focus }, { data: fus }, { data: missions }] = await Promise.all([
-    db.from("app_opens").select("local_date, last_at").eq("profile_id", p.id).eq("local_date", date),
+    db.from("app_opens").select("local_date").eq("profile_id", p.id).eq("local_date", date),
     db.from("daily_checkins").select("moment, top_priorities, status, local_date").eq("profile_id", p.id).in("local_date", [date, addDays(date, -1)]).eq("status", "answered"),
     db.from("planner_tasks").select("id").eq("profile_id", p.id).eq("status", "done").gte("completed_at", start).lt("completed_at", end),
     db.from("retro_completions").select("id").eq("profile_id", p.id).gte("approx_at", start).lt("approx_at", end),
@@ -41,8 +49,8 @@ export async function dayMetrics(db: Db, p: Profile, date: string, habits: Array
     mission_difficulty: shown.length ? shown.reduce((a, m) => a + m.difficulty, 0) / shown.length : null,
   };
   for (const h of habits) if (scheduledOn(h.schedule, date, weekStart)) values[`habit_adherence:${h.id}`] = h.checkins.some((c) => c.date === date && c.done) ? 1 : 0;
-  const open = ((opens ?? []) as Array<{ last_at: string }>)[0];
-  if (bedtime && open) values.bedtime_adherence = localParts(new Date(open.last_at), p.timezone).hhmm <= bedtime.slice(0, 5) ? 1 : 0;
+  const sleep = sleepHabitOf(habits);
+  if (sleep && scheduledOn(sleep.schedule, date, weekStart)) values.bedtime_adherence = sleep.checkins.some((c) => c.date === date && c.done) ? 1 : 0;
   const active = Boolean((opens ?? []).length || plan || doneIds.size || (retro ?? []).length || fuDone + fuMissed > 0);
   return { date, active, values };
 }
@@ -59,9 +67,8 @@ async function loadHabits(db: Db, profileId: string) {
 
 export async function daysWindow(db: Db, p: Profile, today: string, n: number, weekStart: WeekStart): Promise<DayMetrics[]> {
   const habits = await loadHabits(db, p.id);
-  const bedtime = (await effective<string | null>(db, p.id, "target_bedtime")).value;
   const out: DayMetrics[] = [];
-  for (let i = 1; i <= n; i++) out.push(await dayMetrics(db, p, addDays(today, -i), habits, weekStart, bedtime));
+  for (let i = 1; i <= n; i++) out.push(await dayMetrics(db, p, addDays(today, -i), habits, weekStart));
   return out;
 }
 

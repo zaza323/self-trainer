@@ -148,9 +148,11 @@ describe("الوتيرة الشخصية (ح.9)", () => {
     // idempotent: لا اقتراح ثانٍ في الأسبوع نفسه
     const again = await runWeeklyPace(svc, P(childP, "child"), NOW);
     expect(again.proposed?.id).toBe(r.proposed?.id);
-    await expect(h.as(childUser, (q) => q(`select public.decide_increment($1, 'accepted', null)`, [r.proposed!.id]))).rejects.toThrow(/not allowed/);
+    // المتصفح لا يستدعي الدالة إطلاقًا (0017)؛ وعبر فعل الخادم بهوية الطفل تُرفض لأنها تحتاج المربي
+    await expect(h.as(childUser, (q) => q(`select public.decide_increment($1, $2, 'accepted', null)`, [childUser.id, r.proposed!.id]))).rejects.toThrow(/permission denied/);
+    await expect(h.service(`select public.decide_increment($1, $2, 'accepted', null)`, [childUser.id, r.proposed!.id])).rejects.toThrow(/not allowed/);
     expect((await h.service<{ status: string }>(`select status from growth_increments where id = $1`, [r.proposed!.id])).rows[0]!.status).toBe("proposed");
-    await h.as(creator, (q) => q(`select public.decide_increment($1, 'accepted', null)`, [r.proposed!.id]));
+    await h.service(`select public.decide_increment($1, $2, 'accepted', null)`, [creator.id, r.proposed!.id]);
     expect((await h.service<{ status: string }>(`select status from growth_increments where id = $1`, [r.proposed!.id])).rows[0]!.status).toBe("accepted");
   });
   it("الأسبوع التالي: تحقيق 6 من 7 ⇒ achieved + XP increment_achieved (و3 من 7 ⇒ رجوع: rules.test)", async () => {
@@ -166,7 +168,7 @@ describe("الوتيرة الشخصية (ح.9)", () => {
     for (let d = 1; d <= 10; d++) await h.service(`insert into planner_focus_sessions (profile_id, started_at, ended_at, minutes, completed) values ($1, $2, $2, 40, true)`, [teenP, T(addDays(TODAY, -d), "10:00").toISOString()]);
     const r = await runWeeklyPace(svc, P(teenP, "teen"), T(addDays(TODAY, 1), "12:00"));
     expect(r.proposed?.requires_guardian).toBe(false);
-    await h.as(teen, (q) => q(`select public.decide_increment($1, 'edited', 42)`, [r.proposed!.id]));
+    await h.service(`select public.decide_increment($1, $2, 'edited', 42)`, [teen.id, r.proposed!.id]);
     const row = (await h.service<{ status: string; target_value: string }>(`select status, target_value from growth_increments where id = $1`, [r.proposed!.id])).rows[0]!;
     expect(row.status).toBe("edited"); expect(Number(row.target_value)).toBe(42);
   });
@@ -232,7 +234,7 @@ describe("سقف الزيادة على مرحلتين (pace.cap)", () => {
   it("هدف مؤكَّد فوق السقف وغير محقق ⇒ noted مع الفرق، بلا رجوع لخط الأساس، والاقتراح التالي +10% عادي", async () => {
     for (let d = 1; d <= 10; d++) await h.service(`insert into planner_focus_sessions (profile_id, started_at, ended_at, minutes, completed) values ($1, $2, $2, 30, true)`, [adultP, T(addDays(TODAY, -d), "18:00").toISOString()]);
     const id = (await h.service<{ id: string }>(`insert into growth_increments (profile_id, week_start, kind, metric, from_value, target_value) values ($1, $2, 'longer', 'focus_minutes_per_day', 30, 60) returning id`, [adultP, addDays(TODAY, -7)])).rows[0]!.id;
-    await h.as(adult, (q) => q(`select public.decide_increment($1, 'accepted', null, true, false)`, [id]));
+    await h.service(`select public.decide_increment($1, $2, 'accepted', null, true, false)`, [adult.id, id]);
     await h.service(`delete from engagement_states where profile_id = $1`, [adultP]); // أسبوع «low» من اختبار المرآة يفرض hold
     const r = await runWeeklyPace(svc, P(adultP, "adult"), NOW);
     const row = (await h.service<{ status: string; over_cap: boolean; gap: string; achieved_ratio: string }>(`select status, over_cap, gap, achieved_ratio from growth_increments where id = $1`, [id])).rows[0]!;

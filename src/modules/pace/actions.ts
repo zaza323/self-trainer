@@ -20,11 +20,13 @@ export async function decideIncrementAction(_: unknown, form: FormData): Promise
   const p = z.object({ id: z.string().uuid(), decision: z.enum(["accepted", "edited", "declined"]), target: z.coerce.number().positive().optional().or(z.literal("")), confirm: z.enum(["yes"]).optional() })
     .safeParse({ id: form.get("id"), decision: form.get("decision"), target: form.get("target") ?? "", confirm: form.get("confirm") ?? undefined });
   if (!p.success) return { ok: false, error: "invalid_input" };
-  if (!(await getSession())) return { ok: false, error: "not_allowed" };
+  const session = await getSession();
+  if (!session) return { ok: false, error: "not_allowed" };
   const db = await createClient();
   const { data: inc } = await db.from("growth_increments").select("profile_id, from_value, target_value").eq("id", p.data.id).maybeSingle();
   if (!inc) return { ok: false, error: "not_allowed" };
-  const admin = adminOrNull() ?? db;
+  const admin = adminOrNull();
+  if (!admin) return { ok: false, error: "unavailable" };
   const { data: prof } = await admin.from("profiles").select("id, age_mode, timezone, created_at").eq("id", inc.profile_id as string).maybeSingle();
   if (!prof) return { ok: false, error: "not_allowed" };
   const pr = prof as { id: string; age_mode: AgeMode; timezone: string; created_at: string };
@@ -40,7 +42,8 @@ export async function decideIncrementAction(_: unknown, form: FormData): Promise
       overCap = c.overCap;
     }
   }
-  const { error } = await db.rpc("decide_increment", { p_id: p.data.id, p_decision: p.data.decision, p_target: typeof p.data.target === "number" ? p.data.target : null, p_over_cap: overCap, p_discovery: ctx.discovery });
+  // الكتابة لدور الخدمة فقط (الهجرة 0017)؛ الهوية من جلسة الخادم، والدالة تتحقق من الصلاحية بها
+  const { error } = await admin.rpc("decide_increment", { p_actor: session.userId, p_id: p.data.id, p_decision: p.data.decision, p_target: typeof p.data.target === "number" ? p.data.target : null, p_over_cap: overCap, p_discovery: ctx.discovery });
   if (error) return { ok: false, error: /not allowed/.test(error.message) ? "not_allowed" : error.message };
   revalidatePath("/", "layout");
   return { ok: true };
