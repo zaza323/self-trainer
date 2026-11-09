@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.4",
+  "config_version": "2026-11-09.5",
   "models": {
     "main_env": "AI_MODEL_ID",
     "light_env": "AI_MODEL_ID_LIGHT"
@@ -94,6 +94,12 @@
       "max_output_tokens": 700,
       "daily_calls_per_profile": 6,
       "streaming": false
+    },
+    "life_intake_assistant": {
+      "model": "light",
+      "max_output_tokens": 400,
+      "daily_calls_per_profile": 20,
+      "streaming": false
     }
   },
   "validation": {
@@ -129,7 +135,12 @@
       "obstacle_naming",
       "priority_pick",
       "stuck",
-      "free_chat"
+      "free_chat",
+      "life_roles",
+      "life_responsibilities",
+      "life_dependents",
+      "life_pressure",
+      "life_refresh"
     ],
     "policy": {
       "confirm": {
@@ -188,6 +199,28 @@
         "L0_L1": "free_text",
         "L2_L3": "free_text",
         "optional_shortcuts_max": 3
+      },
+      "life_roles": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "choices_plus_other"
+      },
+      "life_responsibilities": {
+        "L0_L1": "free_text",
+        "L2_L3": "free_text",
+        "never_choices": true,
+        "exempt_from_budget": true
+      },
+      "life_dependents": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "choices_plus_other"
+      },
+      "life_pressure": {
+        "L0_L1": "choices_plus_other",
+        "L2_L3": "choices_plus_other"
+      },
+      "life_refresh": {
+        "L0_L1": "quick_replies",
+        "L2_L3": "quick_replies"
       }
     },
     "moment_capability": {
@@ -247,10 +280,100 @@
     },
     "evidence": {
       "reflection_quality_only_from": "free_text",
-      "choice_answers_negative": false
+      "choice_answers_negative": false,
+      "life_moments_produce_evidence": false
     },
     "session_kinds_extra": [
-      "mirror"
+      "mirror",
+      "life_intake"
     ]
+  },
+  "life_intake": {
+    "verbatim_required": true,
+    "verbatim_check": "candidate_text_is_substring_of_user_message_after_normalization",
+    "candidates_require_confirmation": true,
+    "max_followups": 3,
+    "fallback": "fixed_form_per_field"
+  },
+  "boundary": {
+    "principle": "rules_decide_ai_serves",
+    "ai_roles": [
+      "store",
+      "read",
+      "display",
+      "suggest_improvement"
+    ],
+    "allowed_write_targets": [
+      "ai_calls",
+      "ai_suggestions_via_adaptation_suggestions",
+      "companion_messages",
+      "context_suggestions"
+    ],
+    "forbidden_write_targets": [
+      "xp_events",
+      "evidence_events",
+      "capability_scores",
+      "capability_snapshots",
+      "support_level_changes",
+      "incentive_stage_changes",
+      "settings",
+      "settings_audit",
+      "rewards",
+      "real_rewards",
+      "margin_events",
+      "margin_rules",
+      "guardian_links",
+      "missions",
+      "planner_tasks",
+      "goals"
+    ],
+    "sdk_import_allowed_only_in": "lib/ai/client",
+    "engine_must_not_import": [
+      "lib/ai",
+      "model_sdk"
+    ],
+    "apply_only_via": "typed_handler_after_human_approval",
+    "engine_purity": {
+      "inject_clock": true,
+      "inject_seed": true,
+      "forbid": [
+        "Math.random",
+        "Date.now",
+        "new Date()"
+      ]
+    }
+  },
+  "ai_off": {
+    "flag_env": "AI_ENABLED",
+    "auto_degrade_on": [
+      "provider_error_rate",
+      "budget_exhausted",
+      "timeout"
+    ],
+    "companion_chat_fallback": "fixed_menu_plus_talk_to_guardian",
+    "safety_when_off": "keyword_lists_only_conservative",
+    "required_journeys": [
+      "signup_all_modes",
+      "life_intake_form",
+      "goal_fixed_questions",
+      "mission_full_cycle",
+      "planner_full",
+      "start_screen_moments_followup_rest",
+      "guardian_dashboard_margin_rewards_settings",
+      "adaptive_notifications_digest",
+      "safety_keywords"
+    ]
+  },
+  "text_guard": {
+    "applies_to": [
+      "progress_narrator",
+      "weekly_summary",
+      "weekly_review",
+      "reflection_coach",
+      "adaptation_advisor"
+    ],
+    "numbers_and_dates_must_come_from_input": true,
+    "on_violation": "use_fixed_template",
+    "companion_chat": "log_only"
   }
 }

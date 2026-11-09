@@ -401,7 +401,7 @@ G1 لم يُطبق (لا انقطاع). G3 لم يُطبق (simulated).
 
 ### المثال 2: موقف قراري (guided_real) — أنجز دون إتقان
 
-**القالب:** `plan_ahead`، guided_real، صعوبة 3، الأوزان: planning 0.6، self_awareness 0.2، perseverance 0.2. الموقف: "غرفتك غير مرتبة وموعد خروجك بعد {{time_budget}} دقيقة". سؤال توقع: "كم دقيقة سيستغرق؟". `completion_check: self_report`.
+**القالب:** `plan_ahead`، guided_real، صعوبة 3، الأوزان: planning 0.6، self_awareness 0.2، perseverance 0.2. `life_binding: required` (0.5): الموقف يركّبه الخادم من عنصر في سجل حياة المستخدم أو من مهمة له في المخطط: "حسب ما حكيت: {{life_entry_text}}، وموعده بعد {{time_budget}} دقيقة" (في هذا المثال: ترتيب غرفته قبل خروجه، كما حكاه هو). سؤال توقع: "كم دقيقة سيستغرق؟". `completion_check: self_report`.
 
 ```json
 "evidence_rules": [

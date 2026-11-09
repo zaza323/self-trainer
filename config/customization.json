@@ -1,5 +1,5 @@
 {
-  "config_version": "2026-11-05.4",
+  "config_version": "2026-11-09.5",
   "resolution_order": [
     "mission_override",
     "player",
@@ -868,6 +868,44 @@
       },
       "mission_override": false
     },
+    "margin_history_mode": {
+      "type": "enum",
+      "values": [
+        "prefill",
+        "suggest_only",
+        "off"
+      ],
+      "default": {
+        "child": "prefill",
+        "teen": "prefill",
+        "adult": "prefill"
+      },
+      "editable_with_permission": [
+        "manage_settings",
+        "set_task_margin"
+      ],
+      "mission_override": false
+    },
+    "life_refresh_days": {
+      "type": "int",
+      "min": 7,
+      "max": 60,
+      "default": {
+        "child": 14,
+        "teen": 14,
+        "adult": 14
+      },
+      "mission_override": false
+    },
+    "share_life_log_with_guardians": {
+      "type": "bool",
+      "default": {
+        "child": true,
+        "teen": false,
+        "adult": false
+      },
+      "mission_override": false
+    },
     "pace_cap_mode": {
       "type": "enum",
       "values": [
@@ -905,7 +943,10 @@
     "mirror_no_negative_evidence_from_behavior",
     "mirror_neutral_language",
     "reconstruction_details_private",
-    "notification_hard_cap_3"
+    "ai_decides_nothing",
+    "scenarios_from_user_life_only",
+    "margin_never_penalizes",
+    "margin_not_in_evidence"
   ],
   "guardian_temporary_support": {
     "allowed_direction": "down_only",
@@ -1024,6 +1065,12 @@
       "real_mission_idea": {
         "setting_key": null,
         "audience": "guardian_only"
+      },
+      "margin_adjustment": {
+        "setting_key": null,
+        "handler": "apply_margin_rule",
+        "uses_ai": false,
+        "audience": "margin_setters"
       }
     }
   },
@@ -1032,15 +1079,102 @@
       "interests",
       "routine",
       "free_windows",
-      "contexts"
+      "contexts",
+      "roles",
+      "responsibilities",
+      "dependents",
+      "pressures"
     ],
     "max_items_per_field": 10,
     "forbidden_content": [
       "health",
       "non_family_person_names",
-      "precise_locations"
+      "precise_locations",
+      "income",
+      "religion_practices_assumed"
     ],
-    "suggestions_require_user_confirmation": true
+    "suggestions_require_user_confirmation": true,
+    "item_shape": {
+      "id": "uuid",
+      "text": "user_words_verbatim",
+      "source": [
+        "user_typed",
+        "user_voice",
+        "guardian_for_child",
+        "companion_suggested_confirmed"
+      ],
+      "confirmed_at": "timestamp",
+      "last_confirmed_at": "timestamp",
+      "archived": "bool"
+    },
+    "dependents_store": "relation_words_only",
+    "intake": {
+      "enabled": true,
+      "position": "before_goal_and_before_mirror",
+      "max_minutes": 6,
+      "skippable": true,
+      "skip_effect": "neutral_drills_and_own_planner_tasks_only",
+      "reask_after_days": 3,
+      "steps": [
+        {
+          "moment": "life_roles",
+          "field": "roles",
+          "mode": "choices_plus_other",
+          "multi": true
+        },
+        {
+          "moment": "life_responsibilities",
+          "field": "responsibilities",
+          "mode": "free_text",
+          "voice": true,
+          "never_choices": true,
+          "exempt_from_budget": true
+        },
+        {
+          "moment": "life_fixed_schedule",
+          "field": "routine",
+          "mode": "weekly_grid",
+          "chat": false
+        },
+        {
+          "moment": "life_dependents",
+          "field": "dependents",
+          "mode": "choices_plus_other",
+          "multi": true
+        },
+        {
+          "moment": "life_pressure",
+          "field": "pressures",
+          "mode": "choices_plus_other",
+          "multi": true,
+          "free_text_optional": true
+        }
+      ],
+      "max_followups": 3,
+      "summary_card_required": true
+    },
+    "refresh": {
+      "every_days_setting": "life_refresh_days",
+      "modes": [
+        "quick_replies"
+      ],
+      "actions": [
+        "nothing_changed",
+        "edit_log"
+      ]
+    },
+    "visibility": {
+      "child": "guardians_with_manage_settings_can_view_and_edit",
+      "teen": "owner_only_unless_share_life_log_with_guardians",
+      "adult": "owner_only_unless_share_life_log_with_guardians"
+    },
+    "blocklist_file": "content/context_blocklist.ar.json",
+    "scenario_sources_priority": [
+      "planner_tasks_with_dates",
+      "confirmed_log_entries",
+      "user_typed_now"
+    ],
+    "scenario_text_composition": "server_template_gender_neutral"
   },
   "strategy_memory": {
     "show_in_planning_up_to_support_level": "L1_hint",
@@ -1063,13 +1197,33 @@
     "add_rewards",
     "manage_settings",
     "approve_suggestions",
-    "view_planner"
+    "view_planner",
+    "set_task_margin"
   ],
   "permission_defaults": {
     "view_planner": {
       "child_creator": true,
       "teen": false,
       "adult": false
+    },
+    "set_task_margin": {
+      "child_creator": true,
+      "child_other": false,
+      "teen": false,
+      "adult": false
+    }
+  },
+  "permission_scopes": {
+    "set_task_margin": {
+      "scope_key": "margin_scope",
+      "values": [
+        "own_tasks",
+        "all_tasks"
+      ],
+      "default": {
+        "creator_guardian": "all_tasks",
+        "other_guardian": "own_tasks"
+      }
     }
   }
 }

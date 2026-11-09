@@ -1,0 +1,220 @@
+{
+  "config_version": "2026-11-09.5",
+  "applies_to": [
+    "mission",
+    "planner_task"
+  ],
+  "step_min": 5,
+  "bounds_min": {
+    "child": {
+      "min": 5,
+      "max": 90
+    },
+    "teen": {
+      "min": 5,
+      "max": 180
+    },
+    "adult": {
+      "min": 5,
+      "max": 240
+    }
+  },
+  "default_rule": {
+    "order": [
+      "history_actuals",
+      "user_estimate",
+      "template_range",
+      "age_default"
+    ],
+    "history_actuals": {
+      "min_samples": 3,
+      "lookback_days": 60,
+      "statistic": "median",
+      "similarity_levels": [
+        "L1",
+        "L2"
+      ]
+    },
+    "buffer_pct_by_age": {
+      "child": 0.25,
+      "teen": 0.15,
+      "adult": 0.1
+    },
+    "buffer_add_by_support_level": {
+      "L0_instruct": 0.1,
+      "L1_hint": 0.05,
+      "L2_ask": 0.0,
+      "L3_free": 0.0
+    },
+    "support_level_capability": {
+      "mission": "primary_capability_of_template",
+      "planner_task": "planning"
+    },
+    "template_range": {
+      "use": "midpoint",
+      "age_factor": {
+        "child": 1.25,
+        "teen": 1.0,
+        "adult": 0.9
+      },
+      "clamp_to_template_max_factor": 1.5
+    },
+    "age_default_min": {
+      "child": 15,
+      "teen": 25,
+      "adult": 25
+    },
+    "round": "ceil_to_step",
+    "never_exceed_free_gap": true
+  },
+  "similarity": {
+    "mission": {
+      "L1": [
+        "template_id"
+      ],
+      "L2": [
+        "capability_id",
+        "mechanic_id"
+      ]
+    },
+    "planner_task": {
+      "L1": [
+        "normalized_title"
+      ],
+      "L2": [
+        "project_id",
+        "tag_ids"
+      ]
+    },
+    "normalize_title": {
+      "lowercase": true,
+      "strip_digits": true,
+      "strip_time_words": true,
+      "arabic_normalize": [
+        "alef",
+        "yaa",
+        "taa_marbuta",
+        "tashkeel"
+      ]
+    }
+  },
+  "permission": {
+    "key": "set_task_margin",
+    "scope_key": "margin_scope",
+    "scopes": [
+      "own_tasks",
+      "all_tasks"
+    ],
+    "default_scope": {
+      "creator_guardian": "all_tasks",
+      "other_guardian": "own_tasks"
+    },
+    "default_granted": {
+      "child_creator": true,
+      "child_other": false,
+      "teen": false,
+      "adult": false
+    }
+  },
+  "apply_scopes": [
+    "this_task",
+    "all_similar"
+  ],
+  "reason_codes": [
+    "needs_more_time",
+    "gets_distracted",
+    "has_commitment",
+    "can_be_faster",
+    "other"
+  ],
+  "precedence": {
+    "child": [
+      "guardian_this_task",
+      "guardian_rule",
+      "history_prefill",
+      "system_default"
+    ],
+    "teen": [
+      "user_override",
+      "guardian_this_task",
+      "guardian_rule",
+      "history_prefill",
+      "system_default"
+    ],
+    "adult": [
+      "user_override",
+      "guardian_this_task",
+      "guardian_rule",
+      "history_prefill",
+      "system_default"
+    ],
+    "among_guardians": {
+      "child": "creator_lock_then_latest",
+      "teen": "latest",
+      "adult": "latest"
+    }
+  },
+  "history": {
+    "modes": [
+      "prefill",
+      "suggest_only",
+      "off"
+    ],
+    "default_mode": "prefill",
+    "lookback_days": 90,
+    "window_events": 3,
+    "statistic": "median",
+    "min_events": 1,
+    "author_priority": [
+      "creator_guardian",
+      "latest_authorized_guardian"
+    ],
+    "show_provenance": true
+  },
+  "display": {
+    "hide_until_user_estimate": {
+      "capability": "planning",
+      "from_support_level": "L2_ask"
+    },
+    "show_set_by": true,
+    "show_basis_to_setter": true
+  },
+  "at_expiry": {
+    "penalty": false,
+    "xp_effect": false,
+    "evidence_effect": false,
+    "tone": "gentle_overtime",
+    "extension_options_min": [
+      5,
+      10,
+      15
+    ],
+    "followup_after": "margin_end_plus_followup_grace_minutes"
+  },
+  "isolation": {
+    "estimate_accuracy_uses": "user_estimate_only",
+    "forbidden_uses": [
+      "xp",
+      "gate1",
+      "gate2",
+      "evidence",
+      "capability_score",
+      "challenge_scoring",
+      "comparison_between_users",
+      "leaderboards"
+    ]
+  },
+  "review": {
+    "min_completions": 5,
+    "lookback_days": 28,
+    "too_tight_if_median_actual_over_margin_ratio": 1.3,
+    "too_loose_if_median_actual_under_margin_ratio": 0.5,
+    "suggestion_type": "margin_adjustment",
+    "proposed_value": "median_actual_times_one_plus_buffer",
+    "max_per_run": 1,
+    "audience": "margin_setters",
+    "reject_cooldown_days": 30,
+    "uses_ai": false
+  },
+  "decision_trace": true
+}

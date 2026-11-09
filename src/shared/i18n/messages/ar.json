@@ -126,7 +126,8 @@
     "add_rewards": "إضافة مكافآت",
     "manage_settings": "ضبط الإعدادات",
     "approve_suggestions": "الموافقة على اقتراحات التكيّف",
-    "view_planner": "رؤية المخطط «أدواتي»"
+    "view_planner": "رؤية المخطط «أدواتي»",
+    "set_task_margin": "ضبط هامش الوقت للمهام"
   },
   "relations": {
     "mother": "أم",

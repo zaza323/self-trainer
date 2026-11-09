@@ -3,10 +3,10 @@ import { normalizePermissions, VIEW_PROGRESS_ONLY, ALL_PERMISSIONS, GUARDIAN_PER
 import { customization } from "./index";
 
 describe("permissions (ACC-8, ACC-10)", () => {
-  it("عشر صلاحيات بالترتيب الثابت، تطابق config (ب.12)", () => {
+  it("إحدى عشرة صلاحية بالترتيب الثابت، تطابق config (ب.12، 0.5 ب.2)", () => {
     expect([...GUARDIAN_PERMISSIONS]).toEqual(customization.permissions_all);
     expect(GUARDIAN_PERMISSIONS[0]).toBe("view_progress");
-    expect(GUARDIAN_PERMISSIONS).toContain("view_planner");
+    expect(GUARDIAN_PERMISSIONS).toContain("view_planner"); expect(GUARDIAN_PERMISSIONS).toContain("set_task_margin");
   });
   it("normalize يتجاهل المفاتيح الغريبة ويعتبر غير true كـ false", () => {
     expect(normalizePermissions({ view_chat: true, hack: true, add_rewards: "yes" })).toEqual({ ...VIEW_PROGRESS_ONLY, view_progress: false, view_chat: true });

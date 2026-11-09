@@ -1,4 +1,4 @@
-/** صلاحيات رابط المربي (ACC-8 + ب.12 view_planner في 0.4). الترتيب ثابت لأنه يُعرض في الواجهة وفي سجل التدقيق؛ يطابق customization.permissions_all (اختبار). */
+/** صلاحيات رابط المربي (ACC-8 + ب.12 view_planner في 0.4 + set_task_margin في 0.5 ب.2). الترتيب ثابت لأنه يُعرض في الواجهة وفي سجل التدقيق؛ يطابق customization.permissions_all (اختبار). */
 export const GUARDIAN_PERMISSIONS = [
   "view_progress",
   "view_chat",
@@ -10,6 +10,7 @@ export const GUARDIAN_PERMISSIONS = [
   "manage_settings",
   "approve_suggestions",
   "view_planner",
+  "set_task_margin",
 ] as const;
 export type GuardianPermission = (typeof GUARDIAN_PERMISSIONS)[number];
 export type PermissionSet = Record<GuardianPermission, boolean>;

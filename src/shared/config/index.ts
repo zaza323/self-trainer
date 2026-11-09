@@ -44,7 +44,7 @@ export type TrainingLevel = (typeof TRAINING_LEVELS)[number];
 
 export const RESPONSE_MODES = ["quick_replies", "choices_plus_other", "free_text"] as const;
 export type ResponseMode = (typeof RESPONSE_MODES)[number];
-export const MOMENTS = ["confirm", "logistics", "feeling_check", "strategy_choice", "goal_why", "goal_what", "reflection_core", "reflection_secondary", "obstacle_naming", "priority_pick", "stuck", "free_chat"] as const;
+export const MOMENTS = ["confirm", "logistics", "feeling_check", "strategy_choice", "goal_why", "goal_what", "reflection_core", "reflection_secondary", "obstacle_naming", "priority_pick", "stuck", "free_chat", "life_roles", "life_responsibilities", "life_dependents", "life_pressure", "life_refresh"] as const;
 export type Moment = (typeof MOMENTS)[number];
 export const OPTION_SOURCES = ["user_words", "template", "ai"] as const;
 export type OptionSource = (typeof OPTION_SOURCES)[number];
@@ -108,7 +108,7 @@ const customizationSchema = z.object({
     reject_cooldown_days: z.number().int().positive(), expire_after_days: z.number().int().positive(), approver_permission: z.string(),
     allowed_types: z.record(z.string(), z.object({ setting_key: z.string().nullable(), engine_hint_days: z.number().int().positive().optional(), action: z.string().optional(), audience: z.string().optional() })),
   }),
-  personal_context: z.object({ fields: z.array(z.enum(["interests", "routine", "free_windows", "contexts"])), max_items_per_field: z.number().int(), forbidden_content: z.array(z.string()), suggestions_require_user_confirmation: z.boolean() }),
+  personal_context: z.looseObject({ fields: z.array(z.enum(["interests", "routine", "free_windows", "contexts", "roles", "responsibilities", "dependents", "pressures"])), max_items_per_field: z.number().int(), forbidden_content: z.array(z.string()), suggestions_require_user_confirmation: z.boolean() }),
   strategy_memory: z.object({ show_in_planning_up_to_support_level: z.enum(SUPPORT_LEVELS), min_uses_to_show: z.number().int().positive(), min_shown_rate_to_show: z.number().min(0).max(1) }),
   template_metrics: z.object({ min_missions_to_evaluate: z.number().int().positive(), flag_if_shown_rate_below: z.number().min(0).max(1), flag_if_abandon_rate_above: z.number().min(0).max(1), recompute_every_days: z.number().int().positive() }),
   permissions_all: z.array(z.string()),
