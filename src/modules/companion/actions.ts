@@ -55,10 +55,11 @@ export async function sendChatMessage(_: unknown, form: FormData): Promise<Compa
 
 /** AI-13: زر "أريد أن أتحدث مع [المربي]" */
 export async function askForGuardian(_: unknown, form: FormData): Promise<CompanionActionResult> {
-  const sessionId = String(form.get("session_id"));
-  if (!uuid.safeParse(sessionId).success) return { ok: false, error: "invalid_input" };
+  const raw = String(form.get("session_id") ?? "");
   const o = await owner();
   if (!o) return { ok: false, error: "not_allowed" };
+  // AI-13 / 0.5 ج.4: «تحدث مع المربي» يعمل دائمًا، حتى قبل أي جلسة وحين يكون المرافق مستريحًا
+  const sessionId = uuid.safeParse(raw).success ? raw : (await getOrCreateSession(await createClient(), o.profile.id, "free")).id;
   const r = await requestHuman(createAdminClient(), o.profile.id, sessionId, null, "player", null);
   revalidatePath("/app/chat");
   return { ok: true, data: r };

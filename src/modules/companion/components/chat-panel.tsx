@@ -112,9 +112,9 @@ export function ChatPanel(p: Props) {
             <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="اكتب رسالتك" maxLength={2000} aria-label="رسالة" />
             <Button type="submit" disabled={streaming !== null || !draft.trim()}>إرسال</Button>
           </form>
-          {p.sessionId && (p.guardianNames?.length ?? 0) > 0 && (
+          {(p.guardianNames?.length ?? 0) > 0 && (
             <form action={askAction} className="flex items-center gap-2">
-              <input type="hidden" name="session_id" value={p.sessionId} />
+              <input type="hidden" name="session_id" value={p.sessionId ?? ""} />
               <Button type="submit" variant="outline" size="sm" disabled={asking}>{t("chat.talk_to_guardian", { name: p.guardianNames![0]! })}</Button>
               {askState?.ok && <span className="text-xs text-muted-foreground">تم إخبار مربّيك.</span>}
             </form>

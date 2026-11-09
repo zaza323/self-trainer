@@ -1,13 +1,13 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ai, limits, CONFIG_VERSION, type AgeMode, type SupportLevel } from "@/shared/config";
-import { evidenceWeight } from "@/modules/evidence";
+import { ai, limits, type AgeMode, type SupportLevel } from "@/shared/config";
+import { recordCompanionInsights } from "@/modules/evidence/companion-insights";
 import { effective } from "@/modules/settings";
 import { classifyText, safeResponse, raiseSafetyFlag } from "@/modules/safety";
 import type { ModelCaller } from "../model";
-import { runFunction } from "../runtime";
-import { personaSystem, supportStyle, FUNCTION_INSTRUCTIONS, PROMPT_VERSION } from "../prompts";
-import { companionChatAnalysis, questionMarks } from "../schemas";
+import { personaSystem, supportStyle } from "../prompts";
+import { questionMarks } from "../schemas";
+import { chatAvailable, streamChatReply, logChatReply, analyzeChatTurn } from "./ai";
 import messagesContent from "@content/companion_messages.ar.json";
 
 /**
@@ -108,22 +108,18 @@ export async function handlePlayerMessage(admin: SupabaseClient, caller: ModelCa
     ctx.memory.personalContext ? `سياق الحياة: ${JSON.stringify(ctx.memory.personalContext)}` : "", "أجب نصًا عاديًا (لا JSON) بسؤال واحد كحد أقصى."].filter(Boolean).join("\n");
   const cfg = ai.functions.companion_chat;
   const limitReached = (await countCalls(admin, "companion_chat", ctx.profileId, now)) >= (cfg.daily_calls_per_profile ?? Number.MAX_SAFE_INTEGER);
-  if (!caller.enabled || limitReached) {
-    const t = limitReached ? messagesContent.limit_reached[ctx.mode] : messagesContent.apology_fallback;
+  if (!(await chatAvailable(admin, caller, now)) || limitReached) {
+    const t = limitReached ? messagesContent.limit_reached[ctx.mode] : messagesContent.ai_resting; // 0.5 ج.4: AI-OFF
     const { data: m } = await admin.from("companion_messages").insert({ session_id: sessionId, role: "ai", content: t, meta: { fallback: limitReached ? "limit" : "disabled" } }).select("id").single();
     onText?.(t);
     return { kind: "fallback", messageId: m!.id as string, text: t };
   }
   // 5) الرد المبثوث
   const system = personaSystem(ctx.mode, { jsonContract: false });
-  const t0 = Date.now();
-  let reply = "", modelId = caller.modelId("main"), usage = { input: 0, output: 0, cacheRead: 0 };
-  try {
-    const req = { model: "main" as const, system, dynamicSystem: dynamic, messages: merged, maxOutputTokens: cfg.max_output_tokens };
-    const r = caller.stream ? await caller.stream(req, onText ?? (() => {})) : await caller.call(req);
-    reply = r.text.trim(); modelId = r.modelId; usage = r.usage;
-  } catch (e) {
-    await admin.from("ai_calls").insert({ profile_id: ctx.profileId, function: "companion_chat", prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: "stream", valid: false, error: (e as Error).message, latency_ms: Date.now() - t0 });
+  const req = { model: "main" as const, system, dynamicSystem: dynamic, messages: merged, maxOutputTokens: cfg.max_output_tokens };
+  const r = await streamChatReply(admin, caller, ctx.profileId, req, onText);
+  let reply = r.ok ? r.reply : "";
+  if (!r.ok) {
     const t = messagesContent.apology_fallback;
     const { data: m } = await admin.from("companion_messages").insert({ session_id: sessionId, role: "ai", content: t, meta: { fallback: "error" } }).select("id").single();
     onText?.(t);
@@ -134,7 +130,7 @@ export async function handlePlayerMessage(admin: SupabaseClient, caller: ModelCa
   if (questionMarks(reply) > ai.validation.max_questions_per_reply) { reply = reply.split(/(?<=[؟?])/).slice(0, 1).join("").trim() || reply; replaced = true; }
   const outbound = await classifyText(admin, caller, ctx.profileId, reply, "outbound");
   if (outbound.safety.flag && outbound.safety.category) { reply = safeResponse(outbound.safety.category, ctx.mode); replaced = true; }
-  await admin.from("ai_calls").insert({ profile_id: ctx.profileId, function: "companion_chat", prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: "stream", valid: !replaced, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, output: { replaced } });
+  await logChatReply(admin, ctx.profileId, r, reply, replaced, [dynamic, ...merged.map((m) => m.content)].join("\n"));
   const { data: saved } = await admin.from("companion_messages").insert({ session_id: sessionId, role: "ai", content: reply, meta: { replaced } }).select("id").single();
   const messageId = saved!.id as string;
   if (outbound.safety.flag) await raiseSafetyFlag(admin, { profileId: ctx.profileId, sessionId, messageId, direction: "outbound", verdict: outbound });
@@ -142,15 +138,10 @@ export async function handlePlayerMessage(admin: SupabaseClient, caller: ModelCa
 
   // 6) التحليل المهيكل (AI-3، AI-12، ADAPT-2)
   let needsHuman = false;
-  const analysis = await runFunction({ db: admin, caller, fn: "companion_chat", profileId: ctx.profileId, system: FUNCTION_INSTRUCTIONS.companion_chat_analysis,
-    dynamicSystem: `الوضع العمري: ${ctx.mode}`, messages: [{ role: "user", content: `رسالة المستخدم: ${text}\nرد المرافق: ${reply}` }], schema: companionChatAnalysis });
-  if (analysis.ok) {
-    const a = analysis.data;
-    if (a.insights.length) {
-      await admin.from("companion_insights").insert(a.insights.map((i) => ({ session_id: sessionId, profile_id: ctx.profileId, capability_id: i.capability_id, type: i.type, value: i.value, confidence: i.confidence })));
-      // دليل بوزن منخفض خارج المهام (4.7: companion_insight، المصدر companion)
-      await admin.from("evidence_events").insert(a.insights.map((i) => ({ profile_id: ctx.profileId, mission_id: null, capability_id: i.capability_id, rule_id: "companion", source: "companion", type: "companion_insight", value: i.value, rule_weight: i.confidence, weight: evidenceWeight("companion", ctx.support, i.confidence), context_tag: "chat", support_level: ctx.support, config_version: CONFIG_VERSION })));
-    }
+  const a = await analyzeChatTurn(admin, caller, ctx.profileId, ctx.mode, text, reply);
+  if (a) {
+    // دليل بوزن منخفض خارج المهام (4.7: companion_insight) — القواعد تقرر (companion-insights.ts)
+    if (a.insights.length) await recordCompanionInsights(admin, { profileId: ctx.profileId, sessionId, support: ctx.support, candidates: a.insights });
     if (a.needs_human.flag) { needsHuman = true; await requestHuman(admin, ctx.profileId, sessionId, messageId, "ai", a.needs_human.reason); }
     if (a.context_suggestion) await admin.from("context_suggestions").insert({ profile_id: ctx.profileId, session_id: sessionId, field: a.context_suggestion.field, value: a.context_suggestion.value });
   }

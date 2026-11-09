@@ -362,7 +362,15 @@
       "guardian_dashboard_margin_rewards_settings",
       "adaptive_notifications_digest",
       "safety_keywords"
-    ]
+    ],
+    "auto_degrade": {
+      "window_minutes": 10,
+      "provider_errors_threshold": 5,
+      "recover_after_minutes": 15,
+      "daily_global_calls_budget": 5000,
+      "timeout_ms": 20000,
+      "_note_local": "مفاتيح محلية (المرحلة 12): عتبات التدهور التلقائي — أخطاء المزوّد خلال النافذة، مدة التعافي، ميزانية الاستدعاءات اليومية العامة، ومهلة الاستدعاء."
+    }
   },
   "text_guard": {
     "applies_to": [

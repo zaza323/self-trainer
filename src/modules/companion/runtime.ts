@@ -8,6 +8,8 @@ import { createHash } from "node:crypto";
 import { ai } from "@/shared/config";
 import type { ModelCaller, ModelRequest } from "./model";
 import { PROMPT_VERSION } from "./prompts";
+import { aiHealth, providerErrorMeta } from "@/lib/ai/health";
+import { guardText, stringsOf } from "@/lib/ai/text-guard";
 
 export type FunctionKey = keyof typeof ai.functions;
 export type RunResult<T> = { ok: true; data: T; modelId: string } | { ok: false; reason: "disabled" | "limit" | "invalid" | "error"; detail?: string };
@@ -25,6 +27,8 @@ export type RunArgs<S extends z.ZodTypeAny> = {
   verify?: (data: z.infer<S>) => string | null;
   /** بيانات إضافية تُسجَّل في ai_calls.meta للمخرج الصالح (مثل استبدال شكل الرد، 0.4 أ.7) */
   meta?: (data: z.infer<S>) => Record<string, unknown> | null;
+  /** مدخلات إضافية يعطيها الخادم ولا تظهر في الرسائل (لحارس الأرقام والتواريخ، RULES-4) */
+  guardInput?: string;
   now?: Date;
 };
 
@@ -54,11 +58,16 @@ export async function runFunction<S extends z.ZodTypeAny>(a: RunArgs<S>): Promis
   const cfg = fnConfig(a.fn);
   const now = a.now ?? new Date();
   if (!a.caller.enabled) return { ok: false, reason: "disabled" };
+  // 0.5 ج.4: التدهور التلقائي (أخطاء المزوّد، المهلة، الميزانية) ⇒ كأن العلم مطفأ
+  const health = await aiHealth(a.db, now);
+  if (health.degraded) return { ok: false, reason: "disabled", detail: health.reason };
   const used = await callsToday(a.db, a.fn, cfg.daily_calls_global ? null : a.profileId, now);
   if (used >= (cfg.daily_calls_global ?? cfg.daily_calls_per_profile)) return { ok: false, reason: "limit" };
 
   const inputHash = createHash("sha256").update(JSON.stringify({ s: a.system, d: a.dynamicSystem, m: a.messages })).digest("hex").slice(0, 32);
   const retries = ai.validation.retries_on_invalid;
+  const guarded = ai.text_guard.numbers_and_dates_must_come_from_input && ai.text_guard.applies_to.includes(a.fn);
+  const guardSource = [a.dynamicSystem ?? "", ...a.messages.map((m) => m.content), a.guardInput ?? ""].join("\n");
   let messages = a.messages;
   let lastError = "";
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
@@ -68,14 +77,22 @@ export async function runFunction<S extends z.ZodTypeAny>(a: RunArgs<S>): Promis
       const r = await a.caller.call({ model: cfg.model, system: a.system, dynamicSystem: a.dynamicSystem, messages, maxOutputTokens: cfg.max_output_tokens });
       text = r.text; modelId = r.modelId; usage = r.usage;
     } catch (e) {
-      await a.db.from("ai_calls").insert({ profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, valid: false, attempt, error: (e as Error).message, latency_ms: Date.now() - t0 });
+      await a.db.from("ai_calls").insert({ created_at: now.toISOString(), profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, valid: false, attempt, error: (e as Error).message, latency_ms: Date.now() - t0, meta: providerErrorMeta(e) });
       return { ok: false, reason: "error", detail: (e as Error).message };
     }
     const json = extractJson(text);
     const parsed = a.schema.safeParse(json);
     const verifyError = parsed.success ? (a.verify?.(parsed.data) ?? null) : parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+    // 0.5 RULES-4: حارس الأرقام والتواريخ — خرقه يُسقط النص إلى القالب الثابت مباشرة (بلا إعادة محاولة)
+    if (parsed.success && !verifyError && guarded) {
+      const g = guardText(stringsOf(parsed.data), guardSource);
+      if (!g.ok) {
+        await a.db.from("ai_calls").insert({ created_at: now.toISOString(), profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, output: null, valid: false, attempt, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, error: "text_guard", meta: { text_guard_violations: g.violations } });
+        return { ok: false, reason: "invalid", detail: "text_guard" };
+      }
+    }
     const valid = parsed.success && !verifyError;
-    await a.db.from("ai_calls").insert({ profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, output: valid ? parsed.data : null, valid, attempt, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, error: valid ? null : (verifyError ?? "invalid_json"), meta: valid ? (a.meta?.(parsed.data) ?? null) : null });
+    await a.db.from("ai_calls").insert({ created_at: now.toISOString(), profile_id: a.profileId, function: a.fn, prompt_version: PROMPT_VERSION, model_id: modelId, input_hash: inputHash, output: valid ? parsed.data : null, valid, attempt, tokens_in: usage.input, tokens_out: usage.output, cache_read_tokens: usage.cacheRead, latency_ms: Date.now() - t0, error: valid ? null : (verifyError ?? "invalid_json"), meta: valid ? (a.meta?.(parsed.data) ?? null) : null });
     if (valid) return { ok: true, data: parsed.data, modelId };
     lastError = verifyError ?? "invalid_json";
     messages = [...messages, { role: "assistant", content: text.slice(0, 2000) || "{}" }, { role: "user", content: `المخرج السابق مرفوض (${lastError}). أعد الإخراج كـ JSON صالح يطابق المخطط حرفيًا، بسؤال واحد كحد أقصى.` }];

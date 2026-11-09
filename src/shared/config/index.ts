@@ -250,7 +250,7 @@ const aiSchema = z.object({
   functions: z.object({
     goal_builder: aiFn, mission_selector: aiFn, task_classifier: aiFn, reflection_coach: aiFn, progress_narrator: aiFn,
     companion_chat: aiFn, weekly_summary: aiFn, strategy_normalizer: aiFn, adaptation_advisor: aiFn, template_drafter: aiFn,
-    task_parser: aiFn, task_breakdown: aiFn, day_planner: aiFn, weekly_review: aiFn, day_reconstructor: aiFn,
+    task_parser: aiFn, task_breakdown: aiFn, day_planner: aiFn, weekly_review: aiFn, day_reconstructor: aiFn, life_intake_assistant: aiFn,
   }),
   validation: z.object({ retries_on_invalid: z.number().int().nonnegative(), max_questions_per_reply: z.number().int().positive(), reflection_max_turns: z.number().int().positive() }),
   safety: z.object({ classify_inbound: z.boolean(), classify_outbound: z.boolean(), guardian_alert_max_seconds: z.number() }),
@@ -277,9 +277,22 @@ const aiSchema = z.object({
       min: z.number().int().positive(), max: z.number().int().positive(), max_chars: z.number().int().positive(),
       source_priority: z.array(z.enum(OPTION_SOURCES)), require_user_words_when_available: z.boolean(), other_button_added_by_ui: z.boolean(), fallback_file: z.string(),
     }),
-    evidence: z.object({ reflection_quality_only_from: z.literal("free_text"), choice_answers_negative: z.boolean() }),
+    evidence: z.object({ reflection_quality_only_from: z.literal("free_text"), choice_answers_negative: z.boolean(), life_moments_produce_evidence: z.boolean() }),
     session_kinds_extra: z.array(z.string()),
   }),
+  // 0.5 ج: الذكاء الاصطناعي يخدم والقواعد تحكم
+  life_intake: z.object({ verbatim_required: z.boolean(), verbatim_check: z.string(), candidates_require_confirmation: z.boolean(), max_followups: z.number().int().nonnegative(), fallback: z.string() }),
+  boundary: z.object({
+    principle: z.string(), ai_roles: z.array(z.string()), allowed_write_targets: z.array(z.string()), forbidden_write_targets: z.array(z.string()),
+    sdk_import_allowed_only_in: z.string(), engine_must_not_import: z.array(z.string()), apply_only_via: z.string(),
+    engine_purity: z.object({ inject_clock: z.boolean(), inject_seed: z.boolean(), forbid: z.array(z.string()) }),
+  }),
+  ai_off: z.object({
+    flag_env: z.string(), auto_degrade_on: z.array(z.enum(["provider_error_rate", "budget_exhausted", "timeout"])), companion_chat_fallback: z.string(),
+    safety_when_off: z.string(), required_journeys: z.array(z.string()),
+    auto_degrade: z.object({ window_minutes: z.number().positive(), provider_errors_threshold: z.number().int().positive(), recover_after_minutes: z.number().positive(), daily_global_calls_budget: z.number().int().positive(), timeout_ms: z.number().int().positive() }),
+  }),
+  text_guard: z.object({ applies_to: z.array(z.string()), numbers_and_dates_must_come_from_input: z.boolean(), on_violation: z.literal("use_fixed_template"), companion_chat: z.literal("log_only") }),
 });
 const limitsSchema = z.object({
   config_version: z.string(),

@@ -56,3 +56,9 @@
 - `catalog.notification_max_per_day.max`
 - `catalog.pace_cap_mode`
 
+
+## إضافات محلية في المرحلة 12
+- `config/ai.json` → `ai_off.auto_degrade` (جديد، غير موجود في 0.5): `window_minutes = 10`، `provider_errors_threshold = 5`، `recover_after_minutes = 15`، `daily_global_calls_budget = 5000`، `timeout_ms = 20000`. CHANGE-0.5 يذكر «بعد المدة المحددة» ولا يحدد القيم.
+
+## ملاحظات ترقيم الهجرات
+CHANGE-0.5 يقول «الهجرات الجديدة تبدأ من 0017» و«0017 سجل الحياة · 0018 الاقتراحات · 0019 الهامش». لكن 0017 استُخدمت لإغلاق الكتابة المباشرة (بنود الخطوة A)، و0018 للصلاحية `set_task_margin` (لازمة لدمج `permissions_all`). الترقيم الفعلي: 0019 سجل الحياة (المرحلة 13)، 0020 الهامش (المرحلة 14). لم تلزم هجرة لتعميم جدول الاقتراحات (انظر VERIFY-LATER).

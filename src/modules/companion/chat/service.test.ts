@@ -86,7 +86,7 @@ describe("handlePlayerMessage", () => {
     expect(r.kind).toBe("handoff");
     expect(caller.calls.filter((c) => c.model === "main")).toHaveLength(0);
   });
-  it("حد الدقائق اليومي في child → رسالة هادئة (AI-9)؛ والمفتاح معطّل → اعتذار ثابت", async () => {
+  it("حد الدقائق اليومي في child → رسالة هادئة (AI-9)؛ والمفتاح معطّل → «المرافق مستريح» (AI-OFF)", async () => {
     const s = setup({ limitMinutes: 5, mode: "child" }); // 5 = الحد الأدنى في الكتالوج (القيم الأقل تُقص)
     for (let i = 1; i <= 5; i++) s.player(String(i));
     const r = await handlePlayerMessage(s.db.client(), fakeCaller([SAFE, "x"]), { ...ctx, mode: "child" }, SESSION, s.player("6"), "6");
@@ -94,7 +94,7 @@ describe("handlePlayerMessage", () => {
     const s2 = setup();
     const r2 = await handlePlayerMessage(s2.db.client(), fakeCaller([], { enabled: false }), ctx, SESSION, s2.player("x"), "x");
     expect(r2.kind).toBe("fallback");
-    expect(r2.kind === "fallback" && r2.text).toContain("عذرًا");
+    expect(r2.kind === "fallback" && r2.text).toContain("المرافق مستريح حاليًا"); // 0.5 ج.4: AI-OFF
   });
   it("زر «أريد أن أتحدث مع المربي» (AI-13) + سطر الإفصاح (AI-4)", async () => {
     const s = setup();

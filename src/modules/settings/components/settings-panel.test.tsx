@@ -18,7 +18,7 @@ function views(role: "player" | "guardian"): SettingView[] {
   ];
   const actor = role === "player"
     ? { role: "player" as const, userId: "p1" }
-    : { role: "guardian" as const, userId: "g1", permissions: { view_progress: true, view_chat: true, intervene_chat: true, add_missions: true, receive_alerts: true, manage_guardians: true, add_rewards: true, manage_settings: true, approve_suggestions: true, view_planner: true }, isCreator: true, isAccountOwner: true };
+    : { role: "guardian" as const, userId: "g1", permissions: { view_progress: true, view_chat: true, intervene_chat: true, add_missions: true, receive_alerts: true, manage_guardians: true, add_rewards: true, manage_settings: true, approve_suggestions: true, view_planner: true, set_task_margin: true }, isCreator: true, isAccountOwner: true };
   return SETTING_KEYS.map((key) => {
     const effective = resolveEffective({ key, ageMode: "child", rows });
     const common = { key, ageMode: "child" as const, actor, rows, creatorUserIds: ["g1"] };

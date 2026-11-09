@@ -2,9 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ai, type AgeMode } from "@/shared/config";
 import type { ModelCaller } from "@/modules/companion/model";
-import { runFunction } from "@/modules/companion/runtime";
-import { FUNCTION_INSTRUCTIONS } from "@/modules/companion/prompts";
-import { safetyClassifierOutput, type Safety } from "@/modules/companion/schemas";
+import type { Safety } from "@/modules/companion/schemas";
+import { modelSafety } from "./ai";
 import { keywordSafety, mergeSafety } from "./classify";
 import safeResponses from "@content/safe_responses.ar.json";
 import resources from "@content/safety_resources.json";
@@ -16,8 +15,8 @@ export async function classifyText(db: SupabaseClient, caller: ModelCaller, prof
   const kw = keywordSafety(text);
   const should = direction === "inbound" ? ai.safety.classify_inbound : ai.safety.classify_outbound;
   if (!should || !caller.enabled) return mergeSafety(kw, { flag: false, category: null, severity: null });
-  const r = await runFunction({ db, caller, fn: "safety_classifier", profileId, system: FUNCTION_INSTRUCTIONS.safety_classifier, messages: [{ role: "user", content: text }], schema: safetyClassifierOutput });
-  return mergeSafety(kw, r.ok ? r.data : { flag: false, category: null, severity: null });
+  const m = await modelSafety(db, caller, profileId, text);
+  return mergeSafety(kw, m ?? { flag: false, category: null, severity: null });
 }
 
 /** الرد الآمن المكتوب مسبقًا حسب الفئة والوضع + موارد المساعدة للبالغ. */
