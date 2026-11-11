@@ -39,6 +39,8 @@ type Props = {
   reflectionPromptsAbandon?: string[];
   /** ADAPT-3: معرّف الاستراتيجية الأنجح سابقًا (L0–L1) لوسم "نجحت معك سابقًا" */
   workedBefore?: string | null;
+  /** 0.5 ب: هامش الوقت (يحدد طول المؤقت الافتراضي للمهام غير الموقّتة بالقالب) ولوحته */
+  margin?: { minutes: number; panel: React.ReactNode } | null;
 };
 /** دون اتصال: الإرسال يذهب إلى الطابور بدل إجراء الخادم. */
 type Offline = { online: boolean; submit: (kind: OpKind, payload?: Record<string, unknown>) => Promise<void> };
@@ -163,7 +165,7 @@ function Distractor({ mission, template, onLogged }: { mission: MissionRow; temp
   );
 }
 
-function Execute({ mission, template, distraction, offline, mode }: { mission: MissionRow; template: MissionTemplate; distraction: Props["distraction"]; offline: Offline; mode: AgeMode }) {
+function Execute({ mission, template, distraction, offline, mode, marginMin }: { mission: MissionRow; template: MissionTemplate; distraction: Props["distraction"]; offline: Offline; mode: AgeMode; marginMin: number | null }) {
   const router = useRouter();
   const [stop, stopAct, stopping] = useActionState(interruptMission, null);
   const [done, doneAct, completing] = useActionState(completeMission, null);
@@ -194,12 +196,12 @@ function Execute({ mission, template, distraction, offline, mode }: { mission: M
   // MIS-4: إشعار محلي عند انتهاء المؤقت عبر الـService Worker
   useEffect(() => {
     if (!mission.started_at) return;
-    const minutes = isTimer ? template.min_duration : mission.time_estimate ?? template.min_duration;
+    const minutes = isTimer ? template.min_duration : marginMin ?? mission.time_estimate ?? template.min_duration;
     const tag = `timer:${mission.id}`;
     const txt = notificationsContent.types.timer_done[mode];
     void scheduleTimerNotification({ at: Date.parse(mission.started_at) + minutes * 60000, title: txt.title, body: txt.body, url: `/app/missions/${mission.id}`, tag });
     return () => { void cancelTimerNotification(tag); };
-  }, [mission.started_at, mission.id, mission.time_estimate, template.min_duration, isTimer, mode]);
+  }, [mission.started_at, mission.id, mission.time_estimate, template.min_duration, isTimer, mode, marginMin]);
   const checklist = template.checklist ?? [];
   const doneSet = new Set(mission.checklist_done);
   return (
@@ -208,7 +210,7 @@ function Execute({ mission, template, distraction, offline, mode }: { mission: M
       <Card>
         <CardHeader><CardTitle className="text-base">{t("missions.in_progress")}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          {mission.started_at && <Timer startedAt={mission.started_at} minutes={isTimer ? template.min_duration : mission.time_estimate ?? template.min_duration} onDone={() => setTimerDone(true)} label={t("missions.timer")} />}
+          {mission.started_at && <Timer startedAt={mission.started_at} minutes={isTimer ? template.min_duration : marginMin ?? mission.time_estimate ?? template.min_duration} onDone={() => setTimerDone(true)} label={t("missions.timer")} />}
           {timerDone && isTimer && <Alert variant="success">{t("missions.timer_done")}</Alert>}
           {checklist.length > 0 && (
             <div className="space-y-1">
@@ -315,10 +317,11 @@ export function MissionFlow(p: Props) {
       {projected && <Alert className="text-sm">{offlineContent.saved_locally}</Alert>}
       <Situation mission={mission} template={template} mode={mode} />
       <div>{p.chain}</div>
+      {p.margin?.panel}
       {mission.status === "suggested" && <Choose mission={mission} goalOptions={p.goalOptions} />}
       {mission.status === "chosen" && <Plan mission={mission} template={template} mode={mode} workedBefore={p.workedBefore} />}
       {mission.status === "planned" && <Card><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4"><div className="text-sm text-muted-foreground">{mission.custom_strategy ?? textByMode(template.strategies.find((s) => s.id === mission.strategy_chosen)?.text, mode)} · {mission.time_estimate} د</div><Hints mission={mission} template={template} /><Start mission={mission} /></CardContent></Card>}
-      {mission.status === "in_progress" && <Execute mission={mission} template={template} distraction={p.distraction} offline={offline} mode={mode} />}
+      {mission.status === "in_progress" && <Execute mission={mission} template={template} distraction={p.distraction} offline={offline} mode={mode} marginMin={p.margin?.minutes ?? null} />}
       {mission.status === "interrupted" && <Interrupted mission={mission} question={p.interruptionQuestion} offline={offline} />}
       {(mission.status === "completed" || mission.status === "abandoned") && ((off.online && !projected && p.reflectionOverride) || <Reflect mission={mission} prompts={prompts} offline={offline} />)}
       {off.reflectedPending && <Card><CardContent className="p-4 text-sm">{offlineContent.reflection_pending}</CardContent></Card>}

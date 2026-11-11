@@ -81,3 +81,8 @@ CHANGE-0.5 يقول «الهجرات الجديدة تبدأ من 0017» و«001
 
 ## إضافات محلية في المرحلة 13
 - `config/customization.json` → `personal_context.refresh.stale_after_days = 60` (أ.10-11 يذكر «أكثر من 60 يومًا» والملف المرسل لا يحمل مفتاحًا له)، `personal_context.scenario_fields = ["responsibilities"]` (الحقل الوحيد الذي يدخل نص السيناريو)، `personal_context.item_max_chars = 120`. لم تُغيَّر أي قيمة من 0.5.
+
+## إضافات محلية في المرحلة 14
+- `config/margins.json` → `ui.list_limit = 20` و`ui.log_limit = 30` (حدود قوائم شاشتي G17/G18؛ غير موجودة في 0.5). لم تُغيَّر أي قيمة أخرى في الملف.
+- `margins.config_version` لا يدخل `CONFIG_VERSION` المركّب المحفوظ مع الأدلة، لأن الهامش معزول عن الأدلة (ب.6).
+- قيم `config/margins.json` تُزامَن إلى `config_meta.margins` لتقرأها دوال القاعدة (الحدود، الخطوة، رموز السبب، خيارات الزيادة) بلا أرقام في SQL.

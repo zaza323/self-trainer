@@ -11,6 +11,7 @@ import { stepXp } from "./step-xp";
 import { rollSurprise, type Surprise } from "./surprises";
 import spaceContent from "@content/space.ar.json";
 import { primaryCapability } from "@/modules/library";
+import { recordTrace } from "@/modules/trace/service";
 
 type Admin = SupabaseClient;
 const DAY = 86400000;
@@ -177,6 +178,8 @@ export async function refreshGameState(admin: Admin, profile: { id: string; age_
   const intensity = computeIntensity(stage, avgSupport(caps), profile.age_mode, override.value);
   const avatar = displayedAvatarStage(avatarStage(avatarPoints(caps)), profile.avatar_stage_max);
   await admin.from("profiles").update({ incentive_stage: stage, game_intensity: intensity, avatar_stage_max: avatar }).eq("id", profile.id);
+  // RULES-7: أثر قرار تغيّر مرحلة الحوافز
+  if (stage !== profile.incentive_stage) await recordTrace(admin, { profile_id: profile.id, kind: "incentive_stage", subject_type: "profile", subject_id: profile.id, rule: "stage_advance", decision: { from: profile.incentive_stage, to: stage }, inputs: { reflected_missions: reflected, self_created_reflected: selfReflected, transfer_reports: transfers, transfer_reports_last_30_days: transfers30, days_since_onboarding: Math.floor((now.getTime() - onboarded.getTime()) / DAY) } }, now);
   return { stage, stage_changed: stage !== profile.incentive_stage, intensity, avatar_stage: avatar };
 }
 

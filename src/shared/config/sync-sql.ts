@@ -1,4 +1,4 @@
-import { customization, game, limits, support, CONFIG_VERSION, CAPABILITY_IDS } from "./index";
+import { customization, game, limits, support, margins, CONFIG_VERSION, CAPABILITY_IDS } from "./index";
 import capabilitiesContent from "@content/capabilities.ar.json";
 import mechanicsContent from "@content/mechanics.ar.json";
 import achievementsContent from "@content/achievements.ar.json";
@@ -58,10 +58,10 @@ export function buildConfigSyncSql(): string {
   lines.push(`delete from public.settings_catalog where key not in (${keys});`);
 
   lines.push(
-    `insert into public.config_meta (id, edit_rules, resolution_order, limits, support, rewards, config_version, synced_at)
-     values (1, ${jsonLit({ ...customization.edit_rules, _guardian_temporary_support: customization.guardian_temporary_support, _challenges: game.challenges })}, ${jsonLit(customization.resolution_order)}, ${jsonLit(limits)}, ${jsonLit(support)}, ${jsonLit(customization.real_rewards)}, ${lit(CONFIG_VERSION)}, now())
+    `insert into public.config_meta (id, edit_rules, resolution_order, limits, support, rewards, margins, config_version, synced_at)
+     values (1, ${jsonLit({ ...customization.edit_rules, _guardian_temporary_support: customization.guardian_temporary_support, _challenges: game.challenges })}, ${jsonLit(customization.resolution_order)}, ${jsonLit(limits)}, ${jsonLit(support)}, ${jsonLit(customization.real_rewards)}, ${jsonLit(margins)}, ${lit(CONFIG_VERSION)}, now())
      on conflict (id) do update set edit_rules = excluded.edit_rules, resolution_order = excluded.resolution_order,
-       limits = excluded.limits, support = excluded.support, rewards = excluded.rewards, config_version = excluded.config_version, synced_at = now();`,
+       limits = excluded.limits, support = excluded.support, rewards = excluded.rewards, margins = excluded.margins, config_version = excluded.config_version, synced_at = now();`,
   );
   return lines.join("\n");
 }

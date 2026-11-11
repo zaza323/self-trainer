@@ -18,7 +18,7 @@ export type ScheduledItem = { kind: ItemKind; id: string; title: string; startsA
 
 export type BuildInput = {
   date: string; tz: string; defaultDurationMin: number;
-  tasks: Array<{ id: string; title: string; due_date: string | null; due_time: string | null; estimate_min: number | null; status: string }>;
+  tasks: Array<{ id: string; title: string; due_date: string | null; due_time: string | null; estimate_min: number | null; status: string; margin_min?: number | null; margin_extra_min?: number | null }>;
   blocks: Array<{ id: string; task_id: string | null; starts_at: string; ends_at: string; title: string }>;
   habits: Array<{ id: string; title: string; schedule: { time_local?: string | null; duration_min?: number | null }; scheduledToday: boolean }>;
 };
@@ -29,7 +29,7 @@ export function buildScheduled(i: BuildInput): ScheduledItem[] {
   for (const t of i.tasks) {
     if (t.status !== "open" || t.due_date !== i.date || !t.due_time) continue;
     const start = instantForLocal(i.date, t.due_time.slice(0, 5), i.tz);
-    out.push({ kind: "task", id: t.id, title: t.title, startsAt: start, endsAt: new Date(start.getTime() + (t.estimate_min ?? i.defaultDurationMin) * 60000), occurrenceDate: i.date, taskId: t.id });
+    out.push({ kind: "task", id: t.id, title: t.title, startsAt: start, endsAt: new Date(start.getTime() + (t.margin_min ? t.margin_min + (t.margin_extra_min ?? 0) : t.estimate_min ?? i.defaultDurationMin) * 60000), occurrenceDate: i.date, taskId: t.id });
   }
   for (const b of i.blocks) out.push({ kind: "block", id: b.id, title: b.title, startsAt: new Date(b.starts_at), endsAt: new Date(b.ends_at), occurrenceDate: i.date, taskId: b.task_id });
   for (const h of i.habits) {

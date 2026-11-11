@@ -20,6 +20,7 @@ import { addDays } from "@/modules/planner/recurrence";
 import { resolveWindow } from "@/modules/moments/openers";
 import openersContent from "@content/daily_openers.ar.json";
 import capabilities from "@content/capabilities.ar.json";
+import { recordTrace } from "@/modules/trace/service";
 
 type Profile = { id: string; user_id: string; age_mode: AgeMode | null; timezone: string; display_name: string; kind: string };
 type NotifRow = { id: string; profile_id: string; type: string; scheduled_for: string; payload: Record<string, unknown>; deferred_count: number };
@@ -155,7 +156,12 @@ export async function deliverDue(admin: SupabaseClient, sender: PushSender, now 
         if (decision.action === "send" && !spacingOk) decision = { action: "defer", until: new Date(new Date(last!).getTime() + b.spacingMin * 60000), reason: "cap" };
       }
     }
-    if (decision.action === "defer") { await admin.from("notifications").update({ scheduled_for: decision.until.toISOString(), deferred_count: n.deferred_count + 1 }).eq("id", n.id); deferred++; continue; }
+    if (decision.action === "defer") {
+      await admin.from("notifications").update({ scheduled_for: decision.until.toISOString(), deferred_count: n.deferred_count + 1 }).eq("id", n.id);
+      // RULES-7: سبب تأجيل الإشعار (ساعات الهدوء أو حد اليوم)
+      await recordTrace(admin, { profile_id: n.profile_id, kind: "notification_defer", subject_type: "notification", subject_id: n.id, rule: `notification_defer_${decision.reason}`, decision: { until: decision.until.toISOString(), reason: decision.reason }, inputs: { type: n.type, deferred_count: n.deferred_count + 1 } }, now);
+      deferred++; continue;
+    }
     if (decision.action === "drop") { await admin.from("notifications").update({ sent_at: now.toISOString(), title: null, body: null }).eq("id", n.id); dropped++; continue; }
     const msg = buildMessage(n, p, stateByProfile.get(p.id) ?? null, now);
     if (!msg) { await admin.from("notifications").update({ sent_at: now.toISOString() }).eq("id", n.id); dropped++; continue; }

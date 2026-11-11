@@ -11,6 +11,7 @@ import aiJson from "@config/ai.json";
 import limitsJson from "@config/limits.json";
 import trialJson from "@config/trial.json";
 import plannerJson from "@config/planner.json";
+import marginsJson from "@config/margins.json";
 
 export const AGE_MODES = ["child", "teen", "adult"] as const;
 export type AgeMode = (typeof AGE_MODES)[number];
@@ -392,6 +393,8 @@ const plannerSchema = z.object({
   pace: loose, reality_mirror: loose,
 });
 export const planner = plannerSchema.parse(plannerJson);
+/** 0.5 ب: كل قيم هامش الوقت (الحدود، الخطوة، القاعدة الافتراضية، التوصية، المراجعة). */
+export const margins = marginsJson;
 
 export type SettingKey = keyof typeof customizationJson.catalog;
 export const SETTING_KEYS = Object.keys(customization.catalog) as SettingKey[];

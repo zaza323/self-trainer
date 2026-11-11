@@ -5,6 +5,7 @@ import { t } from "@/shared/i18n";
 import { SyncManager } from "@/shared/offline/sync-manager";
 import { challengesVisible } from "@/modules/challenges";
 import { createClient } from "@/shared/db/server";
+import marginsContent from "@content/margins.ar.json";
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
   const s = await getSession();
@@ -28,6 +29,7 @@ export default async function PlayerLayout({ children }: { children: React.React
     ...(showChallenges ? [{ href: "/app/challenges", label: t("nav.challenges") }] : []),
     { href: "/app/context", label: t("nav.context") },
     { href: "/app/suggestions", label: t("nav.suggestions") },
+    { href: "/app/margins", label: marginsContent.ui.title },
     { href: "/app/notifications", label: t("nav.notifications") },
     { href: "/app/settings", label: t("nav.settings") },
     ...(mode !== "child" ? [{ href: "/app/guardians", label: t("nav.guardians") }] : []),

@@ -14,6 +14,7 @@ import { AccountData } from "@/modules/trial/components/account-data";
 import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import { AgeTransitionForm } from "@/shared/ui/forms/age-transition-form";
 import { t } from "@/shared/i18n";
+import marginsContent from "@content/margins.ar.json";
 
 export default async function PlayerOverviewPage({ params }: { params: Promise<{ playerId: string }> }) {
   const { playerId } = await params;
@@ -56,6 +57,7 @@ export default async function PlayerOverviewPage({ params }: { params: Promise<{
             {(link.is_creator || link.permissions.add_rewards) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/rewards`}>{t("guardian.rewards")}</Link></Button>}
             <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/context`}>{t("guardian.context")}</Link></Button>
             <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/suggestions`}>{t("guardian.suggestions")}</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/margins`}>{marginsContent.ui.title}</Link></Button>
             {(link.is_creator || link.permissions.view_planner || link.permissions.add_missions) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/planner`}>{plannerContent.guardian.link}</Link></Button>}
             {(link.is_creator || link.permissions.view_planner) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/mirror`}>{plannerContent.review.mirror_link}</Link></Button>}
             {player.age_mode === "child" && (link.is_creator || link.permissions.manage_settings) && <Button asChild size="sm" variant="outline"><Link href={`/guardian/${player.id}/pace`}>{plannerContent.guardian.pace_link}</Link></Button>}

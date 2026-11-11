@@ -33,11 +33,11 @@ export async function followupSettings(db: Db, profileId: string): Promise<Follo
 export async function scheduledFor(db: Db, p: Profile, date: string, s: FollowupSettings, weekStart: WeekStart): Promise<ScheduledItem[]> {
   const dayStart = instantForLocal(date, "00:00", p.timezone).toISOString(), dayEnd = instantForLocal(addDays(date, 1), "00:00", p.timezone).toISOString();
   const [{ data: tasks }, { data: blocks }, { data: habits }] = await Promise.all([
-    db.from("planner_tasks").select("id, title, due_date, due_time, estimate_min, status").eq("profile_id", p.id).eq("due_date", date).is("parent_task_id", null),
+    db.from("planner_tasks").select("id, title, due_date, due_time, estimate_min, status, margin_min, margin_extra_min").eq("profile_id", p.id).eq("due_date", date).is("parent_task_id", null),
     db.from("planner_time_blocks").select("id, task_id, starts_at, ends_at").eq("profile_id", p.id).gte("starts_at", dayStart).lt("starts_at", dayEnd),
     db.from("planner_habits").select("id, title, schedule").eq("profile_id", p.id).eq("archived", false),
   ]);
-  const taskRows = (tasks ?? []) as Array<{ id: string; title: string; due_date: string | null; due_time: string | null; estimate_min: number | null; status: string }>;
+  const taskRows = (tasks ?? []) as Array<{ id: string; title: string; due_date: string | null; due_time: string | null; estimate_min: number | null; status: string; margin_min: number | null; margin_extra_min: number | null }>;
   const blockRows = (blocks ?? []) as Array<{ id: string; task_id: string | null; starts_at: string; ends_at: string }>;
   const titles = new Map(taskRows.map((t) => [t.id, t.title]));
   const missing = blockRows.filter((b) => b.task_id && !titles.has(b.task_id)).map((b) => b.task_id!);

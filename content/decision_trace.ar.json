@@ -1,0 +1,20 @@
+{
+  "_note": "مؤقت: نصوص «ليش؟» (RULES-7). كل نص قالب ثابت يُملأ من بيانات أثر القرار، بلا ذكاء اصطناعي.",
+  "button": "ليش؟",
+  "unknown": "هذا القرار محسوب بقاعدة ثابتة.",
+  "rules": {
+    "margin_user_override": "أنت حدّدت {margin_min} دقيقة لهذه المهمة.",
+    "margin_guardian_this_task": "حُدِّد {margin_min} دقيقة لهذه المهمة من مربيك.",
+    "margin_guardian_rule": "هناك قاعدة للمهام المشابهة: {margin_min} دقيقة.",
+    "margin_history": "حسب آخر تعديلات على مهام مشابهة: {margin_min} دقيقة.",
+    "margin_default_history_actuals": "آخر {n} مرات أخذت نحو {median} دقيقة، ومع هامش صار {margin_min}.",
+    "margin_default_user_estimate": "قدّرت {estimate} دقيقة، ومع هامش صار {margin_min}.",
+    "margin_default_template_range": "مدة هذا النوع من المهام {min}–{max} دقيقة، فصار {margin_min}.",
+    "margin_default_age_default": "لا بيانات كافية بعد، فالقيمة الافتراضية {margin_min} دقيقة.",
+    "support_up": "تغيّر مستوى الدعم من {from} إلى {to} لأن آخر المهام أظهرت أنك تقدر بدعم أقل.",
+    "support_down": "تغيّر مستوى الدعم من {from} إلى {to} لأن آخر المهام احتاجت دعمًا أكثر.",
+    "stage_advance": "انتقلت مرحلة الحوافز من {from} إلى {to} حسب ثقة القدرات وعدد المهام.",
+    "notification_defer_quiet": "تأجّل الإشعار لأنه وقع في ساعات الهدوء.",
+    "notification_defer_cap": "تأجّل الإشعار لأن حدّ إشعارات اليوم اكتمل."
+  }
+}

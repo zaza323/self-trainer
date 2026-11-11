@@ -17,7 +17,8 @@
       "change_daily_count": "تغيير عدد المهام اليومية",
       "try_mechanic": "تجربة ميكانيكية لأسبوع",
       "request_more_support": "دعم أكثر لقدرة",
-      "real_mission_idea": "فكرة مهمة واقعية"
+      "real_mission_idea": "فكرة مهمة واقعية",
+      "margin_adjustment": "تعديل هامش الوقت"
     },
     "value_labels": { "daily_mission_count": "{value} مهام يوميًا", "focus_capabilities": "التركيز على: {value}", "available_windows": "نوافذ: {value}", "mechanic": "الميكانيكية: {value}", "capability": "القدرة: {value}", "idea": "{value}" }
   },

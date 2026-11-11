@@ -5,7 +5,8 @@ import { loadTemplate, primaryCapability, type MissionTemplate } from "@/modules
 import { computeCapabilityScore, confidenceBand, scoreBand, decideSupport, decideTraining, applyMasteryCheck, nextMasteryCheckDate, type CapMissionSummary } from "@/modules/capabilities";
 import { missionXp, applyDailyCap } from "@/modules/game";
 import { evaluateMission, type EvidenceCandidate } from "./rules";
-import { support as supportCfg } from "@/shared/config";
+import { support as supportCfg, SUPPORT_LEVELS } from "@/shared/config";
+import { recordTrace } from "@/modules/trace/service";
 
 /**
  * تقييم مهمة عند الانتقال إلى reflected وكتابة النتائج (GATE-2..6، أ.5، أ.6، أ.8).
@@ -97,6 +98,7 @@ export async function evaluateAndRecord(admin: SupabaseClient, missionId: string
     if (!st) continue;
     const score = computeCapabilityScore(allEvents.filter((e) => e.capability_id === cap), now);
     let supportLevel = st.support_level as SupportLevel;
+    const supportBefore = supportLevel;
     let trainingLevel = st.training_level as TrainingLevel;
     let mastered = st.mastered as boolean;
     let changedCount = st.support_changed_at_mission_count as number;
@@ -129,6 +131,8 @@ export async function evaluateAndRecord(admin: SupabaseClient, missionId: string
       if (t.change) { trainingChanges.push(`${cap}:${trainingLevel}->${t.mastered ? "mastered" : t.level}`); trainingLevel = t.level; mastered = t.mastered; if (t.mastered) nextCheck = nextMasteryCheckDate(now, mission.profile_id + cap + today); }
     }
     await admin.from("capability_states").update({ support_level: supportLevel, support_changed_at_mission_count: changedCount, training_level: trainingLevel, mastered, next_mastery_check_at: nextCheck, updated_at: now.toISOString() }).eq("profile_id", mission.profile_id).eq("capability_id", cap);
+    // RULES-7: أثر قرار تغيّر مستوى الدعم (يظهر للمستخدم مع «ليش؟»)
+    if (supportLevel !== supportBefore) await recordTrace(admin, { profile_id: mission.profile_id, kind: "support_level", subject_type: "capability", subject_id: cap, rule: SUPPORT_LEVELS.indexOf(supportLevel) > SUPPORT_LEVELS.indexOf(supportBefore) ? "support_up" : "support_down", decision: { from: supportBefore, to: supportLevel }, inputs: { capability_id: cap, mission_id: mission.id, confidence: score.confidence, missions_since_change: forSupport.length - changedCount, mastery_check: Boolean(mission.is_mastery_check) } }, now);
     snapshots.push({ profile_id: mission.profile_id, capability_id: cap, date: today, score: score.score, confidence: score.confidence, training_level: trainingLevel, support_level: supportLevel, phrase_key: `${scoreBand(score.score)}:${confidenceBand(score.confidence)}`, config_version: CONFIG_VERSION });
   }
   const { error: e5 } = await admin.from("capability_snapshots").upsert(snapshots, { onConflict: "profile_id,capability_id,date" });

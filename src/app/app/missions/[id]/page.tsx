@@ -20,6 +20,11 @@ import { TransferForm } from "@/modules/life/components/life-forms";
 import { primaryCapability } from "@/modules/library";
 import { showMemoryInPlanning, bestStrategy } from "@/modules/adaptation";
 import { loadStrategyOutcomes } from "@/modules/adaptation/service";
+import { margins } from "@/shared/config";
+import { resolveFor, traceResolved } from "@/modules/margins/service";
+import { hiddenUntilEstimate } from "@/modules/margins/rules";
+import { MarginPanel } from "@/modules/margins/components/margin-panel";
+import { traceText, whyLabel } from "@/modules/trace/rules";
 
 /** P07/P08/P09/P10 بحسب حالة المهمة. */
 export default async function MissionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -79,8 +84,29 @@ export default async function MissionPage({ params }: { params: Promise<{ id: st
     }
     celebration = { level, messages: msgs };
   }
+  // 0.5 ب: هامش الوقت — يُحل بالقواعد (ب.3)، يُكتب أثره (RULES-7)، ولا يظهر قبل تقدير المستخدم عند L2 فما فوق للتخطيط (ب.6)
+  let margin: { minutes: number; panel: React.ReactNode } | null = null;
+  const live = ["chosen", "planned", "in_progress", "interrupted"].includes(mission.status);
+  if (live) {
+    const now = new Date();
+    const resolved = await resolveFor(await createClient(), "mission", id, now, { viewerId: s.userId });
+    if (resolved) {
+      const { ctx, view } = resolved;
+      try { await traceResolved(createAdminClient(), ctx, view, now); } catch { /* بلا مفتاح خدمة: العرض يعمل والأثر يُكتب لاحقًا */ }
+      const b = margins.bounds_min[mode];
+      margin = {
+        minutes: view.margin_min + view.extra_min,
+        panel: <MarginPanel subjectType="mission" subjectId={id} minutes={view.margin_min} extraMin={view.extra_min} label={view.set_by_label}
+          why={traceText({ rule: view.rule, decision: { margin_min: view.margin_min }, inputs: view.detail })} whyLabel={whyLabel}
+          hidden={mission.status === "chosen" && hiddenUntilEstimate(view.planning_support, mission.time_estimate !== null)}
+          suggestion={view.suggestion?.value ?? null} canEdit={mode !== "child"} startedAt={mission.started_at} running={mission.status === "in_progress"}
+          step={margins.step_min} min={b.min} max={b.max} extensionOptions={margins.at_expiry.extension_options_min} />,
+      };
+    }
+  }
   return (
     <MissionFlow
+      margin={margin}
       mission={mission} template={template} mode={mode} reflection={reflection} reflectionPrompts={prompts}
       interruptionQuestion={fixedQuestions.interruption_question[mode]}
       narrative={narrative} alternatives={mission.status === "reflected" || mission.status === "transferred" ? alternatives(template, mission.strategy_chosen, mode) : []}

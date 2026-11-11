@@ -216,5 +216,10 @@
     "reject_cooldown_days": 30,
     "uses_ai": false
   },
-  "decision_trace": true
+  "decision_trace": true,
+  "ui": {
+    "_note": "مفاتيح محلية (غير موجودة في 0.5): حدود قوائم شاشتي G17/G18",
+    "list_limit": 20,
+    "log_limit": 30
+  }
 }
