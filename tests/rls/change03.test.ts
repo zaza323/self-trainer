@@ -54,7 +54,9 @@ afterAll(() => h.teardown());
 describe("§1 نقاط الخطوات (اختبار 1)", () => {
   it("قدرة دعمها L3 → صفر نقاط خطوات، ونقاط النتائج كما هي؛ وقيد التدريب تُمنح مرة واحدة", async () => {
     await h.service(`update capability_states set support_level = 'L3_free' where profile_id = $1 and capability_id = 'attention'`, [p1]);
-    const m = await runMission(t1, p1, { resume: true, distractions: ["ignore", "break_return", "give_in"] });
+    // معرّف محدد لا يصيب مفاجأة: حتى لا تُستهلك حصة اليوم (واحدة) بالصدفة قبل اختبار المفاجآت أدناه (كان يفشل عشوائيًا بنسبة احتمال المرحلة 1).
+    const missId = Array(1000).fill(0).map((_, i) => `30000000-0000-4000-8000-${String(i).padStart(12, "0")}`).find((id) => !rollSurprise({ missionId: id, stage: 1, intensity: 50, enabled: true, todayCount: 0, weekCount: 0, mode: "teen" }))!;
+    const m = await runMission(t1, p1, { id: missId, resume: true, distractions: ["ignore", "break_return", "give_in"] });
     const r = await evaluateAndRecord(svc, m);
     const g = await afterMissionReflected(svc, m);
     expect(r.xp).toBeGreaterThan(0);                    // نقاط النتائج كما هي

@@ -50,7 +50,9 @@ custom_strategy_fit: فقط إن كتب المستخدم استراتيجيته 
 options (عند choices_plus_other أو quick_replies): 2–4 خيارات قصيرة (≤ 40 حرفًا) بلا تكرار ولا خطة كاملة، كل خيار {label, source}، ومن كلمات المستخدم أولًا حين تتوفر (source="user_words"). عند free_text اجعل options=[].
 لا تضف زر «غير ذلك» (الواجهة تضيفه). في goal_why لا تضع خيارات أبدًا.
 المخطط: { next_question, done, reflection_summary_user_words, thinking_move_named, custom_strategy_fit, evidence_candidates:[{capability_id,type:"reflection_quality",value,rationale}], safety, moment, response_mode, options:[{label,source}] }`,
-  mission_selector: `المهمة: اختر template_id واحدًا من قائمة المرشحين المعطاة فقط، واملأ المتغيرات من سياق حياة المستخدم (context ≤ 120 حرفًا، time_budget دقائق) ضمن حدود القالب، وصعوبة 1–5 ضمن المقترح. rationale جملة واحدة. المخطط: { template_id, variables:{context,time_budget}, difficulty, rationale }`,
+  mission_selector: `المهمة: اختر template_id واحدًا من قائمة المرشحين المعطاة فقط. لا تكتب أي موقف ولا سياق: نص الموقف يركّبه الخادم من كلام المستخدم (0.5 أ.5).
+إن كان للمرشح «مصادر» معروضة (مهام مخطط المستخدم أو عناصر سجله المؤكَّدة) فاختر واحدًا منها في ref بنوعه ومعرّفه كما هما، وإلا ref=null. time_budget دقائق ضمن حدود القالب، وصعوبة 1–5 ضمن المقترح. rationale جملة واحدة.
+المخطط: { template_id, variables:{time_budget}, ref:{ref_type,ref_id}|null, difficulty, rationale }`,
   task_classifier: `المهمة: صنّف مهمة كتبها المستخدم أو المربي: الميكانيكية الأنسب من العشر، أوزان القدرات (مجموعها 1، القدرة الأساسية للميكانيكية هي الأعلى)، suggested_goal_id من قائمة الغايات المعطاة أو null، و2–4 أسئلة تأمل قصيرة بأسلوب الوضع العمري. المخطط: { mechanic, capability_weights, suggested_goal_id, reflection_prompts }`,
   progress_narrator: `المهمة: شاشة الوعي بالتقدم (5.2 خطوة 7): سرد قصير (≤ 5 جمل) من وقائع المهمة فقط، بلا نقاط ولا أحكام ولا مبالغة؛ يبرز القدرة التي ظهرت فعلًا ويسمي حركة التفكير إن حدثت. المخطط: { narrative, highlighted_capability }`,
   companion_chat_analysis: `المهمة: حلّل آخر رسالة للمستخدم وردّ المرافق واستخرج JSON فقط: insights (حتى 3 مؤشرات تعلم بوزن منخفض، لا أحكام)، needs_human (قرار عائلي، موضوع خارج النطاق، إلحاح للتحدث مع المربي)، safety، context_suggestion (حقل واحد من سياق الحياة إن ذُكر شيء ملموس ومسموح: لا صحة ولا أسماء غرباء ولا مواقع دقيقة) أو null.
@@ -74,6 +76,9 @@ mode=propose_draft: حتى max_steps خطوات كمسودة. mode=suggest_missi
 المخطط: { intro, increment_line }`,
   day_reconstructor: `المهمة: تحويل كلام المستخدم عن يومه إلى مقاطع زمنية (0.4 ط.7). استخدم فقط الأوقات التي ذكرها المستخدم حرفيًا أو حدود المقاطع المعروفة المعطاة؛ لا تخترع وقتًا. ما لا وقت له لا يصير مقطعًا؛ الفجوات تبقى فجوات. category من القائمة المعطاة فقط. لا أسماء أشخاص ولا مواقع في label.
 المخطط: { blocks:[{start:"HH:MM", end:"HH:MM", category, label, confidence}], gaps:[{start, end}] }`,
+  life_intake_assistant: `المهمة: رحلة التعارف (0.5 أ.4). المستخدم يحكي عن حياته. استخرج حتى 3 عناصر للحقل المطلوب فقط، كل عنصر مقطع منسوخ حرفيًا من رسالته كما كتبه (لا تلخيص ولا إعادة صياغة ولا إضافة). لا صحة ولا أسماء أشخاص ولا مواقع ولا دخل.
+follow_up: سؤال واحد قصير (≤ 80 حرفًا) فقط إن كان العنصر غامضًا (مثل موعد غير مذكور)، بلا أي افتراض؛ وإلا null.
+المخطط: { candidates:[{field, text}], follow_up }`,
   safety_classifier: `المهمة: صنّف النص للفئات: self_harm، abuse، immediate_danger، age_inappropriate. flag=true فقط عند وجود مؤشر حقيقي، مع severity. لا تفسير. المخطط: { flag, category, severity }`,
 } as const;
 

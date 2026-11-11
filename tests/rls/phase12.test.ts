@@ -1,7 +1,7 @@
 /**
  * المرحلة 12 (0.5 الجزء ج) على قاعدة بيانات حقيقية:
  *  ج.5-2 مخرج ذكاء اصطناعي خبيث (XP، درجة، دعم، إعداد، هامش، مكافأة) لا يغيّر أي جدول ممنوع.
- *  ج.5-5 الرحلات J1–J9 بالعلم AI_ENABLED=false (طبقة الخادم). J2 (التعارف) تُبنى في المرحلة 13 وتُختبر هناك.
+ *  ج.5-5 الرحلات J1–J9 بالعلم AI_ENABLED=false (طبقة الخادم). J2 (التعارف) مختبرة في tests/rls/phase13.test.ts.
  *  ج.5-7 اقتراح pending لا يغيّر شيئًا قبل الموافقة، وينتهي بعد expire_after_days.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -157,7 +157,7 @@ describe("ج.5-5: الرحلات بالعلم AI_ENABLED=false (طبقة الخ�
     const modes = (await h.service<{ age_mode: string }>(`select age_mode from profiles where id = any($1)`, [[childP, teenP, adultP]])).rows.map((r) => r.age_mode).sort();
     expect(modes).toEqual(["adult", "child", "teen"]);
   });
-  it.todo("J2 التعارف وسجل الحياة بالنموذج الثابت — يُبنى ويُختبر في المرحلة 13 (الجزء أ)");
+  // J2 (التعارف وسجل الحياة بالنموذج الثابت) مختبرة في tests/rls/phase13.test.ts «أ.10-8 (J2) و9».
   it("J3 بناء غاية بأسئلة ثابتة، والحفظ بيد المستخدم", async () => {
     const r = await goalBuilderTurn({ db: svc, caller: off(), profileId: teenP, mode: "teen", history: [], userMessage: "بدي أتحسن بالدراسة", draft: null, turn: 1 } as never);
     expect(r.source).toBe("fixed"); expect(r.output.next_question).toBeTruthy();

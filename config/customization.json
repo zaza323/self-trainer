@@ -1161,7 +1161,9 @@
       "actions": [
         "nothing_changed",
         "edit_log"
-      ]
+      ],
+      "stale_after_days": 60,
+      "_note_local": "مفتاح محلي (المرحلة 13): stale_after_days = مدة بلا تأكيد يتوقف بعدها استعمال العنصر في مواقف جديدة (CHANGE-0.5 أ.6: 60 يومًا)."
     },
     "visibility": {
       "child": "guardians_with_manage_settings_can_view_and_edit",
@@ -1174,7 +1176,12 @@
       "confirmed_log_entries",
       "user_typed_now"
     ],
-    "scenario_text_composition": "server_template_gender_neutral"
+    "scenario_text_composition": "server_template_gender_neutral",
+    "scenario_fields": [
+      "responsibilities"
+    ],
+    "_note_local": "مفتاح محلي (المرحلة 13): scenario_fields = حقول السجل التي تصلح مصدرًا لموقف (ما يجب عليه فعله).",
+    "item_max_chars": 120
   },
   "strategy_memory": {
     "show_in_planning_up_to_support_level": "L1_hint",

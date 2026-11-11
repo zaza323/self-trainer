@@ -53,6 +53,8 @@ export type Suggestion = {
   variables: Record<string, string | number>;
   rationale: string;
   is_mastery_check: boolean;
+  /** 0.5 أ.5: مصدر الموقف من حياة المستخدم (يحدده الخادم أو يقبله من قائمة أعطاها) */
+  life_source?: { ref_type: "planner_task" | "life_entry" | "user_typed"; ref_id: string | null; text: string };
 };
 
 const OPEN = new Set(["suggested", "chosen", "planned", "in_progress", "interrupted", "completed", "abandoned"]);
@@ -61,7 +63,8 @@ const daysBetween = (a: string, b: string) => Math.round((Date.parse(a) - Date.p
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
 export function defaultVariablesFor(template: MissionTemplate, mode: AgeMode): Record<string, string | number> {
-  const ctx = template.variable_defaults.context ? textByMode(template.variable_defaults.context, mode) : "";
+  // 0.5 أ.5: أمثلة القالب تُستخدم للتمارين المحايدة فقط؛ القوالب المرتبطة بالحياة لا تحمل مثالًا من عند النظام
+  const ctx = template.life_binding === "none" && template.variable_defaults.context ? textByMode(template.variable_defaults.context, mode) : "";
   return { time_budget: template.variable_defaults.time_budget ?? defaultVariables.time_budget, context: ctx || defaultVariables.context[mode] };
 }
 

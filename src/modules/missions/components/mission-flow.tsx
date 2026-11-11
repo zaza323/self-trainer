@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { chooseMission, dismissSuggestion, planMission, startMission, interruptMission, resumeMission, logDistraction, useHint, toggleChecklistItem, completeMission, abandonMission, submitReflection } from "../actions";
 import type { MissionRow, ReflectionRow } from "../types";
 import type { MissionTemplate } from "@/modules/library";
-import { textByMode, fillVariables } from "@/modules/library/schema";
+import { textByMode } from "@/modules/library/schema";
+import { scenarioText } from "@/modules/library/scenario";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@/shared/ui";
 import { t } from "@/shared/i18n";
 import type { AgeMode } from "@/shared/config";
@@ -60,7 +61,7 @@ function Situation({ mission, template, mode }: { mission: MissionRow; template:
           <CardTitle>{textByMode(template.title, mode)}</CardTitle>
           <div className="flex gap-1"><Badge variant="secondary">{t(`missions.level.${template.training_level}`)}</Badge><Badge variant="outline">{t("missions.difficulty")} {mission.difficulty}</Badge><Badge variant="muted">{t(`missions.status.${mission.status}`)}</Badge></div>
         </div>
-        <CardDescription className="text-base leading-relaxed text-foreground">{fillVariables(textByMode(template.situation, mode), mission.variables)}</CardDescription>
+        <CardDescription className="text-base leading-relaxed text-foreground">{scenarioText(template, mode, mission.variables)}</CardDescription>
       </CardHeader>
     </Card>
   );

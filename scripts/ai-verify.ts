@@ -28,7 +28,7 @@ async function main() {
   await check("reflection_coach", async () => (await reflectionCoachTurn({ db, caller, profileId: "verify", mode: "teen", support: "L1_hint", template: t, missionFacts: { gate1: true, hints_used: 0 }, history: [], userMessage: "(بداية التأمل)", turn: 0, customStrategy: null, fixedPrompts: ["ما الذي ساعدك؟"] })).source === "ai");
   await check("mission_selector", async () => {
     const cands = selectSuggestions({ ageMode: "teen", today: "2026-11-05", templates, history: [], states: [], focusCapabilities: [], dailyCount: 3, breakMode: false });
-    return (await selectWithAi({ db, caller, profileId: "verify", mode: "teen", candidates: cands, personalContext: { interests: ["كرة القدم"] }, goalTitle: "أنهي واجباتي" })).source === "ai";
+    return (await selectWithAi({ db, caller, profileId: "verify", mode: "teen", candidates: cands, sources: [], goalTitle: "أنهي واجباتي" })).source === "ai";
   });
   await check("task_classifier", async () => (await classifyTask({ db, caller, profileId: "verify", mode: "teen", text: "أرتب غرفتي قبل النوم", goals: [] })) !== null);
   await check("progress_narrator", async () => (await narrate({ db, caller, profileId: "verify", mode: "teen", facts: { gate1: true, gate2: "shown" }, fixedLines: ["أنهيت المهمة."] })).source === "ai");

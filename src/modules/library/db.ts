@@ -26,6 +26,7 @@ export function rowToTemplate(row: Record<string, unknown>, caps: Array<{ capabi
     distraction_config: (row.distraction_config ?? null) as MissionTemplate["distraction_config"],
     status: row.status as MissionTemplate["status"],
     origin: row.origin as MissionTemplate["origin"],
+    life_binding: ((row.life_binding as string | undefined) ?? "none") as MissionTemplate["life_binding"],
   };
 }
 

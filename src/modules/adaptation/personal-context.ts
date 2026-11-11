@@ -8,7 +8,8 @@ import content from "@content/personal_context.ar.json";
 export type ContextField = "interests" | "routine" | "free_windows" | "contexts";
 export type PersonalContext = Record<ContextField, string[]>;
 
-export const CONTEXT_FIELDS = customization.personal_context.fields as ContextField[];
+/** الحقول القديمة (نصوص بسيطة). حقول «سجل حياتي» الأربعة (0.5) لها شكل عناصر مؤكَّدة في src/modules/lifelog. */
+export const CONTEXT_FIELDS: ContextField[] = ["interests", "routine", "free_windows", "contexts"];
 
 export function validateContextItem(field: ContextField, value: string): { ok: true; value: string } | { ok: false; reason: "empty" | "too_long" | "health" | "precise_location" | "phone" } {
   const v = value.trim().replace(/\s+/g, " ");

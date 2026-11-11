@@ -28,16 +28,16 @@ const jsonLit = (v: unknown) => `${lit(JSON.stringify(v))}::jsonb`;
 export function buildTemplatesSyncSql(templates: MissionTemplate[]): string {
   const lines: string[] = [];
   for (const t of templates) {
-    lines.push(`insert into public.mission_templates (id, version, mechanic_id, training_level, difficulty, age_modes, title_by_mode, situation_by_mode, variable_defaults, strategies, prediction_prompt, reflection_prompts, hints_by_level, evidence_rules, completion_check, checklist, min_duration, max_duration, distraction_config, status, origin)
+    lines.push(`insert into public.mission_templates (id, version, mechanic_id, training_level, difficulty, age_modes, title_by_mode, situation_by_mode, variable_defaults, strategies, prediction_prompt, reflection_prompts, hints_by_level, evidence_rules, completion_check, checklist, min_duration, max_duration, distraction_config, status, origin, life_binding)
 values (${lit(t.id)}, ${t.version}, ${lit(t.mechanic)}, ${lit(t.training_level)}, ${t.difficulty}, array[${t.age_modes.map(lit).join(",")}]::public.age_mode[],
   ${jsonLit(t.title)}, ${jsonLit(t.situation)}, ${jsonLit(t.variable_defaults)}, ${jsonLit(t.strategies)}, ${t.prediction_prompt ? jsonLit(t.prediction_prompt) : "null"},
   ${jsonLit(t.reflection_prompts)}, ${jsonLit(t.hints_by_level)}, ${jsonLit(t.evidence_rules)}, ${lit(t.completion_check)}, ${t.checklist ? jsonLit(t.checklist) : "null"},
-  ${t.min_duration}, ${t.max_duration}, ${t.distraction_config ? jsonLit(t.distraction_config) : "null"}, ${lit(t.status)}, ${lit(t.origin)})
+  ${t.min_duration}, ${t.max_duration}, ${t.distraction_config ? jsonLit(t.distraction_config) : "null"}, ${lit(t.status)}, ${lit(t.origin)}, ${lit(t.life_binding)})
 on conflict (id, version) do update set mechanic_id = excluded.mechanic_id, training_level = excluded.training_level, difficulty = excluded.difficulty,
   age_modes = excluded.age_modes, title_by_mode = excluded.title_by_mode, situation_by_mode = excluded.situation_by_mode, variable_defaults = excluded.variable_defaults,
   strategies = excluded.strategies, prediction_prompt = excluded.prediction_prompt, reflection_prompts = excluded.reflection_prompts, hints_by_level = excluded.hints_by_level,
   evidence_rules = excluded.evidence_rules, completion_check = excluded.completion_check, checklist = excluded.checklist, min_duration = excluded.min_duration,
-  max_duration = excluded.max_duration, distraction_config = excluded.distraction_config, status = excluded.status, origin = excluded.origin;`);
+  max_duration = excluded.max_duration, distraction_config = excluded.distraction_config, status = excluded.status, origin = excluded.origin, life_binding = excluded.life_binding;`);
     lines.push(`delete from public.template_capabilities where template_id = ${lit(t.id)} and template_version = ${t.version};`);
     for (const [cap, w] of Object.entries(t.capability_weights)) {
       lines.push(`insert into public.template_capabilities (template_id, template_version, capability_id, weight) values (${lit(t.id)}, ${t.version}, ${lit(cap)}, ${w});`);

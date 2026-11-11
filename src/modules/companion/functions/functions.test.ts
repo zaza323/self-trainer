@@ -84,16 +84,17 @@ describe("mission_selector — 7.3", () => {
   it("template_id خارج المرشحين → سقوط إلى أعلى مرشح بالقواعد", async () => {
     const db = new FakeDb();
     const bad = JSON.stringify({ template_id: "zz-sim-99", variables: {}, difficulty: 2, rationale: "x" });
-    const r = await selectWithAi({ db: db.client(), caller: fakeCaller([bad, bad]), profileId: "p", mode: "teen", candidates, personalContext: null, goalTitle: null });
+    const r = await selectWithAi({ db: db.client(), caller: fakeCaller([bad, bad]), profileId: "p", mode: "teen", candidates, sources: [], goalTitle: null });
     expect(r.source).toBe("rules");
     expect(r.suggestion.template.id).toBe(candidates[0]!.template.id);
   });
-  it("الصعوبة والمتغيرات تُقص ضمن حدود القالب", () => {
+  it("الصعوبة والوقت يُقصان ضمن حدود القالب، والنموذج لا يكتب السياق (0.5 أ.5)", () => {
     const c = candidates[0]!;
-    const s = applySelectorRules({ template_id: c.template.id, variables: { time_budget: 999, context: " القراءة " }, difficulty: 5, rationale: "r" }, candidates)!;
+    const s = applySelectorRules({ template_id: c.template.id, variables: { time_budget: 999, context: " القراءة " } as never, difficulty: 5, rationale: "r" }, candidates)!;
     expect(s.difficulty).toBeLessThanOrEqual(c.difficulty + 1);
     expect(s.variables.time_budget).toBe(c.template.max_duration);
-    expect(s.variables.context).toBe("القراءة");
+    expect(s.variables.context).toBe(c.variables.context); // سياق القواعد كما هو، لا نص النموذج
+    expect(s.life_source).toBeUndefined();
   });
 });
 

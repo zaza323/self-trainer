@@ -24,6 +24,7 @@ export const AI_LAYER_FILES = [
   "src/modules/planner/ai.ts",
   "src/modules/planner/reflection-ai.ts",
   "src/modules/safety/ai.ts",
+  "src/modules/lifelog/intake-ai.ts",
 ] as const;
 
 export const SDK_PACKAGES = ["@anthropic-ai/sdk", "openai", "@google/generative-ai"] as const;
@@ -50,13 +51,16 @@ export const AI_ORCHESTRATORS = [
   "src/app/app/planner/[id]/page.tsx",
   "src/app/app/planner/page.tsx",
   "src/app/guardian/[playerId]/chat/page.tsx",
+  "src/app/guardian/[playerId]/context/page.tsx",
   "src/app/guardian/[playerId]/missions/new/page.tsx",
   "src/app/guardian/[playerId]/summary/page.tsx",
+  "src/app/onboarding/life/page.tsx",
   "src/modules/adaptation/service.ts",
   "src/modules/companion/actions.ts",
   "src/modules/companion/chat/service.ts",
   "src/modules/engine/service.ts",
   "src/modules/life/actions.ts",
+  "src/modules/lifelog/actions.ts",
   "src/modules/mirror/actions.ts",
   "src/modules/missions/actions.ts",
   "src/modules/moments/actions.ts",

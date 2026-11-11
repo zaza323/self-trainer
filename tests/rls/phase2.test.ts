@@ -14,7 +14,11 @@ let teenProfile: string;
 let admin: ReturnType<typeof pgSupabaseShim>;
 
 async function runMission(templateId: string, opts: { strategy?: string; custom?: string; prediction?: number; actual?: number; hints?: number; distractions?: string[]; interrupted?: boolean; abandon?: boolean; context?: string; difficulty?: number; support?: string } = {}) {
-  const id = await h.as(teen, async (q) => (await q(`insert into missions (profile_id, template_id, template_version, difficulty, support_level, context_tag) values ($1,$2,1,$3,$4,$5) returning id`, [teenProfile, templateId, opts.difficulty ?? 2, opts.support ?? "L1_hint", opts.context ?? null])).rows[0].id);
+  const args = [teenProfile, templateId, opts.difficulty ?? 2, opts.support ?? "L1_hint", opts.context ?? null];
+  // 0.5 (أ.3): قالب required لا يُدرَج إلا من الخادم وبمصدر صريح؛ هنا «موقف كتبه المستخدم الآن» (user_typed).
+  const id = templateId === "pa-real-01"
+    ? (await h.service<{ id: string }>(`insert into missions (profile_id, template_id, template_version, difficulty, support_level, context_tag, source, variables, variables_provenance) values ($1,$2,1,$3,$4,$5,'engine','{"life_entry_text":"أرتب غرفتي"}'::jsonb,'[{"name":"life_entry_text","ref_type":"user_typed","ref_id":null}]'::jsonb) returning id`, args)).rows[0]!.id
+    : await h.as(teen, async (q) => (await q(`insert into missions (profile_id, template_id, template_version, difficulty, support_level, context_tag) values ($1,$2,1,$3,$4,$5) returning id`, args)).rows[0].id);
   await h.as(teen, async (q) => {
     await q(`select app.transition_mission($1,'chosen')`, [id]);
     await q(`update missions set strategy_chosen = $2, custom_strategy = $3, time_estimate = 5, prediction = $4 where id = $1`, [id, opts.custom ? null : opts.strategy ?? "s1", opts.custom ?? null, opts.prediction ? JSON.stringify({ minutes: opts.prediction }) : null]);

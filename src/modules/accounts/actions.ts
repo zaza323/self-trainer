@@ -104,7 +104,8 @@ export async function createOwnProfile(_: unknown, form: FormData): Promise<Acti
   if (error) return { ok: false, error: error.message };
   // 0.4 ط.2: الانضمام من الواقع (teen/adult افتراضيًا) قبل بناء الغاية؛ الطفل من الغايات
   const startWith = kind === "player" && age_mode ? (customization.catalog.onboarding_start_with!.default as Record<string, string>)[age_mode] : "goals";
-  redirect(kind === "guardian" ? "/guardian" : startWith === "reality" ? "/onboarding/path" : "/onboarding/context");
+  // 0.5 أ.3: التعارف أولًا، ثم يحكم onboarding_start_with ما بعده
+  redirect(kind === "guardian" ? "/guardian" : `/onboarding/life?next=${startWith === "reality" ? "path" : "context"}`);
 }
 
 const createChildSchema = z.object({

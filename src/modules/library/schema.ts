@@ -56,6 +56,8 @@ export const templateSchema = z.object({
   distraction_config: z.object({ count: z.number().int().positive(), kind: z.string().min(1) }).nullable().optional(),
   status: z.enum(["draft", "active", "retired"]).default("active"),
   origin: z.enum(["human", "ai_draft"]).default("human"),
+  /** 0.5 أ.5: none تمرين محايد، optional، required موقف يحتاج حياة المستخدم (يركّبه الخادم) */
+  life_binding: z.enum(["none", "optional", "required"]).default("none"),
 }).superRefine((t, ctx) => {
   if (t.max_duration < t.min_duration) ctx.addIssue({ code: "custom", message: "max_duration < min_duration" });
   const sum = Object.values(t.capability_weights).reduce((a, b) => a + b, 0);

@@ -54,7 +54,9 @@ export type ReflectionCoachOutput = z.infer<typeof reflectionCoachOutput>;
 
 export const missionSelectorOutput = z.object({
   template_id: z.string(),
-  variables: z.object({ context: z.string().max(120).optional(), time_budget: z.number().int().positive().optional() }),
+  variables: z.object({ time_budget: z.number().int().positive().optional() }),
+  /** 0.5 أ.5: مرجع لمصدر يخص المستخدم من القائمة التي أعطاها الخادم؛ النموذج لا يكتب نص الموقف */
+  ref: z.object({ ref_type: z.enum(["planner_task", "life_entry"]), ref_id: z.string().uuid() }).nullable().optional(),
   difficulty: z.number().int().min(1).max(5),
   rationale: z.string().max(300),
 });

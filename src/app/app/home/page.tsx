@@ -4,7 +4,7 @@ import { getGoals, nearestActiveGoal } from "@/modules/goals";
 import { GoalChain } from "@/modules/goals/components/goal-chain";
 import { ensureDailySuggestions } from "@/modules/engine";
 import { listMissions, todayIn, OPEN_STATUSES } from "@/modules/missions";
-import { loadActiveTemplates, textByMode, fillVariables } from "@/modules/library";
+import { loadActiveTemplates, textByMode, scenarioText } from "@/modules/library";
 import { effective } from "@/modules/settings";
 import { createClient } from "@/shared/db/server";
 import { Alert, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui";
@@ -75,7 +75,7 @@ export default async function HomePage() {
                   <CardTitle className="text-base">{textByMode(tpl?.title, mode) || m.template_id}</CardTitle>
                   <div className="flex gap-1"><Badge variant="secondary">{tpl ? t(`missions.level.${tpl.training_level}`) : ""}</Badge><Badge variant="muted">{t(`missions.status.${m.status}`)}</Badge>{m.needs_approval && <Badge variant="warning">{realMissions.needs_approval_notice}</Badge>}{m.source === "guardian" || m.source === "guardian_recurring" ? <Badge variant="outline">من المربي</Badge> : null}</div>
                 </div>
-                {tpl && <CardDescription>{fillVariables(textByMode(tpl.situation, mode), m.variables)}</CardDescription>}
+                {tpl && <CardDescription>{scenarioText(tpl, mode, m.variables)}</CardDescription>}
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-2">
                 <GoalChain goals={goals} goalId={m.goal_id} />
