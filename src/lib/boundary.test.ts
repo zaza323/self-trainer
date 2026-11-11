@@ -8,8 +8,8 @@
 import { describe, it, expect } from "vitest";
 import { readdirSync, statSync } from "node:fs";
 import path from "node:path";
-import { closure, rel, readRel, dbWrites, nondeterministicCalls, importSpecifiers, ROOT } from "@tests/support/import-graph";
-import { AI_LAYER_FILES, SDK_PACKAGES, SDK_ALLOWED_FILE } from "./ai/layer";
+import { closure, rel, readRel, dbWrites, nondeterministicCalls, importSpecifiers, resolveSpecifier, stripComments, ROOT } from "@tests/support/import-graph";
+import { AI_LAYER_FILES, AI_BARRELS, AI_LAYER_PATTERNS, AI_ORCHESTRATORS, SDK_PACKAGES, SDK_ALLOWED_FILE } from "./ai/layer";
 import { ai } from "@/shared/config";
 import engineManifest from "./engine/files.json";
 
@@ -90,5 +90,48 @@ describe("RULES-2: طبقة الذكاء الاصطناعي", () => {
   });
   it("القائمة المسموحة لا تتقاطع مع الممنوعة", () => {
     for (const t of ALLOWED_TABLES) expect(boundary.forbidden_write_targets).not.toContain(t);
+  });
+});
+
+/** كل ملفات المصدر غير الاختبارية. */
+const sourceFiles = () => walk(path.join(ROOT, "src")).map(rel).filter((r) => !/\.test\.(ts|tsx)$/.test(r));
+
+/**
+ * الاتجاه المعاكس: من يستورد الطبقة (أو واجهتها أو حزمة النموذج، استيراد وقت التشغيل) أو يستدعي runFunction من خارجها؟
+ * يعيد المخالفين غير المسجلين كمنسّقين، والمسجلين الذين لم يعودوا يستوردونها.
+ */
+export function reverseViolations(files: string[], layer: Set<string>, barrels: Set<string>, orchestrators: Set<string>): { unlisted: string[]; stale: string[]; callsRunFunction: string[] } {
+  const importers = new Set<string>(), callsRunFunction: string[] = [];
+  for (const r of files) {
+    if (layer.has(r) || barrels.has(r)) continue;
+    const src = readRel(r), abs = path.resolve(ROOT, r);
+    const specs = importSpecifiers(src, true);
+    const hitsLayer = specs.map((s) => resolveSpecifier(s, abs)).filter((x): x is string => Boolean(x)).map(rel).some((x) => layer.has(x) || barrels.has(x));
+    const hitsSdk = specs.some((s) => (SDK_PACKAGES as readonly string[]).includes(s));
+    if (hitsLayer || hitsSdk) importers.add(r);
+    if (/\brunFunction\s*\(/.test(stripComments(src))) callsRunFunction.push(r);
+  }
+  return { unlisted: [...importers].filter((r) => !orchestrators.has(r)).sort(), stale: [...orchestrators].filter((r) => !importers.has(r)).sort(), callsRunFunction };
+}
+
+/** ملفات في مواضع/أسماء الطبقة غير مسجلة في AI_LAYER_FILES. */
+export function unlistedLayerFiles(files: string[], layer: Set<string>, patterns: readonly RegExp[]): string[] {
+  return files.filter((r) => patterns.some((re) => re.test(r)) && !layer.has(r)).sort();
+}
+
+describe("الاتجاه المعاكس: من يحق له استيراد طبقة الذكاء الاصطناعي", () => {
+  const LAYER = new Set<string>(AI_LAYER_FILES), BARRELS = new Set<string>(AI_BARRELS), ORCH = new Set<string>(AI_ORCHESTRATORS);
+  it("لا ملف خارج قائمة المنسّقين يستورد الطبقة أو حزمة النموذج، ولا مدخل زائد في القائمة، وrunFunction لا تُستدعى خارج الطبقة", () => {
+    expect(reverseViolations(sourceFiles(), LAYER, BARRELS, ORCH)).toEqual({ unlisted: [], stale: [], callsRunFunction: [] });
+  });
+  it("كل ملف في مواضع الطبقة مسجل في AI_LAYER_FILES (ملف جديد لا يُتجاهل)", () => {
+    expect(unlistedLayerFiles(sourceFiles(), LAYER, AI_LAYER_PATTERNS)).toEqual([]);
+  });
+  it("المدقق يفشل فعلًا: مستورد غير مسجل، ومستدعٍ لـrunFunction، وملف طبقة جديد غير مسجل (fixtures)", () => {
+    const fx = ["tests/fixtures/boundary/outside/bad-importer.ts", "tests/fixtures/boundary/ai/new-ai.ts"];
+    const v = reverseViolations(fx, LAYER, BARRELS, ORCH);
+    expect(v.unlisted).toEqual(["tests/fixtures/boundary/ai/new-ai.ts", "tests/fixtures/boundary/outside/bad-importer.ts"]);
+    expect(v.callsRunFunction).toContain("tests/fixtures/boundary/outside/bad-importer.ts");
+    expect(unlistedLayerFiles(fx, LAYER, AI_LAYER_PATTERNS)).toEqual(["tests/fixtures/boundary/ai/new-ai.ts"]);
   });
 });

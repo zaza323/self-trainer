@@ -1,5 +1,6 @@
 /** سقف الزيادة على مرحلتين: اكتشاف بلا سقف ← سقف ناعم 50% بتأكيد (ثابت للطفل افتراضيًا)، وحدة واحدة دائمًا مسموحة، المبالغة معلومة لا رجوع. */
 import { describe, it, expect } from "vitest";
+import { planner, customization } from "@/shared/config";
 import { inDiscovery, capFor, capModeFor, checkTarget, overreachPattern, overreachCount, outcomeFor, nextTarget, paceConfig } from "./rules";
 
 const c = paceConfig.cap;
@@ -61,5 +62,21 @@ describe("المبالغة معلومة لا رجوع", () => {
     expect(overreachPattern([miss, miss, hit, under])).toBe(false);
     expect(overreachPattern([miss, miss, miss])).toBe(true); expect(overreachCount([miss, miss, miss, hit])).toBe(3);
     expect(overreachPattern([miss, miss, { over_cap: true, achieved_ratio: null }])).toBe(false);
+  });
+});
+
+describe("قيم الوتيرة المعتمدة لا ترجع لقيم قديمة (قفل بعد دمج إعدادات 0.5)", () => {
+  const pace = planner.pace as unknown as Record<string, unknown>;
+  it("سقف ناعم 50%، اكتشاف 28 يومًا أو 14 يوم نشاط أيهما أبعد، اقتراح 10%، وحدة واحدة دائمًا، ولا أثر لسقف 25% القديم", () => {
+    expect(pace.cap).toMatchObject({ soft_over_baseline_percent: 50, discovery: { min_days: 28, min_active_days: 14, rule: "whichever_later" }, overreach_pattern: { times: 3, achieved_ratio_below: 0.5 } });
+    expect(pace.stretch_default_percent).toBe(10); expect(pace.min_step_units).toBe(1);
+    expect("max_over_baseline_percent" in pace).toBe(false);
+    expect(capFor(1)).toBe(2); expect(nextTarget(40, 10)).toBe(44);
+  });
+  it("الطفل: ولي الأمر يختار صارم/ليّن والافتراضي صارم؛ غير الطفل ليّن", () => {
+    expect((pace.cap as { child_default_mode: string; modes: string[] })).toMatchObject({ child_default_mode: "hard", modes: ["hard", "soft"] });
+    const entry = customization.catalog.pace_cap_mode as unknown as { values: string[]; default: Record<string, string>; allowed_age_modes: string[] };
+    expect(entry).toMatchObject({ values: ["hard", "soft"], default: { child: "hard", teen: "soft", adult: "soft" }, allowed_age_modes: ["child"] });
+    expect(capModeFor("child", undefined)).toBe("hard");
   });
 });

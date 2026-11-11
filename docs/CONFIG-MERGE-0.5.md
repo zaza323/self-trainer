@@ -62,3 +62,19 @@
 
 ## ملاحظات ترقيم الهجرات
 CHANGE-0.5 يقول «الهجرات الجديدة تبدأ من 0017» و«0017 سجل الحياة · 0018 الاقتراحات · 0019 الهامش». لكن 0017 استُخدمت لإغلاق الكتابة المباشرة (بنود الخطوة A)، و0018 للصلاحية `set_task_margin` (لازمة لدمج `permissions_all`). الترقيم الفعلي: 0019 سجل الحياة (المرحلة 13)، 0020 الهامش (المرحلة 14). لم تلزم هجرة لتعميم جدول الاقتراحات (انظر VERIFY-LATER).
+
+## التعارضات الثمانية بالتفصيل
+
+| # | الملف | المفتاح | القيمة المحلية | قيمة 0.5 | المعتمد |
+|---|---|---|---|---|---|
+| 1 | `ai.json` | `config_version` | "2026-11-05.4" | "2026-11-09.5" | 0.5 |
+| 2 | `ai.json` | `response_modes.moments` | 12 عنصرًا | 17 عنصرًا؛ أُضيف: life_roles, life_responsibilities, life_dependents, life_pressure, life_refresh؛ حُذف: — | 0.5 |
+| 3 | `ai.json` | `response_modes.session_kinds_extra` | 1 عنصرًا | 2 عنصرًا؛ أُضيف: life_intake؛ حُذف: — | 0.5 |
+| 4 | `customization.json` | `config_version` | "2026-11-05.4" | "2026-11-09.5" | 0.5 |
+| 5 | `customization.json` | `guardrails_not_configurable` | 20 عنصرًا | 23 عنصرًا؛ أُضيف: ai_decides_nothing, scenarios_from_user_life_only, margin_never_penalizes, margin_not_in_evidence؛ حُذف: notification_hard_cap_3 | 0.5 |
+| 6 | `customization.json` | `personal_context.fields` | 4 عنصرًا | 8 عنصرًا؛ أُضيف: roles, responsibilities, dependents, pressures؛ حُذف: — | 0.5 |
+| 7 | `customization.json` | `personal_context.forbidden_content` | 3 عنصرًا | 5 عنصرًا؛ أُضيف: income, religion_practices_assumed؛ حُذف: — | 0.5 |
+| 8 | `customization.json` | `permissions_all` | 10 عنصرًا | 11 عنصرًا؛ أُضيف: set_task_margin؛ حُذف: — | 0.5 |
+
+- كل التعارضات إضافات على قوائم أو رقم الإصدار. الحذف الوحيد: `notification_hard_cap_3` من الحواجز، وهو متوافق مع 0.4 (السقف صار حسب الوضع العمري `notification_adaptive_ceiling`).
+- لم يمس الدمج `config/planner.json`: قيم الوتيرة المعدّلة بطلب المالك سليمة ومقفولة باختبار `src/modules/pace/cap.test.ts` ← «قيم الوتيرة المعتمدة لا ترجع لقيم قديمة»: سقف ناعم 50%، اكتشاف 28 يومًا أو 14 يوم نشاط (أيهما أبعد)، سقف الطفل صارم/ليّن بافتراضي صارم، وحدة واحدة مسموحة دائمًا، واقتراح الزيادة 10%.

@@ -65,33 +65,67 @@ afterAll(() => h.teardown());
 
 describe("ج.5-2: مخرج ذكاء اصطناعي خبيث لا يغيّر أي جدول ممنوع", () => {
   const evil = { xp: 500, support_level: 3, score: 100, gate2: "shown", settings: { daily_mission_count: 3 }, margin_min: 999, reward: { status: "earned" }, incentive_stage: 4 };
-  it("الراوي، الملخص، بناء الغاية، تقسيم المهام، ترتيب اليوم، إعادة البناء، المستشار، والمحادثة الحرة", async () => {
+  const EVIL_KEYS = Object.keys(evil);
+  const safe = JSON.stringify({ flag: false, category: null, severity: null });
+  /** صفوف ai_calls لوظيفة: يثبت أن المخرج وصل فعلًا إلى الخادم */
+  const calls = async (fn: string) => (await h.service<{ valid: boolean; error: string | null; output: Record<string, unknown> | null }>(`select valid, error, output from ai_calls where profile_id = $1 and function = $2 order by created_at`, [teenP, fn])).rows;
+  const stripped = (rows: Array<{ valid: boolean; output: Record<string, unknown> | null }>) => rows.filter((r) => r.valid).every((r) => EVIL_KEYS.every((k) => !(k in (r.output ?? {}))));
+
+  it("مخرجات مهيكلة تحمل حقولًا خبيثة: تصل، تُقبل بنيتها المسموحة فقط، والحقول الخبيثة تُسقط قبل أي استعمال", async () => {
     const before = await snapshot();
-    const p = P(teenP, "teen", teen);
-    await narrate({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, narrative: "أحسنت", highlighted_capability: "attention" })]), profileId: teenP, mode: "teen", facts: { done: 1 }, fixedLines: ["ثابت"] });
-    await weeklySummary({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, improved: ["الانتباه"], needs_support: [], guardian_tip: "شجّعه" })]), profileId: teenP, mode: "teen", stats: {} });
-    await goalBuilderTurn({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, next_question: "ليش؟", reflection_of_user_words: "بدي أنجح", thinking_move_named: null, phase: "climb_why", draft: { goals: [{ temp_id: "g1", parent_temp_id: null, title_user_words: "أنجح", why_user_words: null }], first_step_user_words: null }, needs_user_confirmation: false, safety: { flag: false, category: null, severity: null }, moment: "goal_why", response_mode: "free_text", options: [] })]), profileId: teenP, mode: "teen", history: [], userMessage: "بدي أنجح", draft: null, turn: 1 } as never);
-    await taskBreakdown({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, steps: [{ title: "خطوة", estimate_min: 5 }], note: null })]), profileId: teenP, mode: "teen", level: "L1_hint", task: { title: "مشروع", notes: null }, userSteps: [] });
-    await dayPlanner({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, placements: [], note: null })]), profileId: teenP, mode: "teen", level: "L1_hint", tasks: [], today: "2026-11-09", nowMin: 540, busy: [] });
-    await dayReconstructor({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, blocks: [], gaps: [] })]), profileId: teenP, mode: "teen", text: "صحيت 9", categories: ["sleep"], knownBoundaries: [], nowHHMM: null });
-    // المستشار: يُحفظ اقتراحًا معلّقًا فقط (جدول مسموح)، ولا يُطبَّق
-    await runAdvisorForProfile(svc, fakeCaller([JSON.stringify({ ...evil, suggestions: [{ type: "change_daily_count", setting_key: "daily_mission_count", proposed_value: 99, reason_short: "x", expected_effect: "y", ...evil }] })]), P(teenP, "teen", teen));
-    // المحادثة الحرة: الأمان الوارد، الرد، الأمان الصادر، التحليل الخبيث (بلا مؤشرات صالحة)
-    const safe = JSON.stringify({ flag: false, category: null, severity: null });
+    const n = await narrate({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, narrative: "أحسنت", highlighted_capability: "attention" })]), profileId: teenP, mode: "teen", facts: { done: 1 }, fixedLines: ["ثابت"] });
+    expect(n.source).toBe("ai"); expect(EVIL_KEYS.some((k) => k in (n as object))).toBe(false);
+    const w = await weeklySummary({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, improved: ["الانتباه"], needs_support: [], guardian_tip: "شجّعه" })]), profileId: teenP, mode: "teen", stats: {} });
+    expect(w.source).toBe("ai");
+    const b = await taskBreakdown({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, steps: [{ title: "خطوة", estimate_min: 5, xp: 500 }], note: null })]), profileId: teenP, mode: "teen", level: "L1_hint", task: { title: "مشروع", notes: null }, userSteps: [] });
+    expect(b.source).toBe("ai"); expect(b.steps).toEqual([{ title: "خطوة", estimate_min: 5 }]);
+    const d = await dayReconstructor({ db: svc, caller: fakeCaller([JSON.stringify({ ...evil, blocks: [], gaps: [] })]), profileId: teenP, mode: "teen", text: "صحيت 9", categories: ["sleep"], knownBoundaries: [], nowHHMM: null });
+    expect(d.source).toBe("ai");
+    for (const fn of ["progress_narrator", "weekly_summary", "task_breakdown", "day_reconstructor"]) {
+      const rows = await calls(fn);
+      expect(rows.filter((r) => r.valid), fn).toHaveLength(1);   // وصل وسُجّل
+      expect(stripped(rows), fn).toBe(true);                     // بلا الحقول الخبيثة
+    }
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it("المستشار: نوع ممنوع يُرفض (صف ai_calls غير صالح)، وقيمة خارج الكتالوج تُحفظ اقتراحًا معلّقًا مقصوصًا، ولا يُطبَّق شيء", async () => {
+    const before = await snapshot();
+    const cat = customization.catalog.daily_mission_count as { min: number; max: number };
+    await h.service(`delete from adaptation_suggestions where profile_id = $1`, [teenP]);
+    // (أ) نوع غير موجود في الكتالوج «grant_xp» مرتين (المحاولة وإعادتها) ⇒ مرفوض كليًا
+    const bad = JSON.stringify({ suggestions: [{ type: "grant_xp", setting_key: null, proposed_value: { xp: 500 }, reason_short: "x", expected_effect: "y" }] });
+    const r1 = await runAdvisorForProfile(svc, fakeCaller([bad, bad]), P(teenP, "teen", teen), new Date("2026-11-09T09:00:00Z"));
+    expect(r1.created).toEqual([]);
+    const rejected = (await calls("adaptation_advisor")).filter((r) => !r.valid);
+    expect(rejected.length).toBeGreaterThanOrEqual(1);
+    expect(rejected.every((r) => r.error === "type_not_allowed")).toBe(true);
+    expect((await h.service<{ n: number }>(`select count(*)::int as n from adaptation_suggestions where profile_id = $1`, [teenP])).rows[0]!.n).toBe(0);
+    // (ب) نوع مسموح بقيمة خبيثة −50 مع حقول إضافية ⇒ اقتراح معلّق واحد مقصوص إلى الحد الأدنى
+    const clip = JSON.stringify({ ...evil, suggestions: [{ ...evil, type: "change_daily_count", setting_key: "daily_mission_count", proposed_value: -50, reason_short: "x", expected_effect: "y" }] });
+    const r2 = await runAdvisorForProfile(svc, fakeCaller([clip]), P(teenP, "teen", teen), new Date("2026-11-10T10:00:00Z")); // يوم تالٍ: حد المستشار استدعاء واحد يوميًا
+    expect(r2.created).toHaveLength(1);
+    const rows = (await h.service<{ decision: string | null; proposed_value: number; type: string }>(`select decision, proposed_value, type from adaptation_suggestions where profile_id = $1`, [teenP])).rows;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.decision).toBeNull(); expect(Number(rows[0]!.proposed_value)).toBe(cat.min); expect(rows[0]!.type).toBe("change_daily_count");
+    // لم يُطبَّق: الإعداد الفعّال كما هو، والجداول الممنوعة كما هي
+    expect((await h.service<{ v: unknown }>(`select app.setting_effective($1,'daily_mission_count') as v`, [teenP])).rows[0]!.v).toBe((customization.catalog.daily_mission_count as { default: { teen: number } }).default.teen);
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it("المحادثة الحرة: تحليل خبيث (قدرة غير موجودة + حقول XP) يُرفض بصف ai_calls غير صالح ولا يكتب أدلة ولا مؤشرات", async () => {
+    const before = await snapshot();
     const sess = await getOrCreateSession(teenDb, teenP, "free");
     const { data: msg } = await teenDb.from("companion_messages").insert({ session_id: sess.id, role: "player", author_id: teen.id, content: "مرحبا" }).select("id").single();
-    await handlePlayerMessage(svc, fakeCaller([safe, "أهلًا، شو ببالك؟", safe, JSON.stringify({ ...evil, insights: [], needs_human: { flag: false, reason: null }, safety: { flag: false, category: null, severity: null }, context_suggestion: null })]),
+    const evilAnalysis = JSON.stringify({ ...evil, insights: [{ capability_id: "xp_events", type: "hack", value: 99, confidence: 5 }], needs_human: { flag: false, reason: null }, safety: { flag: false, category: null, severity: null }, context_suggestion: null });
+    const r = await handlePlayerMessage(svc, fakeCaller([safe, "أهلًا، شو ببالك؟", safe, evilAnalysis, evilAnalysis]),
       { profileId: teenP, mode: "teen", support: "L1_hint", viewers: [], memory: { insights: [], lastSummary: null, personalContext: null } }, sess.id, (msg as { id: string }).id, "مرحبا");
-    const after = await snapshot();
-    expect(after).toEqual(before);
-    // أي مقترح محفوظ بقي معلّقًا ومقصوصًا ضمن الكتالوج (المستشار قد لا يقترح شيئًا بلا بيانات كافية)
-    const cat = customization.catalog.daily_mission_count as { min: number; max: number };
-    for (const s of (await h.service<{ decision: string | null; proposed_value: number }>(`select decision, proposed_value from adaptation_suggestions where profile_id = $1`, [teenP])).rows) {
-      expect(s.decision).toBeNull(); expect(Number(s.proposed_value)).toBeGreaterThanOrEqual(cat.min); expect(Number(s.proposed_value)).toBeLessThanOrEqual(cat.max);
-    }
-    // ولا ai_calls تحمل كتابة: النموذج استُدعي فعلًا (المخرجات الخبيثة وصلت)
-    expect((await h.service<{ n: number }>(`select count(*)::int as n from ai_calls where profile_id = $1`, [teenP])).rows[0]!.n).toBeGreaterThanOrEqual(6);
-    expect(p.id).toBe(teenP);
+    expect(r.kind).toBe("reply");
+    const chat = await calls("companion_chat");
+    expect(chat.some((c) => c.valid)).toBe(true);                       // الرد نفسه وصل
+    expect(chat.filter((c) => !c.valid).length).toBeGreaterThanOrEqual(1); // التحليل الخبيث وصل ورُفض
+    expect((await h.service<{ n: number }>(`select count(*)::int as n from companion_insights where profile_id = $1`, [teenP])).rows[0]!.n).toBe(0);
+    expect(await snapshot()).toEqual(before);
   });
 });
 
